@@ -14,6 +14,7 @@ import { errorHandlingMiddleware } from '~/middlewares/errorHandling.middleware'
 import userRoutes from './routes/user.routes'
 import productRoutes from './routes/product.routes'
 import cartRoutes from './routes/cart.routes'
+import checkoutRoutes from './routes/checkout.routes'
 
 // Load environment variables
 dotenv.config()
@@ -62,6 +63,7 @@ app.get('/', (req, res) => {
 app.use('/api/users', userRoutes)
 app.use('/api/products', productRoutes)
 app.use('/api/cart', cartRoutes)
+app.user('/api/checkout', checkoutRoutes)
 
 
 export default app
