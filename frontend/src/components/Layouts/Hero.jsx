@@ -14,8 +14,8 @@ const Hero = () => {
 
   const textColor = {
     color: isDark
-      ? theme.palette.info.light // sáng hơn trong dark mode
-      : theme.palette.primary.dark // đậm hơn trong light mode
+      ? theme.palette.info.light
+      : theme.palette.primary.dark
   }
 
   const buttonStyle = {

@@ -7,8 +7,8 @@ const UserManagement = () => {
   const [users, setUsers] = useState([
     {
       _id: 12345,
-      name: 'John Doe',
-      email: 'john@example.com',
+      name: 'Thanh Phuc',
+      email: 'thanhphucnguyen54@gmail.com',
       role: 'admin'
     }
   ])

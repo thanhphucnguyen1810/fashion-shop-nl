@@ -15,9 +15,10 @@ const NewArrivals = () => {
       name: 'Stylish Jacket',
       price: 120,
       images: [
-        { url: 'https://picsum.photos/500/500?random=1', altText: 'Stylish Jacket' },
-        { url: 'https://picsum.photos/500/500?random=2', altText: 'Stylish Jacket' },
-        { url: 'https://picsum.photos/500/500?random=3', altText: 'Stylish Jacket' }
+      // Sử dụng ID 237, 238, 239
+        { url: 'https://picsum.photos/id/237/500/500', altText: 'Stylish Jacket - View 1' },
+        { url: 'https://picsum.photos/id/238/500/500', altText: 'Stylish Jacket - View 2' },
+        { url: 'https://picsum.photos/id/239/500/500', altText: 'Stylish Jacket - View 3' }
       ]
     },
     {
@@ -25,9 +26,10 @@ const NewArrivals = () => {
       name: 'Stylish Shirt',
       price: 120,
       images: [
-        { url: 'https://picsum.photos/500/500?random=4', altText: 'Stylish Shirt' },
-        { url: 'https://picsum.photos/500/500?random=5', altText: 'Stylish Shirt' },
-        { url: 'https://picsum.photos/500/500?random=6', altText: 'Stylish Shirt' }
+      // Sử dụng ID 240, 241, 242
+        { url: 'https://picsum.photos/id/240/500/500', altText: 'Stylish Shirt - View 1' },
+        { url: 'https://picsum.photos/id/241/500/500', altText: 'Stylish Shirt - View 2' },
+        { url: 'https://picsum.photos/id/242/500/500', altText: 'Stylish Shirt - View 3' }
       ]
     },
     {
@@ -35,9 +37,10 @@ const NewArrivals = () => {
       name: 'Stylish Pants',
       price: 120,
       images: [
-        { url: 'https://picsum.photos/500/500?random=7', altText: 'Stylish Pants' },
-        { url: 'https://picsum.photos/500/500?random=8', altText: 'Stylish Pants' },
-        { url: 'https://picsum.photos/500/500?random=9', altText: 'Stylish Pants' }
+      // Sử dụng ID 243, 244, 245
+        { url: 'https://picsum.photos/id/243/500/500', altText: 'Stylish Pants - View 1' },
+        { url: 'https://picsum.photos/id/244/500/500', altText: 'Stylish Pants - View 2' },
+        { url: 'https://picsum.photos/id/245/500/500', altText: 'Stylish Pants - View 3' }
       ]
     },
     {
@@ -45,9 +48,10 @@ const NewArrivals = () => {
       name: 'Stylish Dress',
       price: 120,
       images: [
-        { url: 'https://picsum.photos/500/500?random=10', altText: 'Stylish Dress' },
-        { url: 'https://picsum.photos/500/500?random=11', altText: 'Stylish Dress' },
-        { url: 'https://picsum.photos/500/500?random=12', altText: 'Stylish Dress' }
+      // Sử dụng ID 246, 247, 248
+        { url: 'https://picsum.photos/id/246/500/500', altText: 'Stylish Dress - View 1' },
+        { url: 'https://picsum.photos/id/247/500/500', altText: 'Stylish Dress - View 2' },
+        { url: 'https://picsum.photos/id/248/500/500', altText: 'Stylish Dress - View 3' }
       ]
     },
     {
@@ -55,39 +59,43 @@ const NewArrivals = () => {
       name: 'Stylish Sweater',
       price: 120,
       images: [
-        { url: 'https://picsum.photos/500/500?random=13', altText: 'Stylish Sweater' },
-        { url: 'https://picsum.photos/500/500?random=14', altText: 'Stylish Sweater' },
-        { url: 'https://picsum.photos/500/500?random=15', altText: 'Stylish Sweater' }
+      // Sử dụng ID 249, 250, 251
+        { url: 'https://picsum.photos/id/249/500/500', altText: 'Stylish Sweater - View 1' },
+        { url: 'https://picsum.photos/id/250/500/500', altText: 'Stylish Sweater - View 2' },
+        { url: 'https://picsum.photos/id/251/500/500', altText: 'Stylish Sweater - View 3' }
       ]
     },
     {
       _id: '6',
-      name: 'Stylish Top',
+      name: 'Stylish Top A',
       price: 120,
       images: [
-        { url: 'https://picsum.photos/500/500?random=16', altText: 'Stylish Top' },
-        { url: 'https://picsum.photos/500/500?random=17', altText: 'Stylish Top' },
-        { url: 'https://picsum.photos/500/500?random=18', altText: 'Stylish Top' }
+      // Sử dụng ID 252, 253, 254
+        { url: 'https://picsum.photos/id/252/500/500', altText: 'Stylish Top A - View 1' },
+        { url: 'https://picsum.photos/id/253/500/500', altText: 'Stylish Top A - View 2' },
+        { url: 'https://picsum.photos/id/254/500/500', altText: 'Stylish Top A - View 3' }
       ]
     },
     {
       _id: '7',
-      name: 'Stylish Top',
+      name: 'Stylish Top B',
       price: 120,
       images: [
-        { url: 'https://picsum.photos/500/500?random=19', altText: 'Stylish Top' },
-        { url: 'https://picsum.photos/500/500?random=20', altText: 'Stylish Top' },
-        { url: 'https://picsum.photos/500/500?random=21', altText: 'Stylish Top' }
+      // Sử dụng ID 255, 256, 257
+        { url: 'https://picsum.photos/id/255/500/500', altText: 'Stylish Top B - View 1' },
+        { url: 'https://picsum.photos/id/256/500/500', altText: 'Stylish Top B - View 2' },
+        { url: 'https://picsum.photos/id/257/500/500', altText: 'Stylish Top B - View 3' }
       ]
     },
     {
       _id: '8',
-      name: 'Stylish Top',
+      name: 'Stylish Top C',
       price: 120,
       images: [
-        { url: 'https://picsum.photos/500/500?random=22', altText: 'Stylish Top' },
-        { url: 'https://picsum.photos/500/500?random=23', altText: 'Stylish Top' },
-        { url: 'https://picsum.photos/500/500?random=24', altText: 'Stylish Top' }
+      // Sử dụng ID 258, 259, 260
+        { url: 'https://picsum.photos/id/258/500/500', altText: 'Stylish Top C - View 1' },
+        { url: 'https://picsum.photos/id/259/500/500', altText: 'Stylish Top C - View 2' },
+        { url: 'https://picsum.photos/id/260/500/500', altText: 'Stylish Top C - View 3' }
       ]
     }
   ]

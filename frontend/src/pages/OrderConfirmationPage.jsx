@@ -25,9 +25,9 @@ const checkout = {
   ],
   shippingAddress: {
     address: '123 Đường Chính',
-    city: 'Thành phố New York',
+    city: 'Thành phố Cần Thơ',
     postalCode: '10001',
-    country: 'Hoa Kỳ',
+    country: 'VietNam',
     phone: '1234567890'
   },
   totalPrice: 129.98
