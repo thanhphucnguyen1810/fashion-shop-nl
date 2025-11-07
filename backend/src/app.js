@@ -17,6 +17,7 @@ import cartRoutes from './routes/cart.routes'
 import checkoutRoutes from './routes/checkout.routes'
 import orderRoutes from './routes/order.routes'
 import uploadRoutes from './routes/upload.routes'
+import subscribeRoutes from './routes/subscribe.routes'
 
 // Load environment variables
 dotenv.config()
@@ -68,6 +69,7 @@ app.use('/api/cart', cartRoutes)
 app.use('/api/checkout', checkoutRoutes)
 app.use('/api/orders', orderRoutes)
 app.use('/api/upload', uploadRoutes)
+app.use('/api/subscribe', subscribeRoutes)
 
 
 export default app
