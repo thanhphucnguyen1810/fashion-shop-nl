@@ -15,6 +15,8 @@ import userRoutes from './routes/user.routes'
 import productRoutes from './routes/product.routes'
 import cartRoutes from './routes/cart.routes'
 import checkoutRoutes from './routes/checkout.routes'
+import orderRoutes from './routes/order.routes'
+import uploadRoutes from './routes/upload.routes'
 
 // Load environment variables
 dotenv.config()
@@ -63,7 +65,9 @@ app.get('/', (req, res) => {
 app.use('/api/users', userRoutes)
 app.use('/api/products', productRoutes)
 app.use('/api/cart', cartRoutes)
-app.user('/api/checkout', checkoutRoutes)
+app.use('/api/checkout', checkoutRoutes)
+app.use('/api/orders', orderRoutes)
+app.use('/api/upload', uploadRoutes)
 
 
 export default app

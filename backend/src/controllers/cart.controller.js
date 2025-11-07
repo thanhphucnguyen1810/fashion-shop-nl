@@ -72,7 +72,7 @@ export const addToCart = async (req, res) => {
   }
 }
 
-// ✏️ Cập nhật số lượng sản phẩm
+// Cập nhật số lượng sản phẩm
 export const updateCart = async (req, res) => {
   const { productId, quantity, size, color, guestId, userId } = req.body
   try {
@@ -106,7 +106,7 @@ export const updateCart = async (req, res) => {
   }
 }
 
-// ❌ Xóa sản phẩm khỏi giỏ hàng
+// Xóa sản phẩm khỏi giỏ hàng
 export const removeFromCart = async (req, res) => {
   const { productId, size, color, guestId, userId } = req.body
 
@@ -138,7 +138,7 @@ export const removeFromCart = async (req, res) => {
   }
 }
 
-// 📦 Lấy giỏ hàng của user hoặc guest
+// Lấy giỏ hàng của user hoặc guest
 export const getCartDetails = async (req, res) => {
   const { userId, guestId } = req.query
   try {
@@ -151,7 +151,7 @@ export const getCartDetails = async (req, res) => {
   }
 }
 
-// 🔄 Merge giỏ hàng guest vào user khi login
+// Merge giỏ hàng guest vào user khi login
 export const mergeGuestCart = async (req, res) => {
   const { guestId } = req.body
   try {

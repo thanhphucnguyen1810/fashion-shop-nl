@@ -15,38 +15,42 @@ checkoutRoutes.post('/', protect, async (req, res) => {
   const { checkoutItems, shippingAddress, paymentMethod, totalPrice } = req.body
 
   if (!checkoutItems || checkoutItems.length === 0) {
-    return res.status(400).json({ message: 'no items in checkout.' })
+    return res.status(400).json({ message: 'No items in checkout.' })
   }
 
   try {
-    // create a new checkout session
-    const newCheckout = await Checkout.create({
+    // ensure req.user exists
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: 'Unauthorized' })
+    }
+
+    const newCheckout = await checkoutModel.create({
       user: req.user._id,
-      checkoutItems: checkoutItems,
+      checkoutItems,
       shippingAddress,
       paymentMethod,
       totalPrice,
       paymentStatus: 'Pending',
-      isPaid: false
+      isPaid: false,
+      isFinalized: false
     })
 
     console.log(`Checkout created for user: ${req.user._id}`)
     res.status(201).json(newCheckout)
   } catch (error) {
-    console.error('Error Creating checkout session:', error)
+    console.error('Error creating checkout session:', error)
     res.status(500).json({ message: 'Server Error' })
   }
 })
 
-
 // @route PUT /api/checkout/:id/pay
 // @desc Update checkout to mark as paid after successful payment
 // @access Private
-checkoutRoutes.put('/:id/pay', protect, async(req, res) => {
+checkoutRoutes.put('/:id/pay', protect, async (req, res) => {
   const { paymentStatus, paymentDetails } = req.body
 
   try {
-    const checkout = await Checkout.findById(req.params.id)
+    const checkout = await checkoutModel.findById(req.params.id)
     if (!checkout) {
       return res.status(404).json({ message: 'Checkout not found' })
     }
@@ -58,56 +62,71 @@ checkoutRoutes.put('/:id/pay', protect, async(req, res) => {
       checkout.paidAt = Date.now()
       await checkout.save()
 
-      res.status(200).json(checkout)
+      return res.status(200).json(checkout)
     } else {
-      res.status(400).json({ message: 'Invalid Payment Status' })
+      return res.status(400).json({ message: 'Invalid payment status' })
     }
   } catch (error) {
-    console.error(error)
+    console.error('Error updating payment status:', error)
     res.status(500).json({ message: 'Server Error' })
   }
 })
-
 
 // @route PUT /api/checkout/:id/finalize
 // @desc Finalize checkout and convert to an order after payment confirmation
 // @access Private
 checkoutRoutes.post('/:id/finalize', protect, async (req, res) => {
   try {
-    const checkout = await Checkout.findById(req.params.id)
+    const checkout = await checkoutModel.findById(req.params.id)
     if (!checkout) {
-      return res.status(404).json({ message: 'checkout not found' })
+      return res.status(404).json({ message: 'Checkout not found' })
     }
-    if (checkout.isPaid && !checkout.isFinalized) {
-      // Create final order based on the checkout details
-      const finalOrder = await orderModel.create({
-        user: checkout.user,
-        orderItems: checkout.checkoutItems,
-        shippingAddress: checkout.shippingAddress,
-        paymentMethod: checkout.paymentMethod,
-        totalPrice: checkout.totalPrice,
-        isPaid: true,
-        paidAt: checkout.paidAt,
-        isDelivered: false,
-        paymentStatus: 'paid',
-        paymentDetails: checkout.paymentDetails
-      })
 
-      // Mark the checkout as finalized
-      checkout.isFinalized = true
-      checkout.finalizedAt = Date.now()
-      await checkout.save()
-
-      // Delete the cart associated with the user
-      await cartModel.findOneAndDelete({ user: checkout.user })
-      res.status(201).json(finalOrder)
-    } else if (checkout.isFinalized) {
-      res.status(400).json({ message: 'Checkout already finalize' })
-    } else {
-      res.status(400).json({ message: 'Checkout is not paid' })
+    if (!checkout.isPaid) {
+      return res.status(400).json({ message: 'Checkout is not paid' })
     }
+
+    if (checkout.isFinalized) {
+      return res.status(400).json({ message: 'Checkout already finalized' })
+    }
+
+    // create order
+    const finalOrder = await orderModel.create({
+      user: checkout.user,
+      orderItems: checkout.checkoutItems,
+      shippingAddress: checkout.shippingAddress,
+      paymentMethod: checkout.paymentMethod,
+      totalPrice: checkout.totalPrice,
+      isPaid: true,
+      paidAt: checkout.paidAt,
+      isDelivered: false,
+      paymentStatus: 'paid',
+      paymentDetails: checkout.paymentDetails
+    })
+
+    // update product stock (decrement countInStock)
+    // assume each checkoutItem has { product: productId, qty: number }
+    for (const item of checkout.checkoutItems) {
+      if (!item.productId || !item.quantity) continue
+      const prod = await productModel.findById(item.productId)
+      if (prod) {
+        // optional: if stock insufficient, you might want to handle differently
+        prod.countInStock = Math.max(0, (prod.countInStock || 0) - item.quantity)
+        await prod.save()
+      }
+    }
+
+    // mark checkout finalized
+    checkout.isFinalized = true
+    checkout.finalizedAt = Date.now()
+    await checkout.save()
+
+    // delete the user's cart (if exists)
+    await cartModel.findOneAndDelete({ user: checkout.user })
+
+    res.status(201).json(finalOrder)
   } catch (error) {
-    console.error(error)
+    console.error('Error finalizing checkout:', error)
     res.status(500).json({ message: 'Server Error' })
   }
 })
