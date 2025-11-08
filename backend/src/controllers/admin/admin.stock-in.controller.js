@@ -1,9 +1,9 @@
-import StockIn from '../models/stockIn.model.js'
+import stockinModel from '~/models/stockin.model'
 
 // Lấy tất cả phiếu nhập
 export const getAllStockIns = async (req, res) => {
   try {
-    const stockIns = await StockIn.find().populate('items.product')
+    const stockIns = await stockinModel.find().populate('items.product')
     res.json(stockIns)
   } catch (error) {
     res.status(500).json({ message: 'Lỗi khi lấy danh sách phiếu nhập' })
@@ -13,7 +13,7 @@ export const getAllStockIns = async (req, res) => {
 // Lấy chi tiết 1 phiếu nhập
 export const getStockInById = async (req, res) => {
   try {
-    const stockIn = await StockIn.findById(req.params.id).populate('items.product')
+    const stockIn = await stockinModel.findById(req.params.id).populate('items.product')
     if (!stockIn) return res.status(404).json({ message: 'Không tìm thấy phiếu nhập' })
     res.json(stockIn)
   } catch (error) {
@@ -25,7 +25,7 @@ export const getStockInById = async (req, res) => {
 export const createStockIn = async (req, res) => {
   try {
     const { title, supplier, employee, warehouse, items } = req.body
-    const newStockIn = new StockIn({ title, supplier, employee, warehouse, items })
+    const newStockIn = new stockinModel({ title, supplier, employee, warehouse, items })
     await newStockIn.save()
     res.status(201).json(newStockIn)
   } catch (error) {
@@ -36,7 +36,7 @@ export const createStockIn = async (req, res) => {
 // Xóa phiếu nhập
 export const deleteStockIn = async (req, res) => {
   try {
-    await StockIn.findByIdAndDelete(req.params.id)
+    await stockinModel.findByIdAndDelete(req.params.id)
     res.json({ message: 'Đã xóa phiếu nhập' })
   } catch (error) {
     res.status(500).json({ message: 'Xóa phiếu nhập thất bại' })

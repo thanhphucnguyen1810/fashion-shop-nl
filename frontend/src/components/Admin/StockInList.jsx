@@ -163,33 +163,54 @@ const StockInList = () => {
 
       {/* Form thêm phiếu nhập */}
       {showForm && (
-        <div className="border p-4 rounded mb-6 bg-white shadow">
-          <h3 className="font-semibold mb-2 text-lg">Thêm phiếu nhập hàng</h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-            <input name="title" value={form.title} onChange={handleFormChange} placeholder="Tiêu đề phiếu nhập" className="p-2 border rounded" />
-            <input name="supplier" value={form.supplier} onChange={handleFormChange} placeholder="Nhà cung cấp" className="p-2 border rounded" />
-            <input name="employee" value={form.employee} onChange={handleFormChange} placeholder="Nhân viên nhập" className="p-2 border rounded" />
-            <input name="warehouse" value={form.warehouse} onChange={handleFormChange} placeholder="Kho nhập" className="p-2 border rounded" />
-          </div>
+        <div
+          className="fixed inset-0 z-50 flex justify-center items-center"
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+        >
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl p-6 relative">
+            {/* Nút đóng modal */}
+            <button
+              onClick={() => setShowForm(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"
+            >
+        &times;
+            </button>
 
-          <h4 className="font-medium mb-2">Danh sách sản phẩm</h4>
-          {form.items.map((item, i) => (
-            <div key={i} className="grid grid-cols-1 md:grid-cols-6 gap-2 mb-2 items-center">
-              <input name="product" value={item.product} onChange={(e) => handleItemChange(i, e)} placeholder="Tên sản phẩm" className="p-2 border rounded" />
-              <input name="version" value={item.version} onChange={(e) => handleItemChange(i, e)} placeholder="Phiên bản" className="p-2 border rounded" />
-              <input name="size" value={item.size} onChange={(e) => handleItemChange(i, e)} placeholder="Size" className="p-2 border rounded" />
-              <input name="quantity" type="number" value={item.quantity} onChange={(e) => handleItemChange(i, e)} placeholder="Số lượng" className="p-2 border rounded" />
-              <input name="price" type="number" value={item.price} onChange={(e) => handleItemChange(i, e)} placeholder="Giá/1SP" className="p-2 border rounded" />
-              <button onClick={() => removeItem(i)} className="p-2 text-red-500 hover:text-red-700"><FaTrash /></button>
+            <h3 className="font-semibold mb-4 text-xl">Thêm phiếu nhập hàng</h3>
+
+            {/* Form */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <input name="title" value={form.title} onChange={handleFormChange} placeholder="Tiêu đề phiếu nhập" className="p-2 border rounded" />
+              <input name="supplier" value={form.supplier} onChange={handleFormChange} placeholder="Nhà cung cấp" className="p-2 border rounded" />
+              <input name="employee" value={form.employee} onChange={handleFormChange} placeholder="Nhân viên nhập" className="p-2 border rounded" />
+              <input name="warehouse" value={form.warehouse} onChange={handleFormChange} placeholder="Kho nhập" className="p-2 border rounded" />
             </div>
-          ))}
-          <button onClick={addItem} className="px-3 py-1 mb-3 rounded bg-green-600 text-white"><FaPlus /> Thêm sản phẩm</button>
 
-          <div className="text-right">
-            <button onClick={handleAdd} className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Lưu phiếu nhập</button>
+            <h4 className="font-medium mb-2">Danh sách sản phẩm</h4>
+            {form.items.map((item, i) => (
+              <div key={i} className="grid grid-cols-1 md:grid-cols-6 gap-2 mb-2 items-center">
+                <input name="product" value={item.product} onChange={(e) => handleItemChange(i, e)} placeholder="Tên sản phẩm" className="p-2 border rounded" />
+                <input name="version" value={item.version} onChange={(e) => handleItemChange(i, e)} placeholder="Phiên bản" className="p-2 border rounded" />
+                <input name="size" value={item.size} onChange={(e) => handleItemChange(i, e)} placeholder="Size" className="p-2 border rounded" />
+                <input name="quantity" type="number" value={item.quantity} onChange={(e) => handleItemChange(i, e)} placeholder="Số lượng" className="p-2 border rounded" />
+                <input name="price" type="number" value={item.price} onChange={(e) => handleItemChange(i, e)} placeholder="Giá/1SP" className="p-2 border rounded" />
+                <button onClick={() => removeItem(i)} className="p-2 text-red-500 hover:text-red-700"><FaTrash /></button>
+              </div>
+            ))}
+            <button
+              onClick={addItem}
+              className="px-3 py-1 mb-3 rounded bg-green-600 text-white flex items-center gap-2"
+            >
+              <FaPlus /> Thêm sản phẩm
+            </button>
+
+            <div className="text-right">
+              <button onClick={handleAdd} className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Lưu phiếu nhập</button>
+            </div>
           </div>
         </div>
       )}
+
 
       {/* Bảng danh sách */}
       <div className="overflow-x-auto bg-white shadow rounded">

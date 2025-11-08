@@ -25,6 +25,7 @@ import OrderManagement from './components/Admin/OrderManagement'
 import AdminDiscountCodes from './components/Admin/AdminDiscountCodes'
 import AdminReviews from './components/Admin/AdminReviews'
 import StockInList from './components/Admin/StockInList'
+// import OrderDetailModal from './components/Admin/OrderDetails'
 // import SystemSettings from './components/Admin/SystemSettings'
 // import Notifications from './components/Admin/Notifications'
 
@@ -65,6 +66,7 @@ function App() {
             <Route path='coupons' element={<AdminDiscountCodes />} />
             <Route path="reviews" element={<AdminReviews />} />
             <Route path='stock-in' element={<StockInList />} />
+            {/* <Route path='invoice' element={<OrderDetailModal />} /> */}
             {/* <Route path='settings' element={<SystemSettings />} /> */}
             {/* <Route path="notifications" element={<Notifications />} /> */}
           </Route>

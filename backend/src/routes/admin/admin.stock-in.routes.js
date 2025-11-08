@@ -4,7 +4,7 @@ import {
   getStockInById,
   createStockIn,
   deleteStockIn
-} from '../controllers/stockIn.controller.js'
+} from '~/controllers/admin/admin.stock-in.controller'
 
 const router = express.Router()
 
