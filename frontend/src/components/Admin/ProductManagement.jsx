@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa'
+import { FaPlus, FaEdit, FaTrash, FaSearch, FaTimes } from 'react-icons/fa'
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useTheme } from '@mui/material/styles'
@@ -11,6 +11,7 @@ const ProductManagement = () => {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+  const [showForm, setShowForm] = useState(false)
 
   const filteredProducts = products.filter(
     (p) =>
@@ -111,138 +112,181 @@ const ProductManagement = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-6">Quản lý sản phẩm</h2>
+      <h2 className="text-2xl font-bold mb-6">Danh sách sản phẩm</h2>
       {/* Search Bar */}
-      <div className="mb-4">
-        <input
-          type="text"
-          placeholder="Tìm kiếm sản phẩm ..."
-          className="w-full md:w-1/2 p-2 border rounded"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+      <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        {/* Search input + search button */}
+        <div className="relative w-full md:w-1/2">
+          <input
+            type="text"
+            placeholder="Tìm kiếm sản phẩm ..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full py-2.5 pl-11 pr-24 text-sm rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 border border-gray-300"
+          />
+          <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none" />
+          <button
+            onClick={() => console.log('Tìm sản phẩm:', searchTerm)}
+            className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-blue-600 text-white text-sm font-semibold px-4 py-1.5 rounded-full hover:bg-blue-700 active:scale-95 transition-all duration-200"
+          >
+             Tìm
+          </button>
+        </div>
+
+        {/* Thêm sản phẩm button */}
+        <button
+          onClick={() => setShowForm(true)}
+          className="px-4 py-2 rounded flex items-center gap-2"
+          style={{
+            backgroundColor: theme.palette.primary.main,
+            color: theme.palette.primary.contrastText
+          }}
+        >
+          <FaPlus /> Thêm sản phẩm
+        </button>
       </div>
 
-      {/* Add New Product Form */}
-      <div
-        className="border p-6 mb-8 rounded-lg shadow-sm"
-        style={{
-          backgroundColor: theme.palette.background.paper,
-          color: theme.palette.text.primary
-        }}
-      >
-        <h3 className="text-lg font-semibold mb-4">Thêm sản phẩm mới</h3>
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block mb-1 font-medium">Tên sản phẩm</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">Giá</label>
-            <input
-              type="number"
-              name="price"
-              value={formData.price}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">Mã SKU</label>
-            <input
-              type="text"
-              name="sku"
-              value={formData.sku}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          <div className="md:col-span-3">
-            <label className="block mb-1 font-medium">Mô tả</label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              rows={3}
-              required
-            />
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">Số lượng trong kho</label>
-            <input
-              type="number"
-              name="countInStock"
-              value={formData.countInStock}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">Danh mục</label>
-            <input
-              type="text"
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">Bộ sưu tập</label>
-            <input
-              type="text"
-              name="collections"
-              value={formData.collections}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-            />
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">Kích cỡ</label>
-            <input
-              type="text"
-              name="sizes"
-              value={formData.sizes}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-            />
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">Màu sắc</label>
-            <input
-              type="text"
-              name="colors"
-              value={formData.colors}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-            />
-          </div>
-          <div className="md:col-span-3">
+      {/* Modal Add New Product */}
+      {showForm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+          onClick={() => setShowForm(false)} // Click ngoài modal để đóng
+        >
+          <div
+            className="bg-white rounded-lg p-6 w-full max-w-3xl relative"
+            style={{ backgroundColor: theme.palette.background.paper }}
+            onClick={(e) => e.stopPropagation()} // Ngăn click trong modal đóng
+          >
+            {/* Nút đóng */}
             <button
-              type="submit"
-              className="px-4 py-2 mt-2 rounded hover:opacity-90"
-              style={{
-                backgroundColor: theme.palette.success.main,
-                color: theme.palette.success.contrastText
-              }}
+              onClick={() => setShowForm(false)}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
             >
-              Thêm sản phẩm
+              <FaTimes />
             </button>
+
+            <h3 className="text-lg font-semibold mb-4">Thêm sản phẩm mới</h3>
+            <form
+              onSubmit={(e) => {
+                handleSubmit(e) // Gọi hàm thêm sản phẩm
+                setShowForm(false) // Tự động đóng modal sau khi submit
+              }}
+              className="grid grid-cols-1 md:grid-cols-3 gap-4"
+            >
+              <div>
+                <label className="block mb-1 font-medium">Tên sản phẩm</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium">Giá</label>
+                <input
+                  type="number"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium">Mã SKU</label>
+                <input
+                  type="text"
+                  name="sku"
+                  value={formData.sku}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                  required
+                />
+              </div>
+              <div className="md:col-span-3">
+                <label className="block mb-1 font-medium">Mô tả</label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                  rows={3}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium">Số lượng trong kho</label>
+                <input
+                  type="number"
+                  name="countInStock"
+                  value={formData.countInStock}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium">Danh mục</label>
+                <input
+                  type="text"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium">Bộ sưu tập</label>
+                <input
+                  type="text"
+                  name="collections"
+                  value={formData.collections}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium">Kích cỡ</label>
+                <input
+                  type="text"
+                  name="sizes"
+                  value={formData.sizes}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium">Màu sắc</label>
+                <input
+                  type="text"
+                  name="colors"
+                  value={formData.colors}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="md:col-span-3">
+                <button
+                  type="submit"
+                  className="px-4 py-2 mt-2 rounded hover:opacity-90 w-full"
+                  style={{
+                    backgroundColor: theme.palette.success.main,
+                    color: theme.palette.success.contrastText
+                  }}
+                >
+            Thêm sản phẩm
+                </button>
+              </div>
+            </form>
           </div>
-        </form>
-      </div>
+        </div>
+      )}
+
 
       {/* Product Table */}
       <div

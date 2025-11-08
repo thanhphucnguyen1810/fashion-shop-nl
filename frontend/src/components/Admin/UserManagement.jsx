@@ -1,6 +1,5 @@
-import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa'
-
-import { useState } from 'react'
+import { FaPlus, FaEdit, FaTrash, FaSearch, FaTimes, FaChevronLeft, FaChevronRight } from 'react-icons/fa'
+import { useState, useRef, useEffect } from 'react'
 import { useTheme, alpha } from '@mui/material/styles'
 
 const UserManagement = () => {
@@ -22,11 +21,28 @@ const UserManagement = () => {
     role: 'customer'
   })
 
+
   const [searchQuery, setSearchQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState('')
   const [message, setMessage] = useState('')
+  const [showForm, setShowForm] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const usersPerPage = 5
+  const modalRef = useRef()
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        setShowForm(false)
+      }
+    }
+    if (showForm) {
+      document.addEventListener('mousedown', handleClickOutside)
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showForm])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -45,6 +61,7 @@ const UserManagement = () => {
     setUsers(prev => [...prev, newUser])
     setMessage('Thêm người dùng thành công!')
 
+    //Reset form
     setFormData({
       name: '',
       email: '',
@@ -52,6 +69,9 @@ const UserManagement = () => {
       role: 'customer'
     })
 
+    // Đóng modal
+    setShowForm(false)
+    // Xóa message sau 3s
     setTimeout(() => setMessage(''), 3000)
   }
 
@@ -102,7 +122,7 @@ const UserManagement = () => {
       className="max-w-7xl mx-auto p-6"
       style={{ color: theme.palette.text.primary }}
     >
-      <h2 className="text-2xl font-bold mb-6">Quản lý người dùng</h2>
+      <h2 className="text-2xl font-bold mb-6">Danh sách người dùng</h2>
 
       {message && (
         <div
@@ -117,24 +137,35 @@ const UserManagement = () => {
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <input
-          type="text"
-          placeholder="Tìm theo tên hoặc email..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="p-2 border rounded w-full md:w-1/2"
-          style={{
-            backgroundColor: theme.palette.background.paper,
-            color: theme.palette.text.primary,
-            borderColor: alpha(theme.palette.text.primary, 0.3)
-          }}
-        />
+      <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
+        {/* Search input + search button */}
+        <div className="relative w-full md:w-1/2">
+          <input
+            type="text"
+            placeholder="Tìm theo tên hoặc email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full py-2.5 pl-11 pr-24 text-sm rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+            style={{
+              backgroundColor: theme.palette.background.paper,
+              color: theme.palette.text.primary,
+              border: '1px solid rgba(0,0,0,0.2)'
+            }}
+          />
+          <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none" />
+          <button
+            className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-2 bg-blue-600 text-white text-sm font-semibold px-4 py-1.5 rounded-full hover:bg-blue-700 active:scale-95 transition-all duration-200"
+            onClick={() => console.log('Search:', searchQuery)}
+          >
+           Tìm
+          </button>
+        </div>
 
+        {/* Select filter */}
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
-          className="p-2 border rounded w-full md:w-1/3"
+          className="p-2 border rounded w-full md:w-1/4"
           style={{
             backgroundColor: theme.palette.background.paper,
             color: theme.palette.text.primary,
@@ -146,81 +177,108 @@ const UserManagement = () => {
           <option value="staff">Nhân viên</option>
           <option value="admin">Quản trị viên</option>
         </select>
+
+        {/* Thêm sản phẩm button */}
+        <button
+          onClick={() => setShowForm(true)}
+          className="w-full md:w-auto px-4 py-2 rounded flex items-center gap-2"
+          style={{
+            backgroundColor: theme.palette.primary.main,
+            color: theme.palette.primary.contrastText
+          }}
+        >
+          <FaPlus /> Thêm người dùng
+        </button>
       </div>
 
-      <section
-        className="p-6 rounded-lg border mb-8"
-        style={{ backgroundColor: theme.palette.background.paper }}
-      >
-        <h3 className="text-lg font-semibold mb-4">Thêm người dùng mới</h3>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className={labelClass}>Tên</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              className={inputClass}
-              required
-            />
-          </div>
 
-          <div>
-            <label className={labelClass}>Email</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className={inputClass}
-              required
-            />
-          </div>
-
-          <div>
-            <label className={labelClass}>Mật khẩu</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className={inputClass}
-              required
-            />
-          </div>
-
-          <div>
-            <label className={labelClass}>Vai trò</label>
-            <select
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              className={inputClass}
-              style={{
-                backgroundColor: theme.palette.background.paper,
-                color: theme.palette.text.primary,
-                borderColor: alpha(theme.palette.text.primary, 0.3)
-              }}
-            >
-              <option value="customer">Khách hàng</option>
-              <option value="staff">Nhân viên</option>
-              <option value="admin">Quản trị viên</option>
-            </select>
-          </div>
-
-          <button
-            type="submit"
-            className="py-2 px-4 rounded hover:opacity-90"
-            style={{
-              backgroundColor: theme.palette.success.main,
-              color: theme.palette.success.contrastText
-            }}
+      {showForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.85)' }} >
+          <div
+            ref={modalRef}
+            className="bg-white dark:bg-gray-800 bg-opacity-20 rounded-lg p-6 w-full max-w-md relative"
+            style={{ backgroundColor: theme.palette.background.paper }}
           >
-            Thêm người dùng
-          </button>
-        </form>
-      </section>
+            {/* Nút đóng */}
+            <button
+              onClick={() => setShowForm(false)}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+            >
+              <FaTimes />
+            </button>
+
+            <h3 className="text-lg font-semibold mb-4">Thêm người dùng mới</h3>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className={labelClass}>Tên</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className={inputClass}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className={labelClass}>Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={inputClass}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className={labelClass}>Mật khẩu</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className={inputClass}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className={labelClass}>Vai trò</label>
+                <select
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  className={inputClass}
+                  style={{
+                    backgroundColor: theme.palette.background.paper,
+                    color: theme.palette.text.primary,
+                    borderColor: alpha(theme.palette.text.primary, 0.3)
+                  }}
+                >
+                  <option value="customer">Khách hàng</option>
+                  <option value="staff">Nhân viên</option>
+                  <option value="admin">Quản trị viên</option>
+                </select>
+              </div>
+
+              <button
+                type="submit"
+                className="py-2 px-4 rounded hover:opacity-90 w-full"
+                style={{
+                  backgroundColor: theme.palette.success.main,
+                  color: theme.palette.success.contrastText
+                }}
+              >
+          Thêm người dùng
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
 
       <section className="overflow-x-auto shadow-md sm:rounded-lg">
         <table
@@ -308,10 +366,11 @@ const UserManagement = () => {
         <button
           disabled={currentPage === 1}
           onClick={() => setCurrentPage(prev => prev - 1)}
-          className="px-3 py-1 border rounded disabled:opacity-50"
+          className="p-2 border rounded disabled:opacity-50 flex items-center justify-center"
           style={{ backgroundColor: theme.palette.action.hover }}
+          title="Trang trước"
         >
-          Trước
+          <FaChevronLeft />
         </button>
         <span>
           Trang {currentPage} / {totalPages}
@@ -321,8 +380,9 @@ const UserManagement = () => {
           onClick={() => setCurrentPage(prev => prev + 1)}
           className="px-3 py-1 border rounded disabled:opacity-50"
           style={{ backgroundColor: theme.palette.action.hover }}
+          title="Trang sau"
         >
-          Sau
+          <FaChevronRight />
         </button>
       </div>
     </div>
