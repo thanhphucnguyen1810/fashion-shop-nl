@@ -22,6 +22,7 @@ import adminUserRoutes from './routes/admin/admin.user.routes'
 import adminProductRoutes from './routes/admin/admin.product.routes'
 import adminOrderRoutes from './routes/admin/admin.order.routes'
 import adminStockInRoutes from './routes/admin/admin.stock-in.routes'
+// import adminInvoice from './routes/invoice.routes'
 
 // Load environment variables
 dotenv.config()
@@ -80,6 +81,7 @@ app.use('/api/admin/users', adminUserRoutes)
 app.use('/api/admin/products', adminProductRoutes)
 app.use('/api/admin/orders', adminOrderRoutes)
 app.use('/api/admin/stock-in', adminStockInRoutes)
+// app.use('/api/admin/invoice', adminInvoice)
 
 
 export default app
