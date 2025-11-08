@@ -21,8 +21,8 @@ const menuItems = [
   { to: '/admin/stock-in', label: 'Nhập hàng', icon: <FaWarehouse /> },
   { to: '/admin/reviews', label: 'Đánh giá', icon: <FaStar /> },
   { to: '/admin/coupons', label: 'Mã giảm giá', icon: <FaTags /> },
-  { to: '/admin/notifications', label: 'Thông báo', icon: <FaBell /> },
-  { to: '/admin/settings', label: 'Cài đặt', icon: <FaCog /> },
+  // { to: '/admin/notifications', label: 'Thông báo', icon: <FaBell /> },
+  // { to: '/admin/settings', label: 'Cài đặt', icon: <FaCog /> },
   { to: '/', label: 'Cửa hàng', icon: <FaStore /> }
 ]
 

@@ -66,7 +66,7 @@ function App() {
             <Route path='coupons' element={<AdminDiscountCodes />} />
             <Route path="reviews" element={<AdminReviews />} />
             <Route path='stock-in' element={<StockInList />} />
-            {/* <Route path='invoice' element={<OrderDetailModal />} /> */}
+            <Route path='reviews' element={<AdminReviews />} />
             {/* <Route path='settings' element={<SystemSettings />} /> */}
             {/* <Route path="notifications" element={<Notifications />} /> */}
           </Route>

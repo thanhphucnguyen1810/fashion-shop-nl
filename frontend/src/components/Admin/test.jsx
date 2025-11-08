@@ -1,32 +1,55 @@
 import React, { useEffect, useState } from 'react'
 import { FaStar, FaTrash, FaCheckCircle, FaBan, FaSearch } from 'react-icons/fa'
 import { useTheme, alpha } from '@mui/material/styles'
-import axios from 'axios'
 
 export default function AdminReviews() {
   const theme = useTheme()
   const [reviews, setReviews] = useState([])
-  const [filteredReviews, setFilteredReviews] = useState([]) //<---> danh sách sau khi search
+  const [filteredReviews, setFilteredReviews] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
 
-  const fetchReviews = async () => {
-    try {
-      const res = await axios.get('/api/admin/reviews')
-      const data = Array.isArray(res.data)
-        ? res.data
-        : res.data.reviews || []
-      setReviews(data)
-      setFilteredReviews(data)
-    } catch (error) {
-      console.error('Lỗi khi tải đánh giá:', error)
-    }
-  }
-
+  // Fake data mẫu
   useEffect(() => {
-    fetchReviews()
+    const fakeData = [
+      {
+        _id: '1',
+        product: {
+          name: 'Áo sơ mi nam trắng',
+          images: ['https://picsum.photos/100/100?random=1']
+        },
+        user: { name: 'Nguyễn Văn A' },
+        rating: 5,
+        status: 'approved',
+        createdAt: new Date('2025-10-12')
+      },
+      {
+        _id: '2',
+        product: {
+          name: 'Quần jean nữ xanh',
+          images: ['https://picsum.photos/100/100?random=2']
+        },
+        user: { name: 'Trần Thị B' },
+        rating: 3,
+        status: 'pending',
+        createdAt: new Date('2025-11-01')
+      },
+      {
+        _id: '3',
+        product: {
+          name: 'Giày sneaker thể thao',
+          images: ['https://picsum.photos/100/100?random=3']
+        },
+        user: { name: 'Lê Văn C' },
+        rating: 4,
+        status: 'blocked',
+        createdAt: new Date('2025-10-30')
+      }
+    ]
+    setReviews(fakeData)
+    setFilteredReviews(fakeData)
   }, [])
 
-  // 🔍 Lọc danh sách khi người dùng gõ vào ô tìm kiếm
+  // Lọc danh sách khi người dùng gõ vào ô tìm kiếm
   useEffect(() => {
     const term = searchTerm.toLowerCase()
     const filtered = reviews.filter(
@@ -37,23 +60,17 @@ export default function AdminReviews() {
     setFilteredReviews(filtered)
   }, [searchTerm, reviews])
 
-  const handleStatusChange = async (id, newStatus) => {
-    try {
-      await axios.patch(`/api/admin/reviews/${id}/status`, { status: newStatus })
-      fetchReviews()
-    } catch (error) {
-      console.error('Lỗi khi cập nhật trạng thái:', error)
-    }
+  // Đổi trạng thái (fake)
+  const handleStatusChange = (id, newStatus) => {
+    setReviews((prev) =>
+      prev.map((r) => (r._id === id ? { ...r, status: newStatus } : r))
+    )
   }
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Xóa đánh giá này?')) {
-      try {
-        await axios.delete(`/api/admin/reviews/${id}`)
-        fetchReviews()
-      } catch (error) {
-        console.error('Lỗi khi xóa đánh giá:', error)
-      }
+  // Xóa đánh giá (fake)
+  const handleDelete = (id) => {
+    if (window.confirm('Bạn có chắc muốn xóa đánh giá này không?')) {
+      setReviews((prev) => prev.filter((r) => r._id !== id))
     }
   }
 
@@ -109,13 +126,13 @@ export default function AdminReviews() {
               filteredReviews.map((r) => (
                 <tr
                   key={r._id}
-                  className="border-b hover:bg-gray-50 dark:hover:bg-gray-800"
+                  className="border-b hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
                 >
                   <td className="p-3 flex items-center gap-3">
                     <img
                       src={r.product?.images?.[0]}
                       alt={r.product?.name}
-                      className="w-10 h-10 rounded object-cover"
+                      className="w-10 h-10 rounded object-cover border"
                     />
                     <span>{r.product?.name}</span>
                   </td>
@@ -143,7 +160,7 @@ export default function AdminReviews() {
                     </span>
                   </td>
                   <td className="p-3">
-                    {new Date(r.createdAt).toLocaleString('vi-VN')}
+                    {new Date(r.createdAt).toLocaleDateString('vi-VN')}
                   </td>
                   <td className="p-3 text-center flex gap-2 justify-center">
                     {r.status !== 'approved' && (
