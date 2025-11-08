@@ -17,8 +17,8 @@ import { useTheme, alpha } from '@mui/material/styles'
 const menuItems = [
   { to: '/admin/users', label: 'Người dùng', icon: <FaUser /> },
   { to: '/admin/products', label: 'Sản phẩm', icon: <FaBoxOpen /> },
-  { to: '/admin/stock', label: 'Quản lý kho', icon: <FaWarehouse /> },
   { to: '/admin/orders', label: 'Đơn hàng', icon: <FaClipboardList /> },
+  { to: '/admin/stock', label: 'Nhập hàng', icon: <FaWarehouse /> },
   { to: '/admin/reviews', label: 'Đánh giá', icon: <FaStar /> },
   { to: '/admin/coupons', label: 'Mã giảm giá', icon: <FaTags /> },
   { to: '/admin/notifications', label: 'Thông báo', icon: <FaBell /> },

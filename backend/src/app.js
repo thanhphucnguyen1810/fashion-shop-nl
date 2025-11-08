@@ -18,6 +18,9 @@ import checkoutRoutes from './routes/checkout.routes'
 import orderRoutes from './routes/order.routes'
 import uploadRoutes from './routes/upload.routes'
 import subscribeRoutes from './routes/subscribe.routes'
+import adminUserRoutes from './routes/admin/admin.user.routes'
+import adminProductRoutes from './routes/admin/admin.product.routes'
+import adminOrderRoutes from './routes/admin/admin.order.routes'
 
 // Load environment variables
 dotenv.config()
@@ -70,6 +73,11 @@ app.use('/api/checkout', checkoutRoutes)
 app.use('/api/orders', orderRoutes)
 app.use('/api/upload', uploadRoutes)
 app.use('/api/subscribe', subscribeRoutes)
+
+// Admin
+app.use('/api/admin/users', adminUserRoutes)
+app.use('/api/admin/products', adminProductRoutes)
+app.use('/api/admin/orders', adminOrderRoutes)
 
 
 export default app

@@ -8,7 +8,7 @@ const getCart = async (userId, guestId) => {
   return null
 }
 
-// 🛒 Thêm sản phẩm vào giỏ hàng
+// Thêm sản phẩm vào giỏ hàng
 export const addToCart = async (req, res) => {
   const { productId, quantity, size, color, guestId, userId } = req.body
 

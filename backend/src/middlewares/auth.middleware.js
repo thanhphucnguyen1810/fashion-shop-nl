@@ -25,10 +25,10 @@ const protect = async (req, res, next) => {
 
 // Middleware to check if the user is an admin
 const admin = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') {
+  if (req.user && (req.user.role === 'admin' || req.user.role === 'staff')) {
     next()
   } else {
-    res.status(403).json({ message: 'Not authorized as an admin' })
+    res.status(403).json({ message: 'Access denied: Staff or Admin only' })
   }
 }
 

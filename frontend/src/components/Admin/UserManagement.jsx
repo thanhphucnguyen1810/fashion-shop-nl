@@ -1,3 +1,5 @@
+import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa'
+
 import { useState } from 'react'
 import { useTheme, alpha } from '@mui/material/styles'
 
@@ -60,6 +62,14 @@ const UserManagement = () => {
     setUsers(updatedUsers)
     setMessage('Cập nhật vai trò thành công!')
     setTimeout(() => setMessage(''), 2000)
+  }
+
+  const handleAddUser = () => {
+
+  }
+
+  const handleEditUser = () => {
+
   }
 
   const handleDeleteUser = (userId) => {
@@ -132,8 +142,9 @@ const UserManagement = () => {
           }}
         >
           <option value="">Tất cả vai trò</option>
-          <option value="admin">Quản trị viên</option>
           <option value="customer">Khách hàng</option>
+          <option value="staff">Nhân viên</option>
+          <option value="admin">Quản trị viên</option>
         </select>
       </div>
 
@@ -193,6 +204,7 @@ const UserManagement = () => {
               }}
             >
               <option value="customer">Khách hàng</option>
+              <option value="staff">Nhân viên</option>
               <option value="admin">Quản trị viên</option>
             </select>
           </div>
@@ -223,7 +235,7 @@ const UserManagement = () => {
               <th className="py-3 px-4">Tên</th>
               <th className="py-3 px-4">Email</th>
               <th className="py-3 px-4">Vai trò</th>
-              <th className="py-3 px-4">Hành động</th>
+              <th className="py-3 px-4">Tác vụ</th>
             </tr>
           </thead>
           <tbody>
@@ -247,20 +259,44 @@ const UserManagement = () => {
                     }}
                   >
                     <option value="customer">Khách hàng</option>
+                    <option value="staff">Nhân viên</option>
                     <option value="admin">Quản trị viên</option>
                   </select>
                 </td>
-                <td className="p-4">
+                <td className="p-4 flex gap-2">
+                  <button
+                    onClick={() => handleAddUser()}
+                    className="px-3 py-2 rounded hover:opacity-90"
+                    style={{
+                      backgroundColor: theme.palette.success.main,
+                      color: theme.palette.success.contrastText
+                    }}
+                  >
+                    <FaPlus />
+                  </button>
+
+                  <button
+                    onClick={() => handleEditUser(user._id)}
+                    className="px-3 py-2 rounded hover:opacity-90"
+                    style={{
+                      backgroundColor: theme.palette.warning.main,
+                      color: theme.palette.warning.contrastText
+                    }}
+                  >
+                    <FaEdit />
+                  </button>
+
                   <button
                     onClick={() => handleDeleteUser(user._id)}
-                    className="px-4 py-2 rounded hover:opacity-90"
+                    className="px-3 py-2 rounded hover:opacity-90"
                     style={{
                       backgroundColor: theme.palette.error.main,
                       color: theme.palette.error.contrastText
                     }}
                   >
-                    Xóa
+                    <FaTrash />
                   </button>
+
                 </td>
               </tr>
             ))}
