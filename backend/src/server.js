@@ -1,12 +1,10 @@
 /* eslint-disable no-console */
 // start server (port, error handling, logging server start)
-
 import exitHook from 'async-exit-hook'
 
-import app from '~/app'
-import { CONNECT_DB, CLOSE_DB } from '~/config/mongodb'
-import { env } from '~/config/environment'
-
+import app from './app'
+import { CONNECT_DB, CLOSE_DB } from './config/mongodb'
+import { env } from './config/environment'
 
 const HOSTNAME = env.APP_HOST || 'localhost'
 const PORT = env.APP_PORT || 8000

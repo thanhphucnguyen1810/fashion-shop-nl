@@ -1,0 +1,8 @@
+GOOGLE FLOW  & FACEBOOK FLOW
+Frontend:  /login  → click Google  
+Backend:   /auth/google → Google consent  
+Google:    callback → /auth/google/callback  
+Backend:   redirect → http://localhost:5173/login/success?token=xxxx  
+Frontend:  useEffect đọc token → lưu → redirect /
+
+

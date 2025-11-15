@@ -1,19 +1,37 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useTheme } from '@mui/material/styles'
+import { useDispatch, useSelector } from 'react-redux'
 import register from '~/assets/register.webp'
+import { registerUser } from '~/redux/slices/authSlide'
 
 const Register = () => {
   const theme = useTheme()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [name, setName] = useState('')
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    console.log('User Registered: ', { name, email, password })
-    // TODO: xử lý đăng ký
+  const { loading, error, success } = useSelector((state) => state.auth)
+
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: ''
+  })
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value })
   }
+
+  // Gửi request đăng ký
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    dispatch(registerUser(formData))
+  }
+
+  // Điều hướng khi đăng ký thành công
+  useEffect(() => {
+    if (success) navigate('/login')
+  }, [success, navigate])
 
   return (
     <div
@@ -42,15 +60,20 @@ const Register = () => {
           </div>
 
           <h2 className='text-2xl font-bold text-center mb-6'>Chào mừng bạn!</h2>
-          <p className='text-center mb-6'>Vui lòng nhập tên, email và mật khẩu để đăng ký</p>
+          {error && (
+            <p className="text-red-500 text-center font-semibold mb-4">
+              {error}
+            </p>
+          )}
 
           {/* Name */}
           <div className='mb-4'>
             <label className='block text-sm font-semibold mb-2'>Name</label>
             <input
               type='text'
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              name='name'
+              value={formData.name}
+              onChange={handleChange}
               className='w-full p-2 border rounded'
               placeholder='Enter your name'
               style={{
@@ -66,8 +89,9 @@ const Register = () => {
             <label className='block text-sm font-semibold mb-2'>Email</label>
             <input
               type='email'
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              name='email'
+              value={formData.email}
+              onChange={handleChange}
               className='w-full p-2 border rounded'
               placeholder='Enter your email address'
               style={{
@@ -83,8 +107,9 @@ const Register = () => {
             <label className='block text-sm font-semibold mb-2'>Password</label>
             <input
               type='password'
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              name='password'
+              value={formData.password}
+              onChange={handleChange}
               className='w-full p-2 border rounded'
               placeholder='Enter your password'
               style={{
@@ -97,13 +122,14 @@ const Register = () => {
 
           <button
             type='submit'
+            disabled={loading}
             className='w-full p-2 rounded-lg font-semibold transition'
             style={{
               backgroundColor: theme.palette.primary.main,
               color: theme.palette.primary.contrastText
             }}
           >
-            Đăng ký
+            {loading ? 'Đang đăng ký...' : 'Đăng ký' }
           </button>
 
           <p className='mt-6 text-center text-sm'>
@@ -134,3 +160,4 @@ const Register = () => {
 }
 
 export default Register
+

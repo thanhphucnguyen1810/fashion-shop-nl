@@ -47,11 +47,13 @@ export const registerUser = async (req, res) => {
 // @access Public
 export const loginUser = async (req, res) => {
   const { email, password } = req.body
-
+  console.log('Login body:', req.body)
   try {
     // Find the user by email
     const user = await User.findOne({ email })
+    console.log(user)
     if (!user || !(await user.matchPassword(password))) {
+
       return res.status(400).json({ message: 'Invalid Credentials' })
     }
 
@@ -73,6 +75,27 @@ export const loginUser = async (req, res) => {
   }
 }
 
+// @desc   Social Login callback (Google, Facebook)
+// @route  GET /api/users/auth/.../callback
+// @access Public
+// ============= SOCIAL LOGIN CALLBACK =============
+export const socialLogin = async (req, res) => {
+  const user = req.user
+  const token = generateToken(user)
+
+  const redirectURL = `${env.FRONTEND_URL}/login?token=${token}&user=${encodeURIComponent(
+    JSON.stringify({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    })
+  )}`
+
+  return res.redirect(redirectURL)
+}
+
+
 // @desc   Get profile
 // @route  GET /api/users/profile
 // @access Private
@@ -85,6 +108,51 @@ export const getUserProfile = async (req, res) => {
   }
 }
 
+// PUT /api/users/profile
+export const updateUserProfile = async (req, res) => {
+  const user = req.user
+  const { name, gender, avatar } = req.body
+
+  if (name) user.name = name
+  if (gender) user.gender = gender
+  if (avatar) user.avatar = avatar
+
+  await user.save()
+
+  res.status(200).json({
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    avatar: user.avatar,
+    gender: user.gender,
+    favorites: user.favorites
+  })
+}
+
+// POST /api/users/favorites/:productId
+export const addFavorite = async (req, res) => {
+  const user = req.user
+  const productId = req.params.productId
+
+  if (!user.favorites.includes(productId)) {
+    user.favorites.push(productId)
+    await user.save()
+  }
+
+  res.status(200).json(user.favorites)
+}
+
+// DELETE /api/users/favorites/:productId
+export const removeFavorite = async (req, res) => {
+  const user = req.user
+  const productId = req.params.productId
+
+  user.favorites = user.favorites.filter(id => id.toString() !== productId)
+  await user.save()
+
+  res.status(200).json(user.favorites)
+}
 
 /**
 
