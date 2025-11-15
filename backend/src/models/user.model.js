@@ -23,7 +23,22 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['customer', 'staff', 'admin'],
     default: 'customer'
-  }
+  },
+  avatar: {
+    type: String,
+    default: 'https://picsum.photos/500/500?random=1' // hoặc 1 avatar mặc định
+  },
+  gender: {
+    type: String,
+    enum: ['male', 'female', 'other'],
+    default: 'other'
+  },
+  favorites: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product'
+    }
+  ]
 }, {
   timestamps: true
 })
@@ -41,5 +56,8 @@ userSchema.pre('save', async function (next) {
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password)
 }
+// userSchema.methods.matchPassword = async function (enteredPassword) {
+//   return await bcrypt.compare( await bcrypt.hash(enteredPassword), this.password)
+// }
 
 export default mongoose.model('User', userSchema)

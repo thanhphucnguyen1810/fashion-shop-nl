@@ -45,12 +45,6 @@ const MyOrdersPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6">
-      <h2
-        className="text-xl sm:text-2xl font-bold mb-6"
-        style={{ color: theme.palette.text.primary }}
-      >
-        Đơn hàng của tôi
-      </h2>
 
       <div
         className="relative shadow-md sm:rounded-lg overflow-hidden"

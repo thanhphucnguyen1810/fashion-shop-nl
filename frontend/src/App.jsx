@@ -40,6 +40,7 @@ function App() {
           <Route path='/' element={<UserLayout />}>
             <Route index element={<Home />} />
             <Route path='login' element={<Login />} />
+            <Route path='login/success' element={<Login />} />
             <Route path='register' element={<Register />} />
             <Route path='profile' element={<Profile />} />
             <Route path='contact' element={<Contact />} />
@@ -66,7 +67,6 @@ function App() {
             <Route path='coupons' element={<AdminDiscountCodes />} />
             <Route path="reviews" element={<AdminReviews />} />
             <Route path='stock-in' element={<StockInList />} />
-            <Route path='reviews' element={<AdminReviews />} />
             {/* <Route path='settings' element={<SystemSettings />} /> */}
             {/* <Route path="notifications" element={<Notifications />} /> */}
           </Route>
