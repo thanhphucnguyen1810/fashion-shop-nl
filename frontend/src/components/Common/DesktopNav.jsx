@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { useTheme } from '@mui/material/styles'
 import { Link } from 'react-router-dom'
 import { FaChevronDown } from 'react-icons/fa'
+import CategoryMenu from '../CategoryMenu'
 
 const NavItem = ({ nav, isOpen, onMouseEnter, onMouseLeave, onClose, primaryColor, secondaryColor }) => {
   const hasSubmenu = Array.isArray(nav.submenu)
@@ -61,11 +62,9 @@ const DesktopNav = () => {
 
   const navLinks = [
     { label: 'Trang chủ', path: '/' },
-    { label: 'Sản phẩm mới', path: '/collections/new' },
-    { label: 'Thời trang nam', path: '/collections/men' },
-    { label: 'Thời trang nữ', path: '/collections/women' },
-    { label: 'Phụ kiện', path: '/collections/accessories' },
-    // { label: 'Giảm giá', path: '/collections/sale' },
+    { label: 'Tất cả sản phẩm', path: '/collections/all' },
+    { label: 'Khuyến mãi', path: '/coupons' },
+    { label: 'Blog/Tin tức', path: '/blog' },
     { label: 'Liên hệ', path: '/contact' }
   ]
 
@@ -81,19 +80,22 @@ const DesktopNav = () => {
   }
 
   return (
-    <div className="hidden md:flex items-center justify-center space-x-5 w-full overflow-hidden">
-      {navLinks.map((nav) => (
-        <NavItem
-          key={nav.label}
-          nav={nav}
-          isOpen={openMenu === nav.label}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-          onClose={() => setOpenMenu(null)}
-          primaryColor={primaryColor}
-          secondaryColor={secondaryColor}
-        />
-      ))}
+    <div>
+      <div className="hidden md:flex items-center justify-center space-x-5 w-full overflow-hidden">
+        {navLinks.map((nav) => (
+          <NavItem
+            key={nav.label}
+            nav={nav}
+            isOpen={openMenu === nav.label}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            onClose={() => setOpenMenu(null)}
+            primaryColor={primaryColor}
+            secondaryColor={secondaryColor}
+          />
+        ))}
+      </div>
+
     </div>
   )
 }

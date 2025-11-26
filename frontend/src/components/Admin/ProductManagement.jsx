@@ -1,23 +1,22 @@
 /* eslint-disable no-console */
-import { FaPlus, FaEdit, FaTrash, FaSearch, FaTimes } from 'react-icons/fa'
 import { useState, useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { fetchAdminProducts, createProduct, deleteProduct } from '~/redux/slices/admin/adminProductSlice'
+import { FaPlus, FaEdit, FaTrash, FaSearch, FaTimes } from 'react-icons/fa'
 import { Link } from 'react-router-dom'
 import { useTheme } from '@mui/material/styles'
-import axios from 'axios'
+import Loading from '../Common/Loading'
 
 const ProductManagement = () => {
   const theme = useTheme()
-
-  const [products, setProducts] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
+  const dispatch = useDispatch()
+  const { products, loading, error } = useSelector((state) => state.adminProducts)
   const [showForm, setShowForm] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
 
-  const filteredProducts = products.filter(
-    (p) =>
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.category.toLowerCase().includes(searchTerm.toLowerCase())
+  // Lọc danh sách sản phẩm theo searchTerm
+  const filteredProducts = products.filter(product =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const [formData, setFormData] = useState({
@@ -30,31 +29,13 @@ const ProductManagement = () => {
     sizes: '',
     colors: '',
     collections: '',
-    user: '' // ID người tạo sản phẩm
+    images: [],
+    user: ''
   })
 
-  // ===== GET PRODUCTS =====
-  const fetchProducts = async (search = '') => {
-    try {
-      setLoading(true)
-      const res = await axios.get(`/api/admin/products?search=${search}`)
-      // console.log('Dữ liệu API trả về:', res.data)
-      setProducts(res.data.products || [])
-    } catch (error) {
-      console.error('Lỗi khi tải danh sách sản phẩm:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // ===== Debounced fetch =====
   useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      fetchProducts(searchTerm)
-    }, 500) // đợi 500ms sau khi gõ xong
-
-    return () => clearTimeout(delayDebounce) // hủy timeout nếu gõ tiếp
-  }, [searchTerm])
+    dispatch(fetchAdminProducts())
+  }, [dispatch])
 
   // ===== HANDLE FORM =====
   const handleChange = (e) => {
@@ -65,54 +46,49 @@ const ProductManagement = () => {
   // ===== ADD PRODUCT =====
   const handleSubmit = async (e) => {
     e.preventDefault()
-    try {
-      const payload = {
-        ...formData,
-        price: Number(formData.price),
-        countInStock: Number(formData.countInStock),
-        sizes: formData.sizes ? formData.sizes.split(',').map((s) => s.trim()) : [],
-        colors: formData.colors ? formData.colors.split(',').map((c) => c.trim()) : [],
-        user: formData.user || '6732d0cfb7b9cd001fa923a1' // ví dụ ID admin
-      }
 
-      const res = await axios.post('/api/admin/products', payload)
-      console.log('Thêm sản phẩm thành công:', res.data)
+    const formPayload = new FormData()
+    formPayload.append('name', formData.name)
+    formPayload.append('description', formData.description)
+    formPayload.append('price', formData.price)
+    formPayload.append('countInStock', formData.countInStock)
+    formPayload.append('sku', formData.sku)
+    formPayload.append('category', formData.category)
+    formPayload.append('collections', formData.collections)
+
+    formPayload.append('sizes', JSON.stringify(formData.sizes))
+    formPayload.append('colors', JSON.stringify(formData.colors))
+
+    formData.images.forEach(file => {
+      formPayload.append('images', file)
+    })
+
+    try {
+      await dispatch(createProduct(formPayload)).unwrap()
+      // Đóng modal sau khi lưu thành công
+      setShowForm(false)
+      // reset form
+      setShowForm(false)
       setFormData({
-        name: '',
-        description: '',
-        price: '',
-        countInStock: '',
-        sku: '',
-        category: '',
-        sizes: '',
-        colors: '',
-        collections: '',
-        user: ''
+        name:'', description:'', price:'', countInStock:'', sku:'', category:'', sizes: [], colors: [], collections:'', images:[]
       })
-      fetchProducts()
     } catch (error) {
-      console.error('Lỗi khi thêm sản phẩm:', error.response?.data || error.message)
-      alert(error.response?.data?.message || 'Thêm sản phẩm thất bại')
+      console.error(error)
     }
   }
+
 
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm('Bạn có chắc muốn xóa sản phẩm này không?')
-    if (confirmDelete) {
-      try {
-        await axios.delete(`/api/admin/products/${id}`)
-        fetchProducts()
-        console.log('Deleting product with ID:', id)
-      } catch (error) {
-        console.error('Lỗi khi xóa sản phẩm:', error)
-        alert('Xóa sản phẩm thất bại!')
-      }
-    }
+    if (window.confirm('Bạn có chắc muốn xóa sản phẩm này không?'))
+      dispatch(deleteProduct(id))
   }
+  if (loading) return <Loading />
+  if (error) return <p>Error: {error}</p>
+
 
   return (
     <div className="max-w-7xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-6">Danh sách sản phẩm</h2>
+      <h2 className="text-2xl font-bold mb-6">Quản Lý Sản Phẩm</h2>
       {/* Search Bar */}
       <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         {/* Search input + search button */}
@@ -151,12 +127,12 @@ const ProductManagement = () => {
         <div
           className="fixed inset-0 z-50 flex items-center justify-center"
           style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-          onClick={() => setShowForm(false)} // Click ngoài modal để đóng
+          onClick={() => setShowForm(false)}
         >
           <div
             className="bg-white rounded-lg p-6 w-full max-w-3xl relative"
             style={{ backgroundColor: theme.palette.background.paper }}
-            onClick={(e) => e.stopPropagation()} // Ngăn click trong modal đóng
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Nút đóng */}
             <button
@@ -168,10 +144,7 @@ const ProductManagement = () => {
 
             <h3 className="text-lg font-semibold mb-4">Thêm sản phẩm mới</h3>
             <form
-              onSubmit={(e) => {
-                handleSubmit(e) // Gọi hàm thêm sản phẩm
-                setShowForm(false) // Tự động đóng modal sau khi submit
-              }}
+              onSubmit={handleSubmit}
               className="grid grid-cols-1 md:grid-cols-3 gap-4"
             >
               <div>
@@ -271,6 +244,24 @@ const ProductManagement = () => {
                 />
               </div>
               <div className="md:col-span-3">
+                <label className="block mb-1 font-medium">Hình ảnh</label>
+                <input
+                  type="file"
+                  name="images"
+                  multiple
+                  accept="image/*"
+                  onChange={(e) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      images: Array.from(e.target.files) // lưu mảng file
+                    }))
+                  }}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+
+
+              <div className="md:col-span-3">
                 <button
                   type="submit"
                   className="px-4 py-2 mt-2 rounded hover:opacity-90 w-full"
@@ -299,6 +290,7 @@ const ProductManagement = () => {
           <table className="min-w-full text-left" style={{ color: theme.palette.text.primary }}>
             <thead style={{ backgroundColor: theme.palette.grey[200] }} className="text-xs uppercase">
               <tr>
+                <th className="py-3 px-4">Ảnh</th>
                 <th className="py-3 px-4">Tên sản phẩm</th>
                 <th className="py-3 px-4">Giá</th>
                 <th className="py-3 px-4">Tồn kho</th>
@@ -311,8 +303,23 @@ const ProductManagement = () => {
               {filteredProducts.length > 0 ? (
                 filteredProducts.map((product) => (
                   <tr key={product._id} className="border-b hover:bg-gray-50">
+                    <td className="p-4">
+                      {product.images && product.images.length > 0 ? (
+                        <img
+                          src={
+                            product.images[0] && product.images[0].url
+                              ? product.images[0].url
+                              : product.images[0]
+                          }
+                          alt={product.name}
+                          className="w-16 h-16 object-cover rounded"
+                        />
+                      ) : (
+                        <span className="text-gray-400 text-sm">Chưa có ảnh</span>
+                      )}
+                    </td>
                     <td className="p-4 font-medium">{product.name}</td>
-                    <td className="p-4">${product.price}</td>
+                    <td className="p-4">{product.price}đ</td>
                     <td className="p-4">{product.countInStock}</td>
                     <td className="p-4">{product.sku}</td>
                     <td className="p-4">{product.category}</td>

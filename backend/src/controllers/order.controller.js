@@ -1,4 +1,5 @@
-import orderModel from '~/models/order.model.js'
+import orderModel from '~/models/order.model'
+import productModel from '~/models/product.model'
 
 // @desc Get logged-in user's orders
 // @route GET /api/orders/my-orders
@@ -18,7 +19,10 @@ export const getMyOrders = async (req, res) => {
 // @access Private
 export const getOrderById = async (req, res) => {
   try {
-    const order = await orderModel.findById(req.params.id).populate('user', 'name email')
+    const order = await orderModel.findById(req.params.orderId)
+      .populate('user', 'fullName email phoneNumber')
+      .populate('coupon.couponId', 'code name discountType')
+
     if (!order) {
       return res.status(404).json({ message: 'Order not found' })
     }
@@ -26,5 +30,106 @@ export const getOrderById = async (req, res) => {
   } catch (error) {
     console.error('Error fetching order by ID:', error)
     res.status(500).json({ message: 'Server Error' })
+  }
+}
+
+// @desc Create a temporary order for Buy Now action
+// @route POST /api/orders/buy-now
+// @access Private/Public
+export const createCheckoutOrder = async (req, res) => { // Đổi tên hàm
+  try {
+    // 1. NHẬN DỮ LIỆU ĐẦU VÀO ĐẦY ĐỦ
+    // LẤY THÊM TRƯỜNG paymentMethod
+    const { orderItems, userId, guestId, shippingAddress, couponInfo, paymentMethod } = req.body
+
+    if (!orderItems || orderItems.length === 0) {
+      return res.status(400).json({ message: 'Không có sản phẩm để tạo đơn hàng.' })
+    }
+
+    // 2. TÍNH TOÁN GIÁ CƠ BẢN VÀ KIỂM TRA TỒN KHO
+    let calculatedTotalPrice = 0
+    let finalOrderItems = [] // Khai báo list sản phẩm đã kiểm tra
+
+    for (const item of orderItems) {
+      const product = await productModel.findById(item.productId)
+      if (!product) {
+        return res.status(404).json({ message: `Sản phẩm ID ${item.productId} không tồn tại.` })
+      }
+      const currentStock = product.countInStock || 0
+      if (currentStock < item.quantity) {
+        return res.status(400).json({
+          message: `Sản phẩm ${product.name} hiện không đủ số lượng (${item.quantity}). Tổng tồn kho: ${currentStock}`
+        })
+      }
+      const itemPrice = product.price
+      calculatedTotalPrice += itemPrice * item.quantity
+
+      // Thêm item đã được kiểm tra vào list
+      finalOrderItems.push({
+        productId: item.productId,
+        name: product.name,
+        image: product.images?.[0]?.url || 'default-image-url',
+        price: itemPrice,
+        size: item.size,
+        color: item.color,
+        quantity: item.quantity
+      })
+    }
+
+    // Lấy thông tin coupon (Nếu có)
+    const discountAmount = couponInfo?.discountAmount || 0
+    const finalTotalPrice = calculatedTotalPrice - discountAmount
+
+    // 3. XÁC ĐỊNH TRẠNG THÁI VÀ PHƯƠNG THỨC THANH TOÁN
+    let initialStatus = 'PendingCheckout' // Mặc định là chờ thanh toán (MoMo)
+    let isPaid = false
+
+    if (paymentMethod === 'COD') {
+      // Nếu là COD, đơn hàng được tạo xong và chờ Admin duyệt
+      initialStatus = 'AwaitingConfirmation'
+      isPaid = false // Chưa trả tiền
+    }
+    // Note: Nếu là MOMO/Online, nó sẽ giữ nguyên PendingCheckout (chờ thanh toán từ bên thứ 3)
+
+    // 4. TẠO ORDER OBJECT VỚI DỮ LIỆU ĐẦY ĐỦ
+    // KHẮC PHỤC LỖI: newOrder phải được khai báo trước khi sử dụng.
+    // Tôi đã khai báo 'finalOrderItems' ở trên và sử dụng nó ở đây.
+    const newOrderData = {
+      user: userId ? userId : null,
+      guestId: userId ? null : guestId,
+      orderItems: finalOrderItems, // Sử dụng list đã được điền
+
+      shippingAddress: shippingAddress || {},
+
+      coupon: {
+        code: couponInfo?.code || null,
+        discountAmount: discountAmount,
+        couponId: couponInfo?.couponId || null
+      },
+
+      // LƯU PHƯƠNG THỨC VÀ TRẠNG THÁI PHÙ HỢP
+      paymentMethod: paymentMethod, // LƯU 'COD' HOẶC 'MOMO'
+      totalPrice: finalTotalPrice > 0 ? finalTotalPrice : 0,
+
+      isPaid: isPaid, // Trạng thái thanh toán
+      paymentStatus: isPaid ? 'completed' : 'pending', // Tốt hơn nên dùng status chi tiết hơn
+
+      // SỬ DỤNG TRẠNG THÁI ĐÃ TÍNH TOÁN Ở BƯỚC 3
+      status: initialStatus,
+      orderType: 'Cart' // Giả định là từ giỏ hàng, bạn có thể chỉnh thành BuyNow nếu cần
+    }
+
+    // 5. LƯU ĐƠN HÀNG VÀO DB
+    const createdOrder = await orderModel.create(newOrderData)
+
+    // 6. TRẢ VỀ
+    res.status(201).json({
+      message: 'Đơn hàng được tạo thành công.',
+      checkout: createdOrder // Trả về object order đầy đủ
+    })
+
+  } catch (error) {
+    console.error('Error creating checkout order:', error)
+    res.status(500).json({ message: 'Server Error khi tạo đơn hàng.' })
   }
 }

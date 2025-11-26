@@ -1,20 +1,42 @@
 import { useEffect, useRef, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { FaFilter } from 'react-icons/fa'
+import { useDispatch, useSelector } from 'react-redux'
 import FilterSidebar from '~/components/Products/FilterSidebar'
 import ProductGrid from '~/components/Products/ProductGrid'
 import SortOptions from '~/components/Products/SortOptions'
+import { fetchProducts, setFilters } from '~/redux/slices/productSlice'
 
 const CollectionPage = () => {
-  const [products, setProducts] = useState([])
+  const { collections } = useParams()
+  const [searchParams] = useSearchParams()
+  const dispatch = useDispatch()
+  // Lấy filters từ Redux để sử dụng (tùy chọn)
+  const { products, loading, error, filters } = useSelector((state) => state.products)
   const sidebarRef = useRef(null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
-  const { collection, gender, category } = useParams()
+  // Gộp tất cả logic tải dữ liệu và đồng bộ trạng thái vào một useEffect
+  useEffect(() => {
+    const queryParams = Object.fromEntries([...searchParams])
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen)
-  }
+    // 1. Cập nhật Redux state filters từ URL
+    // Mục tiêu là set tất cả bộ lọc (bao gồm search) lên Redux
+    // và đảm bảo 'collection' từ route cũng được đưa vào Redux filters
+    const allFilters = {
+      ...queryParams,
+      collection: collections || ''
+    }
+
+    // Dispatch action để cập nhật Redux filters state
+    dispatch(setFilters(allFilters))
+
+    // 2. Gọi API fetchProducts với tất cả các bộ lọc đã được đồng bộ
+    dispatch(fetchProducts(allFilters))
+
+  }, [dispatch, collections, searchParams])
+
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen)
 
   const handleClickOutside = (event) => {
     if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
@@ -24,80 +46,8 @@ const CollectionPage = () => {
 
   useEffect(() => {
     document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
-
-  useEffect(() => {
-    setTimeout(() => {
-      const fetchedProducts = [
-        {
-          _id: 1,
-          name: 'Áo khoác thời trang',
-          price: 120,
-          images: [{ url: 'https://picsum.photos/500/500?random=1', altText: 'Áo khoác thời trang' }]
-        },
-        {
-          _id: 2,
-          name: 'Áo khoác thời trang',
-          price: 80,
-          images: [{ url: 'https://picsum.photos/500/500?random=2', altText: 'Áo khoác thời trang' }]
-        },
-        {
-          _id: 3,
-          name: 'Áo khoác thời trang',
-          price: 150,
-          images: [{ url: 'https://picsum.photos/500/500?random=3', altText: 'Áo khoác thời trang' }]
-        },
-        {
-          _id: 4,
-          name: 'Áo khoác thời trang',
-          price: 100,
-          images: [{ url: 'https://picsum.photos/500/500?random=4', altText: 'Áo khoác thời trang' }]
-        },
-        {
-          _id: 5,
-          name: 'Áo khoác thời trang',
-          price: 120,
-          images: [{ url: 'https://picsum.photos/500/500?random=5', altText: 'Áo khoác thời trang' }]
-        },
-        {
-          _id: 6,
-          name: 'Áo khoác thời trang',
-          price: 80,
-          images: [{ url: 'https://picsum.photos/500/500?random=6', altText: 'Áo khoác thời trang' }]
-        },
-        {
-          _id: 7,
-          name: 'Áo khoác thời trang',
-          price: 150,
-          images: [{ url: 'https://picsum.photos/500/500?random=7', altText: 'Áo khoác thời trang' }]
-        },
-        {
-          _id: 8,
-          name: 'Áo khoác thời trang',
-          price: 100,
-          images: [{ url: 'https://picsum.photos/500/500?random=8', altText: 'Áo khoác thời trang' }]
-        }
-      ]
-
-      let filtered = fetchedProducts
-      // if (collection) {
-      //   filtered = fetchedProducts.filter((p) => p.collection === collection)
-      // } else if (gender && category) {
-      //   filtered = fetchedProducts.filter((p) => p.gender === gender && p.category === category)
-      // }
-
-      setProducts(filtered)
-    }, 1000)
-  }, [collection, gender, category])
-
-  const getTitle = () => {
-    if (collection) return collection.replace('-', ' ').toUpperCase()
-    if (gender && category) return `${gender} / ${category}`.replace('-', ' ').toUpperCase()
-    return 'BỘ SƯU TẬP'
-  }
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen">
@@ -117,18 +67,24 @@ const CollectionPage = () => {
         ref={sidebarRef}
         className={`${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transition-transform duration-300 ease-in-out overflow-y-auto lg:static lg:translate-x-0`}
+        } fixed top-10 left-0 bottom-0 z-10 w-64 bg-white shadow-lg transition-transform duration-300 ease-in-out overflow-y-auto lg:static lg:translate-x-0
+          lg:h-auto lg:mt-0 lg:pt-0 
+          pt-16`}
       >
         <FilterSidebar />
       </div>
 
       {/* Nội dung chính */}
       <div className="flex-1 p-4 space-y-4">
-        <h2 className="text-3xl font-semibold uppercase">{getTitle()}</h2>
+        {filters.search && (
+          <p className="text-sm text-gray-500">
+                  Đang tìm kiếm theo từ khóa: "{filters.search}"
+          </p>
+        )}
 
         <SortOptions />
 
-        <ProductGrid products={products} />
+        <ProductGrid products={products} loading={loading} error={error} columnCount={4} />
       </div>
     </div>
   )

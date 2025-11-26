@@ -3,172 +3,348 @@ import { useTheme } from '@mui/material/styles'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import { logout, setUser } from '~/redux/slices/authSlide'
+import { logout, setUser } from '~/redux/slices/authSlice'
 import MyOrdersPage from './MyOrdersPage'
+import { clearCart } from '~/redux/slices/cartSlices'
+import { Box, Typography } from '@mui/material'
+import { toast } from 'sonner'
+import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
+import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined'
+import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined'
+import LogoutIcon from '@mui/icons-material/Logout'
+import SaveIcon from '@mui/icons-material/Save'
 
-// Component hiển thị 1 sản phẩm yêu thích
-const FavoriteCard = ({ product }) => (
-  <div className='border rounded-lg overflow-hidden shadow-sm'>
-    <img src={product.image} alt={product.name} className='w-full h-40 object-cover' />
-    <div className='p-2'>
-      <h3 className='text-sm font-semibold'>{product.name}</h3>
-      <p className='text-sm text-gray-500'>{product.price}₫</p>
+// --- FavoriteCard Component (Giữ nguyên) ---
+const FavoriteCard = ({ product, theme }) => (
+  <div
+    className='rounded-lg overflow-hidden shadow-md transition-all hover:shadow-lg duration-300 cursor-pointer'
+    style={{ border: `1px solid ${theme.palette.divider}`, backgroundColor: theme.palette.background.default }}
+  >
+    {/* Placeholder for Product Image */}
+    <div className='w-full h-32 bg-gray-200 dark:bg-gray-700 flex items-center justify-center'>
+      <span className='text-gray-500'>
+
+[Image of {product.name}]
+      </span>
+    </div>
+    <div className='p-3'>
+      <h3 className='text-base font-medium truncate' style={{ color: theme.palette.text.primary }}>{product.name}</h3>
+      <p className='text-sm mt-1 font-semibold' style={{ color: theme.palette.primary.main }}>{product.price}₫</p>
     </div>
   </div>
 )
 
+// --- TabPanel Component (Giữ nguyên) ---
+function TabPanel(props) {
+  const { children, value, index, ...other } = props
+  return (
+    <div
+      role='tabpanel'
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box>
+          {children}
+        </Box>
+      )}
+    </div>
+  )
+}
+
+// --- Main Profile Component ---
 const Profile = () => {
   const theme = useTheme()
-  const dispatch = useDispatch()
+  const { user, token } = useSelector((state) => state.auth)
   const navigate = useNavigate()
-  const { user } = useSelector((state) => state.auth)
+  const dispatch = useDispatch()
 
   const [avatarFile, setAvatarFile] = useState(null)
+  const [name, setName] = useState(user?.name || '')
   const [gender, setGender] = useState(user?.gender || 'other')
   const [favorites, setFavorites] = useState([])
+  const [tabValue, setTabValue] = useState(0)
 
-  // Redirect nếu user null (đã logout)
+  const userToken = token
+
   useEffect(() => {
     if (!user) {
       navigate('/login')
     }
+    setName(user?.name || '')
+    setGender(user?.gender || 'other')
   }, [user, navigate])
 
-  // Fetch danh sách sản phẩm yêu thích
   useEffect(() => {
     const fetchFavorites = async () => {
       try {
+        if (!userToken) return
+
         const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
-          headers: { Authorization: `Bearer ${user.token}` }
+          headers: { Authorization: `Bearer ${userToken}` }
         })
         setFavorites(res.data.favorites || [])
       } catch (err) {
-        console.error(err)
+        console.error('Lỗi khi fetch favorites:', err)
+        toast.error('Lỗi tải danh sách yêu thích.', { duration: 1000 })
       }
     }
     if (user) fetchFavorites()
-  }, [user])
+  }, [user, userToken])
 
-  const handleLogout = () => { dispatch(logout()) }
+  const handleLogout = () => {
+    dispatch(logout())
+    dispatch(clearCart())
+    navigate('/login')
+    toast.success('Đăng xuất thành công!', { duration: 1000 })
+  }
+
   const handleAvatarChange = (e) => {
     if (e.target.files[0]) setAvatarFile(e.target.files[0])
   }
 
   const handleUpdateProfile = async () => {
-    if (!user) return
-    try {
-      const formData = new FormData()
-      formData.append('gender', gender)
-      if (avatarFile) formData.append('avatar', avatarFile)
+    if (!user || !userToken) return
 
+    const formData = new FormData()
+
+    formData.append('name', name)
+    formData.append('gender', gender)
+
+    if (avatarFile) {
+      formData.append('avatar', avatarFile)
+    }
+
+    try {
       const res = await axios.put(
         `${import.meta.env.VITE_API_URL}/api/users/profile`,
         formData,
         {
           headers: {
-            Authorization: `Bearer ${user.token}`,
+            Authorization: `Bearer ${userToken}`,
             'Content-Type': 'multipart/form-data'
           }
         }
       )
 
-      // Update redux store
-      dispatch(setUser({ user: res.data, token: user.token }))
-      alert('Cập nhật profile thành công!')
+      const updatedUser = res.data
+
+      dispatch(setUser({ user: updatedUser, token: userToken }))
+
+      setAvatarFile(null)
+
+      toast.success('Cập nhật profile thành công!', { duration: 1000 })
     } catch (err) {
       console.error(err)
-      alert('Cập nhật thất bại')
+      toast.error('Cập nhật thất bại. Vui lòng kiểm tra console.', { duration: 1000 })
     }
   }
+
+  // Cấu hình Menu
+  const profileMenu = [
+    { index: 0, label: 'Thông tin cá nhân', icon: <PersonOutlineIcon /> },
+    { index: 1, label: 'Đơn hàng của tôi', icon: <ShoppingBagOutlinedIcon /> },
+    { index: 2, label: 'Sản phẩm yêu thích', icon: <FavoriteBorderOutlinedIcon /> }
+  ]
 
   if (!user) return null
 
   return (
-    <div className='min-h-screen flex flex-col'>
-      <div className='flex-grow container mx-auto p-4 md:p-6'>
-        <div className='flex flex-col md:flex-row md:space-x-6 space-y-6 md:space-y-0'>
-          {/* Left Section: Profile Info */}
-          <div
-            className='w-full md:w-1/3 lg:w-1/4 shadow-md rounded-lg px-6'
-            style={{
-              backgroundColor: theme.palette.background.paper,
-              color: theme.palette.text.primary
-            }}
-          >
-            {/* Avatar */}
-            <div className='flex flex-col items-center mb-4'>
-              <img
-                src={avatarFile ? URL.createObjectURL(avatarFile) : user.avatar || '/default-avatar.png'}
-                alt='Avatar'
-                className='rounded-full w-24 h-24 object-cover mb-2'
-              />
-              <input type='file' onChange={handleAvatarChange} />
-            </div>
-            <h1 className='text-2xl md:text-3xl font-bold mb-4'> {user.name}</h1>
-            <p
-              className='text-lg mb-4'
-              style={{ color: theme.palette.text.secondary }}
+    <div className='min-h-screen' style={{ backgroundColor: theme.palette.background.default }}>
+      <div className='w-full font-Poppins p-4 md:px-12 lg:px-20'>
+        <Typography
+          variant='h4'
+          gutterBottom
+          sx={{
+            color: theme.palette.text.primary,
+            fontWeight: 700,
+            marginBottom: theme.spacing(4)
+          }}
+        >
+          Tài khoản của tôi
+        </Typography>
+
+        <div className='flex flex-col md:flex-row md:space-x-6'>
+          {/* Left Section: User Summary + Menu Navigation (1/4 width) */}
+          <div className='w-full md:w-1/4 mb-6 md:mb-0'>
+            {/* 1. User Info Card (Prominent Avatar) - ĐÃ PHỤC HỒI ẢNH LỚN */}
+            <div
+              className='shadow-md rounded-xl p-6 mb-4 flex flex-col items-center' // Centered content
+              style={{ backgroundColor: theme.palette.background.paper }}
             >
-              {user.email}
-            </p>
-            {/* Gender */}
-            <div className='mb-4'>
-              <label className='block text-sm font-semibold mb-1'>Giới tính</label>
-              <select
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                className='w-full p-2 border rounded'
+              {/* Avatar */}
+              <div className='relative group'>
+                <img
+                  src={avatarFile ? URL.createObjectURL(avatarFile) : user?.avatar?.url }
+                  alt='Avatar'
+                  className='rounded-full w-20 h-20 object-cover border-4' // Kích thước lớn hơn
+                  style={{ borderColor: theme.palette.primary.light }}
+                />
+                <label
+                  htmlFor="avatar-upload"
+                  className='absolute inset-0 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer'
+                  style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+                >
+                  <span className='text-white text-xs font-semibold'>Sửa ảnh</span>
+                </label>
+                <input
+                  id="avatar-upload"
+                  type='file'
+                  onChange={handleAvatarChange}
+                  className='hidden'
+                  accept="image/*"
+                />
+              </div>
+              <Typography
+                variant='h6'
+                className='mt-3 font-semibold'
+                style={{ color: theme.palette.text.primary }}
               >
-                <option value='male'>Nam</option>
-                <option value='female'>Nữ</option>
-                <option value='other'>Khác</option>
-              </select>
-            </div>
-            <button
-              onClick={handleUpdateProfile}
-              className='w-full py-2 px-4 mb-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition'
-            >
-              Cập nhật Profile
-            </button>
-            <button
-              onClick={handleLogout}
-              className='w-full py-2 px-4 rounded'
-              style={{
-                backgroundColor: theme.palette.error.main,
-                color: theme.palette.getContrastText(theme.palette.error.main)
-              }}
-              onMouseOver={(e) =>
-                (e.currentTarget.style.backgroundColor =
-                  theme.palette.error.dark)
-              }
-              onMouseOut={(e) =>
-                (e.currentTarget.style.backgroundColor =
-                  theme.palette.error.main)
-              }
-            >
-              Đăng xuất
-            </button>
-          </div>
-
-          {/* Right Section: Orders + Favorites */}
-          <div className='w-full md:w-2/3 lg:w-3/4 flex flex-col space-y-6'>
-            {/* Orders */}
-            <div className='shadow-md rounded-lg p-4' style={{ backgroundColor: theme.palette.background.paper }}>
-              <h2 className='text-xl font-semibold mb-4'>Đơn hàng của tôi</h2>
-              <MyOrdersPage />
+                {user?.name}
+              </Typography>
+              <Typography
+                variant='body2'
+                style={{ color: theme.palette.text.secondary }}
+              >
+                {user?.email}
+              </Typography>
             </div>
 
-            {/* Favorites */}
-            <div className='shadow-md rounded-lg p-4' style={{ backgroundColor: theme.palette.background.paper }}>
-              <h2 className='text-xl font-semibold mb-4'>Sản phẩm yêu thích</h2>
-              <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
-                {favorites.length > 0 ? (
-                  favorites.map((product) => <FavoriteCard key={product._id} product={product} />)
-                ) : (
-                  <p>Chưa có sản phẩm yêu thích nào.</p>
-                )}
+            {/* 2. Navigation Menu */}
+            <div
+              className='shadow-md rounded-xl p-3 sticky top-4 self-start' // Thêm sticky
+              style={{ backgroundColor: theme.palette.background.paper }}
+            >
+              {profileMenu.map((item) => (
+                <div
+                  key={item.index}
+                  onClick={() => setTabValue(item.index)}
+                  className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors duration-200 ${
+                    tabValue === item.index
+                      ? 'font-bold'
+                      : 'hover:bg-opacity-70'
+                  }`}
+                  style={{
+                    backgroundColor: tabValue === item.index ? theme.palette.primary.light : 'transparent',
+                    color: tabValue === item.index ? theme.palette.primary.contrastText : theme.palette.text.primary
+                  }}
+                >
+                  {item.icon}
+                  <Typography variant='body1'>{item.label}</Typography>
+                </div>
+              ))}
+
+              {/* Logout Button in Menu Style */}
+              <div
+                onClick={handleLogout}
+                className='flex items-center space-x-3 p-3 mt-2 rounded-lg cursor-pointer transition-colors duration-200 hover:bg-opacity-70'
+                style={{
+                  color: theme.palette.error.main,
+                  borderTop: `1px solid ${theme.palette.divider}`
+                }}
+              >
+                <LogoutIcon />
+                <Typography variant='body1'>Đăng xuất</Typography>
               </div>
             </div>
+          </div>
+
+          {/* Right Section: Content (3/4 width) */}
+          <div className='w-full md:w-3/4 shadow-xl rounded-xl' style={{ backgroundColor: theme.palette.background.paper }}>
+
+            {/* Tab 1: Cập nhật Profile */}
+            <TabPanel value={tabValue} index={0}>
+              <div className='p-6'>
+                <h2 className='text-2xl font-semibold mb-6 border-b pb-3' style={{ color: theme.palette.text.primary, borderColor: theme.palette.divider }}>Thông tin cá nhân</h2>
+
+                {/* Name Input */}
+                <div className='mb-4'>
+                  <label className='block text-sm font-medium mb-1' style={{ color: theme.palette.text.secondary }}>Tên hiển thị</label>
+                  <input
+                    type='text'
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className='w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500'
+                    style={{
+                      backgroundColor: theme.palette.background.default,
+                      color: theme.palette.text.primary,
+                      borderColor: theme.palette.divider
+                    }}
+                  />
+                </div>
+
+                {/* Email Display */}
+                <div className='mb-4'>
+                  <label className='block text-sm font-medium mb-1' style={{ color: theme.palette.text.secondary }}>Email (Không thể thay đổi)</label>
+                  <input
+                    type='email'
+                    value={user?.email || ''}
+                    disabled
+                    className='w-full p-3 border rounded-lg cursor-not-allowed'
+                    style={{
+                      backgroundColor: theme.palette.action.disabledBackground,
+                      color: theme.palette.text.secondary,
+                      borderColor: theme.palette.divider
+                    }}
+                  />
+                </div>
+
+                {/* Gender Select */}
+                <div className='mb-6'>
+                  <label className='block text-sm font-medium mb-1' style={{ color: theme.palette.text.secondary }}>Giới tính</label>
+                  <select
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    className='w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500'
+                    style={{
+                      backgroundColor: theme.palette.background.default,
+                      color: theme.palette.text.primary,
+                      borderColor: theme.palette.divider
+                    }}
+                  >
+                    <option value='male'>Nam</option>
+                    <option value='female'>Nữ</option>
+                    <option value='other'>Khác</option>
+                  </select>
+                </div>
+
+                <button
+                  onClick={handleUpdateProfile}
+                  className='w-full py-3 px-4 rounded-lg font-bold transition duration-300 flex items-center justify-center space-x-2'
+                  style={{
+                    backgroundColor: theme.palette.primary.main,
+                    color: theme.palette.primary.contrastText
+                  }}
+                >
+                  <SaveIcon />
+                  <span>Cập nhật Profile</span>
+                </button>
+              </div>
+            </TabPanel>
+
+            {/* Tab 2: Đơn hàng */}
+            <TabPanel value={tabValue} index={1}>
+              <div className='p-6'>
+                <h2 className='text-2xl font-semibold mb-4 border-b pb-3' style={{ color: theme.palette.text.primary, borderColor: theme.palette.divider }}>Lịch sử Đơn hàng</h2>
+                <MyOrdersPage />
+              </div>
+            </TabPanel>
+
+            {/* Tab 3: Sản phẩm yêu thích */}
+            <TabPanel value={tabValue} index={2}>
+              <div className='p-6'>
+                <h2 className='text-2xl font-semibold mb-4 border-b pb-3' style={{ color: theme.palette.text.primary, borderColor: theme.palette.divider }}>Sản phẩm yêu thích</h2>
+                <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
+                  {favorites.length > 0 ? (
+                    favorites.map((product) => <FavoriteCard key={product._id} product={product} theme={theme} />)
+                  ) : (
+                    <p style={{ color: theme.palette.text.secondary }}>Bạn chưa có sản phẩm yêu thích nào. Hãy đi khám phá!</p>
+                  )}
+                </div>
+              </div>
+            </TabPanel>
           </div>
         </div>
       </div>

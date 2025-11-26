@@ -1,4 +1,4 @@
-import mongoose, { trusted } from 'mongoose'
+import mongoose from 'mongoose'
 const checkoutItemScheme = new mongoose.Schema({
   productId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -17,6 +17,14 @@ const checkoutItemScheme = new mongoose.Schema({
     type: Number,
     required: true
   },
+  size: {
+    type: String,
+    required: true
+  },
+  color: {
+    type: String,
+    required: true
+  },
   quantity: {
     type: Number,
     required: true
@@ -33,10 +41,22 @@ const checkoutScheme = new mongoose.Schema({
   },
   checkoutItems: [checkoutItemScheme],
   shippingAddress: {
+    firstName: { type: String, required: false },
+    lastName: { type: String, required: false },
+    phone: { type: String, required: false },
     address: { type: String, required: true },
     city: { type: String, required: true },
-    postalCode: { type: String, required: true },
+    postalCode: { type: String, required: false, default: '00000' },
     country: { type: String, required: true }
+  },
+  coupon: {
+    code: { type: String, default: null },
+    discountAmount: { type: Number, default: 0 },
+    couponId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Coupon',
+      default: null
+    }
   },
   paymentMethod: {
     type: String,

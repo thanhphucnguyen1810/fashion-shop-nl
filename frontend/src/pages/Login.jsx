@@ -4,23 +4,36 @@ import { useTheme } from '@mui/material/styles'
 import { FaGoogle, FaFacebook } from 'react-icons/fa'
 import login from '~/assets/login.webp'
 import { useDispatch, useSelector } from 'react-redux'
-import { loginUser, socialLogin, setUser } from '~/redux/slices/authSlide'
+import { loginUser, socialLogin, setUser } from '~/redux/slices/authSlice'
+import { mergeCart } from '~/redux/slices/cartSlices'
 
 const Login = () => {
   const theme = useTheme()
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const location = useLocation()
-  const { loading, error, user } = useSelector((state) => state.auth)
+
+  const { user, guestId, loading, error } = useSelector((state) => state.auth)
+  const { cart } = useSelector((state) => state.cart)
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  // Redirect khi login thành công (email/password)
+
+  // Get redirect parameter and check if it's checkout or something
+  const redirect = new URLSearchParams(location.search).get('redirect') || '/'
+  const isCheckoutRedirect = redirect.includes('checkout')
+
   useEffect(() => {
     if (user) {
-      navigate('/')
+      if (cart?.products.length > 0 && guestId) {
+        dispatch(mergeCart({ guestId, user })).then(() => {
+          navigate(isCheckoutRedirect ? '/checkout' : '/')
+        })
+      } else {
+        navigate(isCheckoutRedirect ? '/checkout' : '/')
+      }
     }
-  }, [user, navigate])
+  }, [user, guestId, cart, navigate, isCheckoutRedirect, dispatch])
 
   // ===== Parse token từ OAuth redirect =====
   useEffect(() => {
@@ -77,6 +90,18 @@ const Login = () => {
 
           <h2 className='text-2xl font-bold text-center mb-3'>Chào mừng bạ quay lại!</h2>
 
+          {error && (
+            <div className='bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 text-sm'>
+              <p>{error}</p>
+              {/* Logic kiểm tra lỗi chưa xác minh email (Giả sử backend trả về lỗi chứa 'xác minh') */}
+              {error.includes('xác minh') && (
+                <p className='mt-2 font-medium'>
+                          Tài khoản chưa được kích hoạt. Vui lòng kiểm tra hộp thư của bạn để xác minh.
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Email */}
           <div className='mb-4'>
             <label className='block text-sm font-semibold mb-2'>Email</label>
@@ -109,6 +134,15 @@ const Login = () => {
                 color: theme.palette.text.primary
               }}
             />
+            <div className='flex justify-end mt-1'>
+              <Link
+                to='/forgot-password'
+                className='text-sm font-medium hover:underline'
+                style={{ color: theme.palette.secondary.main }}
+              >
+                        Quên mật khẩu?
+              </Link>
+            </div>
           </div>
 
           {/* Nút đăng nhập */}
@@ -121,7 +155,7 @@ const Login = () => {
               color: theme.palette.primary.contrastText
             }}
           >
-            {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+            {loading ? 'Loading...' : 'Đăng nhập'}
           </button>
 
           {/* --- OR divider --- */}
@@ -165,7 +199,7 @@ const Login = () => {
           <p className='mt-8 text-center text-sm'>
             Chưa có tài khoản?{' '}
             <Link
-              to='/register'
+              to={`/register?redirect=${encodeURIComponent(redirect)}`}
               style={{ color: theme.palette.secondary.main }}
             >
               Đăng ký ngay

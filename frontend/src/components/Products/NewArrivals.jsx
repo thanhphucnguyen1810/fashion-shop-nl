@@ -1,104 +1,41 @@
+/* eslint-disable no-console */
 import { useEffect, useRef, useState } from 'react'
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi'
+import { FaStar } from 'react-icons/fa'
 import { Link } from 'react-router-dom'
 import { useTheme } from '@mui/material/styles'
 import palette from '~/theme/palette'
+import axios from 'axios'
 
+// Component NewArrivals
 const NewArrivals = () => {
+  // Hàm định dạng tiền tệ
+  const formatCurrency = (amount) => {
+    if (amount === undefined || amount === null) return '0đ'
+    // Sử dụng Intl.NumberFormat để định dạng số theo chuẩn Việt Nam (dùng dấu chấm)
+    return new Intl.NumberFormat('vi-VN').format(amount) + 'đ'
+  }
   const theme = useTheme()
   const mode = theme.palette.mode
   const colors = palette[mode]
 
-  const newArrivals = [
-    {
-      _id: '1',
-      name: 'Stylish Jacket',
-      price: 120,
-      images: [
-      // Sử dụng ID 237, 238, 239
-        { url: 'https://picsum.photos/id/237/500/500', altText: 'Stylish Jacket - View 1' },
-        { url: 'https://picsum.photos/id/238/500/500', altText: 'Stylish Jacket - View 2' },
-        { url: 'https://picsum.photos/id/239/500/500', altText: 'Stylish Jacket - View 3' }
-      ]
-    },
-    {
-      _id: '2',
-      name: 'Stylish Shirt',
-      price: 120,
-      images: [
-      // Sử dụng ID 240, 241, 242
-        { url: 'https://picsum.photos/id/240/500/500', altText: 'Stylish Shirt - View 1' },
-        { url: 'https://picsum.photos/id/241/500/500', altText: 'Stylish Shirt - View 2' },
-        { url: 'https://picsum.photos/id/242/500/500', altText: 'Stylish Shirt - View 3' }
-      ]
-    },
-    {
-      _id: '3',
-      name: 'Stylish Pants',
-      price: 120,
-      images: [
-      // Sử dụng ID 243, 244, 245
-        { url: 'https://picsum.photos/id/243/500/500', altText: 'Stylish Pants - View 1' },
-        { url: 'https://picsum.photos/id/244/500/500', altText: 'Stylish Pants - View 2' },
-        { url: 'https://picsum.photos/id/245/500/500', altText: 'Stylish Pants - View 3' }
-      ]
-    },
-    {
-      _id: '4',
-      name: 'Stylish Dress',
-      price: 120,
-      images: [
-      // Sử dụng ID 246, 247, 248
-        { url: 'https://picsum.photos/id/246/500/500', altText: 'Stylish Dress - View 1' },
-        { url: 'https://picsum.photos/id/247/500/500', altText: 'Stylish Dress - View 2' },
-        { url: 'https://picsum.photos/id/248/500/500', altText: 'Stylish Dress - View 3' }
-      ]
-    },
-    {
-      _id: '5',
-      name: 'Stylish Sweater',
-      price: 120,
-      images: [
-      // Sử dụng ID 249, 250, 251
-        { url: 'https://picsum.photos/id/249/500/500', altText: 'Stylish Sweater - View 1' },
-        { url: 'https://picsum.photos/id/250/500/500', altText: 'Stylish Sweater - View 2' },
-        { url: 'https://picsum.photos/id/251/500/500', altText: 'Stylish Sweater - View 3' }
-      ]
-    },
-    {
-      _id: '6',
-      name: 'Stylish Top A',
-      price: 120,
-      images: [
-      // Sử dụng ID 252, 253, 254
-        { url: 'https://picsum.photos/id/252/500/500', altText: 'Stylish Top A - View 1' },
-        { url: 'https://picsum.photos/id/253/500/500', altText: 'Stylish Top A - View 2' },
-        { url: 'https://picsum.photos/id/254/500/500', altText: 'Stylish Top A - View 3' }
-      ]
-    },
-    {
-      _id: '7',
-      name: 'Stylish Top B',
-      price: 120,
-      images: [
-      // Sử dụng ID 255, 256, 257
-        { url: 'https://picsum.photos/id/255/500/500', altText: 'Stylish Top B - View 1' },
-        { url: 'https://picsum.photos/id/256/500/500', altText: 'Stylish Top B - View 2' },
-        { url: 'https://picsum.photos/id/257/500/500', altText: 'Stylish Top B - View 3' }
-      ]
-    },
-    {
-      _id: '8',
-      name: 'Stylish Top C',
-      price: 120,
-      images: [
-      // Sử dụng ID 258, 259, 260
-        { url: 'https://picsum.photos/id/258/500/500', altText: 'Stylish Top C - View 1' },
-        { url: 'https://picsum.photos/id/259/500/500', altText: 'Stylish Top C - View 2' },
-        { url: 'https://picsum.photos/id/260/500/500', altText: 'Stylish Top C - View 3' }
-      ]
+  // Lấy màu sắc từ theme (Tập trung vào Primary và Error)
+  const PRIMARY_COLOR = theme.palette.primary.main // Màu chủ đạo (Xanh, dùng cho NEW)
+  const ERROR_COLOR = theme.palette.error.main // Màu đỏ (Dùng cho giá Sale)
+
+  // Logic giữ nguyên
+  const [newArrivals, setNewArrivals] = useState([])
+  useEffect(() => {
+    const fetchNewArrivals = async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/products/new-arrivals`)
+        setNewArrivals(response.data)
+      } catch (error) {
+        console.error(error)
+      }
     }
-  ]
+    fetchNewArrivals()
+  }, [])
 
   const scrollRef = useRef(null)
   const [isDragging, setIsDragging] = useState(false)
@@ -149,45 +86,64 @@ const NewArrivals = () => {
         container.removeEventListener('scroll', updateScrollButtons)
       }
     }
-  }, [])
+  }, [newArrivals])
+
+  // Hàm render Rating Stars
+  const renderRatingStars = (rating) => {
+    const stars = []
+    const fullStars = Math.floor(rating)
+    const hasHalfStar = rating % 1 !== 0
+
+    for (let i = 0; i < 5; i++) {
+      if (i < fullStars) {
+        stars.push(<FaStar key={i} className='text-yellow-500 text-sm' />)
+      } else if (i === fullStars && hasHalfStar) {
+        stars.push(<FaStar key={i} className='text-yellow-500 text-sm opacity-50' />)
+      } else {
+        // Empty Star
+        stars.push(<FaStar key={i} className='text-gray-300 text-sm' />)
+      }
+    }
+    return <div className='flex space-x-0.5'>{stars}</div>
+  }
 
   return (
-    <section className='py-16 px-4 lg:px-0' style={{ backgroundColor: colors.background }}>
+    <section className='py-12 px-4 lg:px-0' style={{ backgroundColor: theme.palette.background.default }}>
       <div className='container mx-auto text-center mb-10 relative'>
-        <h2 className='text-3xl font-bold mb-4' style={{ color: colors.text }}>
-          Khám Phá Bộ Sưu Tập Mới
+        <h2 className='text-4xl font-Poppins mb-2 uppercase tracking-widest' style={{ color: colors.text }}>
+          SẢN PHẨM MỚI
         </h2>
-        <p className='text-lg mb-8' style={{ color: colors.mutedText }}>
-        Cập nhật xu hướng mới nhất với những thiết kế vừa ra mắt, giúp bạn luôn nổi bật và sành điệu mỗi ngày.
+        <p className='text-md mb-8 max-w-2xl mx-auto font-Poppins italic' style={{ color: colors.mutedText }}>
+        Chất lượng vượt thời gian, thiết kế mới nhất.
         </p>
 
-        {/* Scroll Buttons */}
+        {/* Scroll Buttons - Đơn giản hóa kiểu dáng */}
         <div className='absolute right-0 bottom-[30px] flex space-x-2'>
           <button
             onClick={() => scroll('left')}
             disabled={!canScrollLeft}
-            className='p-2 rounded border'
+            className='p-2 rounded-full border transition-all duration-300'
             style={{
-              backgroundColor: canScrollLeft ? colors.background : colors.border,
-              color: canScrollLeft ? colors.text : colors.mutedText,
+              backgroundColor: canScrollLeft ? theme.palette.background.paper : theme.palette.grey[200],
+              color: PRIMARY_COLOR,
               cursor: canScrollLeft ? 'pointer' : 'not-allowed',
-              borderColor: colors.border
+              borderColor: theme.palette.divider
             }}
           >
-            <FiChevronLeft className='text-2xl' />
+            <FiChevronLeft className='text-xl' />
           </button>
           <button
             onClick={() => scroll('right')}
             disabled={!canScrollRight}
-            className='p-2 rounded border'
+            className='p-2 rounded-full border transition-all duration-300'
             style={{
-              backgroundColor: canScrollRight ? colors.background : colors.border,
-              color: canScrollRight ? colors.text : colors.mutedText,
+              backgroundColor: canScrollRight ? theme.palette.background.paper : theme.palette.grey[200],
+              color: PRIMARY_COLOR,
               cursor: canScrollRight ? 'pointer' : 'not-allowed',
-              borderColor: colors.border
+              borderColor: theme.palette.divider
             }}
           >
-            <FiChevronRight className='text-2xl' />
+            <FiChevronRight className='text-xl' />
           </button>
         </div>
       </div>
@@ -195,29 +151,89 @@ const NewArrivals = () => {
       {/* Scrollable Content */}
       <div
         ref={scrollRef}
-        className={`container mx-auto overflow-x-scroll flex space-x-6 relative ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        className={`container mx-auto overflow-x-scroll flex space-x-8 relative ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUpOrLeave}
         onMouseLeave={handleMouseUpOrLeave}
       >
         {newArrivals.map((product) => (
-          <div key={product._id} className='min-w-[100%] sm:min-w-[50%] lg:min-w-[30%] relative'>
-            <img
-              src={product.images[0].url}
-              alt={product.images[0]?.altText || product.name}
-              className='w-full h-[500px] object-cover rounded-lg'
-              draggable='false'
-            />
-            <div
-              className='absolute bottom-0 left-0 right-0 bg-opacity-50 backdrop-blur-md p-4 rounded-b-lg'
-              style={{ backgroundColor: `${colors.background}cc`, color: colors.text }}
-            >
-              <Link to={`/product/${product._id}`} className='block'>
-                <h4 className='font-medium'>{product.name}</h4>
-                <p className='mt-1'>${product.price}</p>
-              </Link>
-            </div>
+          <div
+            key={product._id}
+            className='min-w-full sm:min-w-[50%] md:min-w-[33.333%] lg:min-w-[20%] relative cursor-pointer group overflow-hidden transition-all duration-300' // Bỏ rounded-xl để ảnh có thể full width
+            style={{
+              backgroundColor: theme.palette.background.paper,
+              border: `1px solid ${theme.palette.divider}`,
+              borderRadius: '4px',
+              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)'
+            }}
+          >
+            <Link to={`/products/${product._id}`} className='block'>
+              {/* Hình ảnh */}
+              <img
+                src={product.images && product.images.length > 0 ? product.images[0].url : 'placeholder_image_url'}
+                alt={product.name}
+                className='w-full h-[350px] object-contain transition-transform duration-500 group-hover:scale-105'
+                draggable='false'
+              />
+
+              {/*TAGS (Chỉ hiển thị NEW & SALE) */}
+              <div className='absolute top-3 left-3 flex space-x-2'>
+                <span
+                  className='px-3 py-1 text-xs font-bold tracking-widest text-white shadow-md'
+                  style={{ backgroundColor: PRIMARY_COLOR }}
+                >
+                        NEW
+                </span>
+
+                {/* Sale Tag (Nếu có giảm giá) */}
+                {product.disCountPrice && product.disCountPrice < product.price && (
+                  <span
+                    className='px-3 py-1 text-xs font-bold tracking-widest text-white shadow-md'
+                    style={{ backgroundColor: ERROR_COLOR }}
+                  >
+                            SALE
+                  </span>
+                )}
+              </div>
+
+              <div
+                className='p-4 text-left transition-all duration-300'
+                style={{
+                  backgroundColor: 'transparent',
+                  color: theme.palette.text.primary
+                }}
+              >
+                <div className='flex items-center mb-1'>
+                  {renderRatingStars(product.rating)}
+                  <span className='ml-2 text-xs' style={{ color: colors.mutedText }}>
+                        ({product.numReviews || 0} Đánh giá)
+                  </span>
+                </div>
+                {/* Tên Sản phẩm */}
+                <h4 className='font-normal text-lg mb-1 line-clamp-1 tracking-wide'>
+                  {product.name}
+                </h4>
+
+                {/* Hiển thị Giá */}
+                {product.disCountPrice && product.disCountPrice < product.price ? (
+                  <div className='flex items-end space-x-2'>
+                    {/* Giá Khuyến Mãi (Màu Đỏ/Error) */}
+                    <p className='text-lg font-bold' style={{ color: ERROR_COLOR }}>
+                      {formatCurrency(product.disCountPrice)}
+                    </p>
+                    {/* Giá Gốc */}
+                    <p className='text-sm line-through' style={{ color: colors.mutedText }}>
+                      {formatCurrency(product.price)}
+                    </p>
+                  </div>
+                ) : (
+                  <p className='text-lg font-bold'>
+                    {formatCurrency(product.price)}
+                  </p>
+                )}
+              </div>
+            </Link>
           </div>
         ))}
       </div>

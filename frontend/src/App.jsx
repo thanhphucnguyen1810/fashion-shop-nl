@@ -7,12 +7,16 @@ import SettingsProvider from '~/contexts/SettingsContext'
 import Home from '~/pages/Home'
 import Login from '~/pages/Login'
 import Register from '~/pages/Register'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
+import VerifyEmail from './pages/VerifyEmail'
 import Profile from '~/pages/Profile'
 import CollectionPage from '~/pages/CollectionPage'
 import ProductDetails from '~/components/Products/ProductDetails'
 import Contact from '~/pages/Contact'
 import Checkout from '~/components/Cart/Checkout'
 import OrderConfirmationPage from '~/pages/OrderConfirmationPage'
+import OrderSuccessPage from '~/pages/OrderSuccess'
 import OrderDetailsPage from '~/pages/OrderDetailsPage'
 import MyOrdersPage from '~/pages/MyOrdersPage'
 
@@ -25,9 +29,9 @@ import OrderManagement from './components/Admin/OrderManagement'
 import AdminDiscountCodes from './components/Admin/AdminDiscountCodes'
 import AdminReviews from './components/Admin/AdminReviews'
 import StockInList from './components/Admin/StockInList'
-// import OrderDetailModal from './components/Admin/OrderDetails'
-// import SystemSettings from './components/Admin/SystemSettings'
-// import Notifications from './components/Admin/Notifications'
+import ProtectedRoute from './components/Common/ProtectedRoute'
+import UserOrderHistory from './components/Admin/UserOrderHistory'
+import CategoryManagement from './components/Admin/CategoryManagement'
 
 
 function App() {
@@ -42,33 +46,45 @@ function App() {
             <Route path='login' element={<Login />} />
             <Route path='login/success' element={<Login />} />
             <Route path='register' element={<Register />} />
+            <Route path="/verify-email/:token" element={<VerifyEmail />} />
+            <Route path='forgot-password' element={<ForgotPasswordPage />} />
+            <Route path='reset-password/:token' element={<ResetPasswordPage />} />
             <Route path='profile' element={<Profile />} />
             <Route path='contact' element={<Contact />} />
 
             {/* Collection Pages */}
-            <Route path='collections/:collection' element={<CollectionPage />} />
+            <Route path='collections' element={<CollectionPage />} />
+            <Route path='collections/:collections' element={<CollectionPage />} />
             <Route path='collections/:category/:subcategory' element={<CollectionPage />} />
 
             {/* Product Details */}
-            <Route path='product/:id' element={<ProductDetails />} />
+            <Route path='products/:id' element={<ProductDetails />} />
             <Route path='checkout' element={<Checkout />} />
-            <Route path='order-confirmation' element={<OrderConfirmationPage />} />
+            <Route path='order-confirm/:id' element={<OrderConfirmationPage />} />
+            <Route path="/order-success/:id" element={<OrderSuccessPage />} />
             <Route path='order/:id' element={<OrderDetailsPage />} />
             <Route path='my-orders' element={<MyOrdersPage />} />
 
           </Route>
           {/* Admin Layout */}
-          <Route path='/admin' element={<AdminLayout />}>
+          <Route
+            path='/admin'
+            element={
+              <ProtectedRoute role='admin'>
+                <AdminLayout />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<AdminHomePage />} />
             <Route path='users' element={<UserManagement />} />
+            <Route path="users/:userId/orders" element={<UserOrderHistory />} />
             <Route path='products' element={<ProductManagement />} />
             <Route path='products/:id/edit' element={<EditProductPage />} />
             <Route path='orders' element={<OrderManagement />} />
             <Route path='coupons' element={<AdminDiscountCodes />} />
             <Route path="reviews" element={<AdminReviews />} />
             <Route path='stock-in' element={<StockInList />} />
-            {/* <Route path='settings' element={<SystemSettings />} /> */}
-            {/* <Route path="notifications" element={<Notifications />} /> */}
+            <Route path='categories' element={<CategoryManagement />} />
           </Route>
         </Routes>
       </BrowserRouter>

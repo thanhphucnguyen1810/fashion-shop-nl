@@ -59,7 +59,7 @@ export default function AdminReviews() {
 
   return (
     <div className="p-6" style={{ color: theme.palette.text.primary }}>
-      <h2 className="text-2xl font-bold mb-4">Danh sách đánh giá sản phẩm</h2>
+      <h2 className="text-2xl font-bold mb-4">Quản Lý Đánh Giá Sản Phẩm</h2>
 
       {/* 🔍 Search Bar */}
       <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">

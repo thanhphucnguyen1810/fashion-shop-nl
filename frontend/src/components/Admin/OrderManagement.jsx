@@ -1,65 +1,70 @@
 import { useTheme, alpha } from '@mui/material/styles'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { FaTimes, FaUser, FaMoneyBillWave, FaTruck, FaHome, FaBox, FaReceipt, FaSearch } from 'react-icons/fa'
-import OrderDetailModal from './OrderDetails'
+// Giả định OrderDetailModal và Loading có sẵn
+// import OrderDetailModal from './OrderDetails'
+// import Loading from '../Common/Loading'
+import { useDispatch, useSelector } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
+import { fetchAllOrders, updateOrderStatus as updateOrderThunk } from '~/redux/slices/admin/adminOrderSlice'
 
+// === CẬP NHẬT TRẠNG THÁI CHO KHỚP VỚI MODEL ===
 const ORDER_STATUSES = [
-  { value: 'Pending Payment', label: 'Chờ thanh toán', color: 'bg-yellow-300 text-yellow-900' },
-  { value: 'Processing', label: 'Đang xử lý', color: 'bg-blue-300 text-blue-900' },
-  { value: 'Packing', label: 'Đang đóng gói', color: 'bg-indigo-300 text-indigo-900' },
-  { value: 'Shipped', label: 'Đã gửi hàng', color: 'bg-purple-300 text-purple-900' },
-  { value: 'Out for Delivery', label: 'Đang giao hàng', color: 'bg-pink-300 text-pink-900' },
-  { value: 'Delivered', label: 'Đã giao hàng', color: 'bg-green-300 text-green-900' },
+  { value: 'PendingCheckout', label: 'Tạo đơn tạm', color: 'bg-gray-300 text-gray-700' }, // Trạng thái này có thể không cần hiển thị cho Admin, nhưng tôi giữ lại để đảm bảo tính đầy đủ
+  { value: 'AwaitingConfirmation', label: 'Chờ xác nhận', color: 'bg-yellow-300 text-yellow-900' },
+  { value: 'AwaitingShipment', label: 'Chờ giao hàng', color: 'bg-blue-300 text-blue-900' },
+  { value: 'InTransit', label: 'Đang giao hàng', color: 'bg-purple-300 text-purple-900' },
+  { value: 'Delivered', label: 'Đã giao thành công', color: 'bg-green-300 text-green-900' },
   { value: 'Cancelled', label: 'Đã hủy', color: 'bg-red-300 text-red-900' }
-]
-
-const MOCK_ORDERS = [
-  {
-    _id: 12345,
-    user: { name: 'Nguyễn Thanh Phúc' },
-    totalPrice: 120000,
-    status: 'Processing',
-    createdAt: '2025-06-07',
-    paymentMethod: 'Thẻ tín dụng',
-    address: '123 Đường Chính, Thành phố',
-    items: [
-      { id: 1, name: 'Sản phẩm A', quantity: 2, price: 30 },
-      { id: 2, name: 'Sản phẩm B', quantity: 1, price: 60 }
-    ]
-  },
-  {
-    _id: 12346,
-    user: { name: 'Nguyễn Văn A' },
-    totalPrice: 200000,
-    status: 'Pending Payment',
-    createdAt: '2025-06-06',
-    paymentMethod: 'Thanh toán khi nhận hàng',
-    address: '456 Đường Khác, Thành phố',
-    items: [
-      { id: 3, name: 'Sản phẩm C', quantity: 4, price: 50 }
-    ]
-  }
 ]
 
 const ITEMS_PER_PAGE = 5
 
 const OrderManagement = () => {
-  const [orders, setOrders] = useState(MOCK_ORDERS)
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const { user } = useSelector((state) => state.auth)
+  const { orders, loading, error } = useSelector((state) => state.adminOrders)
+
+  useEffect(() => {
+    if (!user || user.role !== 'admin') {
+      navigate('/')
+    } else {
+      dispatch(fetchAllOrders())
+    }
+  }, [dispatch, user, navigate])
+
+  const handleStatusChange = (orderId, status) => {
+    // Sử dụng thunk đã đổi tên để tránh xung đột
+    dispatch(updateOrderThunk({ id: orderId, status }))
+  }
+
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [sortBy, setSortBy] = useState('createdAt_desc')
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
+  // Sử dụng state để mô phỏng thông báo thay vì alert()
+  const [statusMessage, setStatusMessage] = useState(null)
 
   const theme = useTheme()
 
+  // === SỬA LỖI LỌC DỮ LIỆU ĐỂ XỬ LÝ ĐƠN HÀNG GUEST AN TOÀN ===
   const filteredOrders = orders
-    .filter(order =>
-      (order._id.toString().includes(searchTerm) ||
-      order.user.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (filterStatus ? order.status === filterStatus : true)
-    )
+    .filter(order => {
+      // Lấy tên khách hàng hoặc Guest ID nếu là đơn hàng Guest
+      const customerName = order.user?.name || order.guestId || 'Khách (Guest)'
+      const orderIdString = order._id.toString()
+      const term = searchTerm.toLowerCase()
+
+      return (
+      // Lọc theo Mã đơn hàng hoặc Tên khách hàng (Đã an toàn)
+        (orderIdString.includes(term) || customerName.toLowerCase().includes(term)) &&
+            // Lọc theo trạng thái
+            (filterStatus ? order.status === filterStatus : true)
+      )
+    })
 
   filteredOrders.sort((a, b) => {
     if (sortBy === 'createdAt_desc') return new Date(b.createdAt) - new Date(a.createdAt)
@@ -72,19 +77,16 @@ const OrderManagement = () => {
   const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE)
   const paginatedOrders = filteredOrders.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
 
-  const handleStatusChange = (orderId, newStatus) => {
-    alert(`Cập nhật đơn hàng #${orderId} sang trạng thái "${newStatus}"`)
-    setOrders(prev =>
-      prev.map(o => (o._id === orderId ? { ...o, status: newStatus } : o))
-    )
-  }
-
   const handleCancelOrder = (orderId) => {
+    // Thay thế window.confirm/alert
     if (!window.confirm(`Bạn có chắc muốn hủy đơn hàng #${orderId} không?`)) return
-    alert(`Đơn hàng #${orderId} đã được hủy`)
-    setOrders(prev =>
-      prev.map(o => (o._id === orderId ? { ...o, status: 'Cancelled' } : o))
-    )
+
+    // Gọi thunk update status thành 'Cancelled'
+    dispatch(updateOrderThunk({ id: orderId, status: 'Cancelled' }))
+      .then(() => setStatusMessage(`Đơn hàng #${orderId} đã được hủy thành công.`))
+      .catch(() => setStatusMessage(`Lỗi khi hủy đơn hàng #${orderId}.`))
+
+    // Lưu ý: Không cần gọi setOrders thủ công nếu Redux Thunk (updateOrderStatus.fulfilled) hoạt động đúng
   }
 
   const openOrderDetail = (order) => {
@@ -97,9 +99,36 @@ const OrderManagement = () => {
     setShowDetailModal(false)
   }
 
+  // Dùng placeholder cho OrderDetailModal và Loading vì code chưa cung cấp
+  const OrderDetailModalPlaceholder = ({ showDetailModal, closeOrderDetail, selectedOrder }) => showDetailModal ? (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full">
+        <h3 className="text-xl font-bold mb-4">Chi tiết đơn hàng #{selectedOrder?._id}</h3>
+        <p>Khách hàng: {selectedOrder?.user?.name || selectedOrder?.guestId || 'Guest'}</p>
+        <p>Tổng tiền: {Number(selectedOrder?.totalPrice || 0).toLocaleString('vi-VN')} đ</p>
+        <button onClick={closeOrderDetail} className="mt-4 bg-red-500 text-white p-2 rounded">Đóng</button>
+      </div>
+    </div>
+  ) : null
+
+  const LoadingPlaceholder = () => (
+    <div className="text-center p-8">Đang tải dữ liệu...</div>
+  )
+
+  if (loading) return <LoadingPlaceholder />
+  if (error) return <p className="text-red-500 p-4 text-center">Lỗi: {error}</p>
+
   return (
     <div className="max-w-7xl mx-auto p-6">
-      <h2 className="text-3xl font-bold mb-6">Quản lý đơn hàng</h2>
+      <h2 className="text-3xl font-bold mb-6 text-gray-800">Quản Lý Đơn Hàng</h2>
+
+      {/* Status Message Display */}
+      {statusMessage && (
+        <div className="mb-4 p-3 bg-indigo-100 text-indigo-700 rounded-lg flex justify-between items-center shadow-md">
+          <span>{statusMessage}</span>
+          <button onClick={() => setStatusMessage(null)}><FaTimes /></button>
+        </div>
+      )}
 
       {/* Thanh tìm kiếm & lọc */}
       <div className="flex flex-wrap gap-4 mb-6">
@@ -107,9 +136,12 @@ const OrderManagement = () => {
         <div className="relative w-full md:w-1/2">
           <input
             type="text"
-            placeholder="Tìm theo mã đơn hoặc tên khách hàng"
+            placeholder="Tìm theo mã đơn, tên khách hàng hoặc Guest ID"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value)
+              setCurrentPage(1) // Reset page khi tìm kiếm
+            }}
             className="w-full py-2.5 pl-11 pr-24 text-sm rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             style={{
               backgroundColor: theme.palette.background.paper,
@@ -122,34 +154,30 @@ const OrderManagement = () => {
             className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-2 bg-blue-600 text-white text-sm font-semibold px-4 py-1.5 rounded-full hover:bg-blue-700 active:scale-95 transition-all duration-200"
             onClick={() => console.log('Search:', searchTerm)}
           >
-           Tìm
+            Tìm
           </button>
         </div>
 
         <select
           value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          className="border border-gray-300 rounded px-3 py-2"
-          style={{
-            backgroundColor: theme.palette.background.paper,
-            color: theme.palette.text.primary,
-            borderColor: alpha(theme.palette.text.primary, 0.3)
+          onChange={(e) => {
+            setFilterStatus(e.target.value)
+            setCurrentPage(1) // Reset page khi lọc
           }}
+          className="px-4 py-2 rounded flex items-center gap-2 border"
         >
-          <option value="">Tất cả trạng thái</option>
+          <option value="">-- Tất cả trạng thái --</option>
           {ORDER_STATUSES.map(({ value, label }) => (
+            // Bỏ qua trạng thái tạm thời 'PendingCheckout' trong lọc nếu bạn không muốn thấy nó thường xuyên
+            // {value !== 'PendingCheckout' && (
             <option key={value} value={value}>{label}</option>
+            // )}
           ))}
         </select>
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}
-          className="border border-gray-300 rounded px-3 py-2"
-          style={{
-            backgroundColor: theme.palette.background.paper,
-            color: theme.palette.text.primary,
-            borderColor: alpha(theme.palette.text.primary, 0.3)
-          }}
+          className="px-4 py-2 rounded flex items-center gap-2 border"
         >
           <option value="createdAt_desc">Mới nhất</option>
           <option value="createdAt_asc">Cũ nhất</option>
@@ -160,14 +188,14 @@ const OrderManagement = () => {
 
       {/* Bảng đơn hàng */}
       <div
-        className="overflow-x-auto shadow-md sm:rounded-lg"
+        className="overflow-x-auto shadow-xl rounded-xl"
         style={{
           backgroundColor: theme.palette.background.paper
         }}
       >
-        <div className="min-w-[1000px]"> {/* Đặt width tối thiểu để bảng không bung */}
+        <div className="min-w-[1000px]">
           <table className="min-w-full text-left text-gray-700">
-            <thead className="bg-gray-100 text-xs uppercase">
+            <thead className="bg-gray-100 text-xs uppercase text-gray-600 border-b">
               <tr>
                 <th className="py-3 px-4">Mã đơn</th>
                 <th className="py-3 px-4">Khách hàng</th>
@@ -180,43 +208,55 @@ const OrderManagement = () => {
               {paginatedOrders.length > 0 ? (
                 paginatedOrders.map((order) => {
                   const statusObj = ORDER_STATUSES.find(s => s.value === order.status) || {}
+                  // Xác định tên khách hàng: Ưu tiên User > Guest ID
+                  const customerDisplay = order.user?.name || (order.guestId ? `[GUEST] ${order.guestId.substring(0, 8)}...` : 'Khách vãng lai')
+
                   return (
-                    <tr key={order._id} className="border-b hover:bg-gray-50">
+                    <tr key={order._id} className="border-b hover:bg-gray-50 transition duration-150 ease-in-out">
                       <td
                         className="py-4 px-4 font-medium whitespace-nowrap cursor-pointer text-blue-600 hover:underline"
                         onClick={() => openOrderDetail(order)}
                       >
-                  #{order._id}
+                     #{order._id.substring(0, 10)}...
                       </td>
-                      <td className="py-4 px-4">{order.user.name}</td>
-                      <td className="py-4 px-4">{order.totalPrice.toLocaleString()} đ</td>
+                      <td className="py-4 px-4 text-gray-800">{customerDisplay}</td>
+                      {/* Sửa lỗi định dạng tiền tệ */}
+                      <td className="py-4 px-4 font-semibold text-gray-900">
+                        {Number(order.totalPrice).toLocaleString('vi-VN')} đ
+                      </td>
                       <td className="py-4 px-4">
                         <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${statusObj.color || 'bg-gray-300 text-gray-700'}`}>
-                          {ORDER_STATUSES.find(s => s.value === order.status)?.label || order.status}
+                          {statusObj.label || order.status}
                         </span>
                       </td>
                       <td className="py-4 px-4 flex gap-2 flex-wrap">
-                        <select
-                          value={order.status}
-                          onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-1"
-                        >
-                          {ORDER_STATUSES.map(({ value, label }) => (
-                            <option key={value} value={value}>{label}</option>
-                          ))}
-                        </select>
-                        <button
-                          onClick={() => handleCancelOrder(order._id)}
-                          className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                          disabled={order.status === 'Cancelled' || order.status === 'Delivered'}
-                        >
-                    Hủy
-                        </button>
+                        {/* Ẩn dropdown và nút Hủy nếu đơn hàng đang ở trạng thái TẠM THỜI (PendingCheckout) */}
+                        {order.status !== 'PendingCheckout' ? (
+                          <>
+                            <select
+                              value={order.status}
+                              onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                              className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-1.5 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                              disabled={order.status === 'Cancelled' || order.status === 'Delivered'}
+                            >
+                              {ORDER_STATUSES.filter(s => s.value !== 'PendingCheckout').map(({ value, label }) => (
+                                <option key={value} value={value}>{label}</option>
+                              ))}
+                            </select>
+                            <button
+                              onClick={() => handleCancelOrder(order._id)}
+                              className="bg-red-500 text-white px-3 py-1.5 rounded-lg hover:bg-red-600 shadow-md transition active:scale-95"
+                              disabled={order.status === 'Cancelled' || order.status === 'Delivered'}
+                            >Hủy
+                            </button>
+                          </>
+                        ) : (
+                          <span className="text-sm text-gray-500 italic px-2 py-1">Chưa hoàn tất thanh toán</span>
+                        )}
                         <button
                           onClick={() => openOrderDetail(order)}
-                          className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                        >
-                    Xem chi tiết
+                          className="bg-blue-500 text-white px-3 py-1.5 rounded-lg hover:bg-blue-600 shadow-md transition active:scale-95"
+                        > Xem chi tiết
                         </button>
                       </td>
                     </tr>
@@ -225,7 +265,7 @@ const OrderManagement = () => {
               ) : (
                 <tr>
                   <td colSpan={8} className="text-center py-6 text-gray-500">
-              Không tìm thấy đơn hàng nào.
+                     Không tìm thấy đơn hàng nào.
                   </td>
                 </tr>
               )}
@@ -241,15 +281,14 @@ const OrderManagement = () => {
           <button
             onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
             disabled={currentPage === 1}
-            className="px-3 py-1 border rounded disabled:opacity-50"
-          >
-            Trước
+            className="px-3 py-1 border rounded-lg disabled:opacity-50 bg-white hover:bg-gray-100"
+          > Trước
           </button>
           {[...Array(totalPages)].map((_, i) => (
             <button
               key={i}
               onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 border rounded ${currentPage === i + 1 ? 'bg-blue-600 text-white' : ''}`}
+              className={`px-3 py-1 border rounded-lg ${currentPage === i + 1 ? 'bg-blue-600 text-white shadow-lg' : 'bg-white hover:bg-gray-100'}`}
             >
               {i + 1}
             </button>
@@ -257,15 +296,14 @@ const OrderManagement = () => {
           <button
             onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
             disabled={currentPage === totalPages}
-            className="px-3 py-1 border rounded disabled:opacity-50"
-          >
-            Sau
+            className="px-3 py-1 border rounded-lg disabled:opacity-50 bg-white hover:bg-gray-100"
+          >Sau
           </button>
         </div>
       )}
 
-      {/* Chi tiết đơn hàng */}
-      <OrderDetailModal
+      {/* Chi tiết đơn hàng (Dùng Placeholder) */}
+      <OrderDetailModalPlaceholder
         selectedOrder={selectedOrder}
         showDetailModal={showDetailModal}
         closeOrderDetail={closeOrderDetail}
@@ -275,4 +313,8 @@ const OrderManagement = () => {
   )
 }
 
+// Giả định bạn đã có OrderDetailModal và Loading thực tế
+// export default OrderManagement
+
+// Dùng export mặc định để chạy component này trong môi trường hiện tại
 export default OrderManagement

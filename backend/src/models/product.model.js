@@ -4,7 +4,7 @@ const productSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    time: true
+    trim: true
   },
   description: {
     type: String,
@@ -51,10 +51,21 @@ const productSchema = new mongoose.Schema({
   },
   gender: {
     type: String,
-    enum: ['Men', 'Women', 'Unisex']
+    enum: [
+      'Nam',
+      'Nữ',
+      'Unisex',
+      'Nam (Bé Trai)',
+      'Nữ (Bé Gái)'
+    ],
+    default: 'Unisex'
   },
   images: [
     {
+      public_id: {
+        type: String,
+        required: true
+      },
       url: {
         type: String,
         required: true
@@ -104,5 +115,6 @@ const productSchema = new mongoose.Schema({
 },
 { timestamps: true }
 )
+
 
 export default mongoose.model('Product', productSchema)

@@ -1,6 +1,8 @@
 import 'dotenv/config'
 
 export const env = {
+  FRONTEND_URL: process.env.FRONTEND_URL,
+  API_URL: process.env.API_URL,
   MONGODB_URI: process.env.MONGODB_URI,
   MONGODB_DB_NAME: process.env.MONGODB_DB_NAME,
 
@@ -11,7 +13,9 @@ export const env = {
 
   AUTHOR: process.env.AUTHOR,
   JWT_SECRET: process.env.JWT_SECRET,
-  FRONTEND_URL: process.env.FRONTEND_URL,
+
+  SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
+  SENDGRID_SENDER: process.env.SENDGRID_SENDER,
 
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
@@ -23,7 +27,11 @@ export const env = {
 
   FACEBOOK_CLIENT_ID: process.env.FACEBOOK_CLIENT_ID,
   FACEBOOK_CLIENT_SECRET: process.env.FACEBOOK_CLIENT_SECRET,
-  FACEBOOK_CALLBACK_URL: process.env.FACEBOOK_CALLBACK_URL
+  FACEBOOK_CALLBACK_URL: process.env.FACEBOOK_CALLBACK_URL,
+
+  SEPAY_BANK_ACCOUNT: process.env.SEPAY_BANK_ACCOUNT,
+  SEPAY_BANK_NAME: process.env.SEPAY_BANK_NAME
+
 }
 
 

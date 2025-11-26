@@ -18,16 +18,19 @@ import oauthRoutes from './routes/oauth.routes'
 
 import productRoutes from './routes/product.routes'
 import cartRoutes from './routes/cart.routes'
+import couponRoutes from './routes/coupon.routes'
 import checkoutRoutes from './routes/checkout.routes'
 import orderRoutes from './routes/order.routes'
 import uploadRoutes from './routes/upload.routes'
 import subscribeRoutes from './routes/subscribe.routes'
+import categoryRoutes from './routes/category.routes'
 
 import adminUserRoutes from './routes/admin/admin.user.routes'
 import adminProductRoutes from './routes/admin/admin.product.routes'
 import adminOrderRoutes from './routes/admin/admin.order.routes'
 import adminStockInRoutes from './routes/admin/admin.stock-in.routes'
 import adminReviewRoutes from './routes/admin/admin.review.routes'
+import adminCouponRoutes from './routes/admin/admin.coupon.routes'
 
 
 // Load environment variables
@@ -80,10 +83,12 @@ app.use('/api/users', userRoutes)
 app.use('/api/oauth', oauthRoutes)
 app.use('/api/products', productRoutes)
 app.use('/api/cart', cartRoutes)
+app.use('/api/coupons', couponRoutes)
 app.use('/api/checkout', checkoutRoutes)
 app.use('/api/orders', orderRoutes)
 app.use('/api/upload', uploadRoutes)
 app.use('/api/subscribe', subscribeRoutes)
+app.use('/api/categories', categoryRoutes)
 
 // Admin
 app.use('/api/admin/users', adminUserRoutes)
@@ -91,6 +96,7 @@ app.use('/api/admin/products', adminProductRoutes)
 app.use('/api/admin/orders', adminOrderRoutes)
 app.use('/api/admin/stock-in', adminStockInRoutes)
 app.use('/api/admin/reviews', adminReviewRoutes)
+app.use('/api/admin/coupons', adminCouponRoutes)
 
 // app.use('/api/admin/invoice', adminInvoice)
 
