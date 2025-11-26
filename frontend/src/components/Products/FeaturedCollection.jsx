@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useTheme } from '@mui/material/styles'
-import featured from '~/assets/featured.webp'
+import featured from '~/assets/featured.png'
 
 const FeaturedCollection = () => {
   const theme = useTheme()

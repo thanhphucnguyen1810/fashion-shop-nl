@@ -1,11 +1,72 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { useTheme } from '@mui/material/styles'
+import {
+  Box,
+  Typography,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  FormControlLabel,
+  Radio,
+  Checkbox,
+  Slider,
+  Button,
+  Divider,
+  Grid
+} from '@mui/material'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+
+// --- Color Mapping Utility ---
+const getColorCode = (colorName) => {
+  const lowerCaseName = colorName.toLowerCase()
+  switch (lowerCaseName) {
+  case 'đen':
+    return '#000000'
+  case 'trắng':
+    return '#ffffff'
+  case 'đỏ':
+  case 'đỏ rượu':
+  case 'đỏ burgundy':
+    return '#800020'
+  case 'xanh dương':
+  case 'xanh navy':
+    return '#000080'
+  case 'xanh lá':
+    return '#008000'
+  case 'vàng':
+    return '#ffc107'
+  case 'vàng mustard':
+  case 'vàng mù tạt':
+    return '#ffdb58'
+  case 'xám':
+    return '#808080'
+  case 'hồng':
+  case 'hồng phấn':
+    return '#ffc0cb'
+  case 'nâu':
+    return '#964b00'
+  case 'be':
+    return '#f5f5dc'
+  case 'tím':
+    return '#800080'
+  case 'xanh mint':
+    return '#3eb489'
+  case 'xanh teal':
+    return '#008080'
+  case 'xanh rêu':
+    return '#556b2f'
+  default:
+    // Dùng màu trắng với border cho các màu phức tạp (như hoa văn, phối màu)
+    return 'transparent'
+  }
+}
 
 const FilterSidebar = () => {
   const [searchParams, setSearchParams] = useSearchParams()
-  const navigate = useNavigate()
   const theme = useTheme()
+
+  const MAX_PRICE_VALUE = 500 // Giả định 500 = 500.000 VNĐ
 
   const [filters, setFilters] = useState({
     category: '',
@@ -15,20 +76,166 @@ const FilterSidebar = () => {
     material: [],
     brand: [],
     minPrice: 0,
-    maxPrice: 100
+    maxPrice: 500 // Mặc định hiển thị ₫500.000
   })
 
-  const [priceRange, setPriceRange] = useState([0, 100])
+  const [priceRange, setPriceRange] = useState([0, 500])
 
-  const categories = ['Áo', 'Quần']
-  const colors = ['Đỏ', 'Xanh dương', 'Xanh lá', 'Vàng', 'Xám', 'Trắng', 'Hồng', 'Be', 'Xanh navy']
-  const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
-  const materials = ['Cotton', 'Len', 'Denim', 'Polyester', 'Lụa', 'Vải lanh', 'Viscose', 'Nỉ']
-  const brands = ['Urban Threads', 'Modern Fit', 'Street Style', 'Beach Breeze', 'Fashionista', 'ChicStyle']
-  const genders = ['Nam', 'Nữ']
+  // Dữ liệu bộ lọc (giữ nguyên từ file bạn cung cấp)
+  const categories = [
+    'Áo Nam',
+    'Áo Len Nữ',
+    'Áo Polo Nam',
+    'Áo Sơ Mi Nam',
+    'Quần Jeans Nữ',
+    'Túi Xách Nữ',
+    'Áo Thun Nữ',
+    'Áo Kiểu Nữ',
+    'Thời Trang Trẻ Em',
+    'Quần Nam',
+    'Quần Nữ',
+    'Áo Khoác Nữ',
+    'Áo Khoác Nam',
+    'Quần Jeans Trẻ Em',
+    'Quần Legging Bé Gái',
+    'Quần Culottes Bé Gái',
+    'Đầm Maxi Nữ',
+    'Giày Lười Nam',
+    'Mũ Bucket',
+    'Túi Đeo Chéo',
+    'Phụ Kiện'
+  ]
+  const colors = [
+    'Vàng Mustard',
+    'Đen',
+    'Hồng Phấn',
+    'Nâu',
+    'Tím',
+    'Vàng',
+    'Nâu Đất',
+    'Xanh Navy',
+    'Trắng',
+    'Xanh Jeans Đậm',
+    'Đỏ',
+    'Vàng Bò',
+    'Đen Phối Nâu',
+    'Xám Phối Đen',
+    'Xanh Mint',
+    'Hoa Văn Tím/Hồng',
+    'Hoa Nhí Pastel',
+    'Xám',
+    'Kem/Đỏ Rượu Vang',
+    'Trắng/Đen',
+    'Xanh Lá',
+    'Họa Tiết Đen Trắng',
+    'Đỏ Burgundy',
+    'Xanh Teal',
+    'Xanh Nhạt (Light Wash)',
+    'Hồng Nhạt (Blush Pink)',
+    'Kem Họa Tiết',
+    'Hồng Đất',
+    'Be',
+    'Xanh Rêu',
+    'Xanh Jeans Trung Bình',
+    'Hồng Nhạt Họa Tiết Tim',
+    'Hồng Đỏ (Fuchsia)',
+    'Xanh Nhạt',
+    'Đen Họa Tiết',
+    'Trắng Họa Tiết',
+    'Kem/Be',
+    'Đen/Trắng',
+    'Vàng Mù Tạt',
+    'Đỏ Rượu'
+  ]
+  const sizes = [
+    'S',
+    'M',
+    'L',
+    'XL',
+    'XXL',
+    'XS',
+    'X',
+    '2T',
+    '3T',
+    '4T',
+    '5T',
+    '6T',
+    '29',
+    '30',
+    '31',
+    '32',
+    '34',
+    '39',
+    '40',
+    '41',
+    '42'
+  ]
+  const materials = [
+    'Cotton Thấm Hút',
+    'Len Mềm Mại',
+    'Cotton',
+    'Cotton Pha',
+    'Denim Cotton Mềm',
+    'Da PU (Vân Hạt)',
+    'Da PU',
+    'Thun Gân Cotton Co Giãn',
+    'Vải Cotton/Lụa Pha',
+    'Voan/Cotton Mỏng',
+    'Kaki/Cotton Co Giãn',
+    'Cotton Dệt Nổi',
+    'Vải Lụa/Voan Mềm',
+    'Vải Nỉ (Fleece)',
+    'Vải Denim',
+    'Vải Phao',
+    'Vải Denim (Jeans)',
+    'Vải Dù (Nylon/Polyester)',
+    'Cotton Co Giãn',
+    'Vải Dập Nổi (Textured)',
+    'Voan/Lụa',
+    'Vải Nỉ Mỏng (French Terry)',
+    'Vải Nỉ Bông (Fleece)',
+    'Cotton Mềm',
+    'Vải Lưới/Suede Giả',
+    'Cotton Dệt',
+    'Da PU Mềm',
+    'Da Tổng Hợp & Vải Dệt'
+  ]
+  const brands = [
+    'ZENITH APPAREL',
+    'Haint Boutique',
+    'FASHION HUB',
+    'RUSTIC WEAR',
+    'URBAN CHIC',
+    'LUXURY HANDBAGS (Ví dụ)',
+    'OFFICE ELEGANCE',
+    'GIRLY CHIC',
+    'SUMMER VIBE',
+    'KIDS FASHION',
+    'MODERN MAN',
+    'STREET LEGENDS',
+    'CASUAL YOUTH',
+    'BOLD STYLE',
+    'SPORTY GEAR',
+    'DENIM STREET',
+    'WINTER GLAM',
+    'SPORTS JUNIOR',
+    'SMART CASUAL',
+    'CASUAL OUTDOOR',
+    'BLUE LEGACY',
+    'FASHION JUNIOR',
+    'ELEGANT WEAR',
+    'NEWCHIC',
+    'SHOES MASTER',
+    'ACCESSORIES FUN',
+    'MINI BAGS CO.',
+    'DAISY FASHION'
+  ]
+  const genders = ['Nam', 'Nữ', 'Unisex']
 
+  // --- Logic Hooks ---
   useEffect(() => {
     const params = Object.fromEntries([...searchParams])
+    const maxP = Number(params.maxPrice) || 500
     setFilters({
       category: params.category || '',
       gender: params.gender || '',
@@ -37,45 +244,69 @@ const FilterSidebar = () => {
       material: params.material ? params.material.split(',') : [],
       brand: params.brand ? params.brand.split(',') : [],
       minPrice: Number(params.minPrice) || 0,
-      maxPrice: Number(params.maxPrice) || 100
+      maxPrice: maxP
     })
-    setPriceRange([0, Number(params.maxPrice) || 100])
+    setPriceRange([0, maxP])
   }, [searchParams])
+
+  // --- Event Handlers ---
+  const updateURLParams = (newFilters) => {
+    const params = new URLSearchParams(searchParams)
+
+    // Xóa tất cả các filters cũ mà component này quản lý
+    const filterKeys = Object.keys(filters)
+    filterKeys.forEach((key) => params.delete(key))
+
+    // Thêm các filters mới
+    filterKeys.forEach((key) => {
+      const value = newFilters[key]
+      if (Array.isArray(value) && value.length > 0) {
+        params.set(key, value.join(','))
+      } else if (key === 'maxPrice' && value !== 500) {
+        // Chỉ thêm maxPrice nếu nó khác giá trị mặc định (500)
+        params.set('maxPrice', value.toString())
+      } else if (key === 'minPrice' && value !== 0) {
+        params.set('minPrice', value.toString())
+      } else if (
+        !Array.isArray(value) &&
+        value !== '' &&
+        value !== false &&
+        key !== 'minPrice' &&
+        key !== 'maxPrice'
+      ) {
+        params.set(key, value.toString())
+      }
+    })
+
+    setSearchParams(params)
+  }
 
   const handleFilterChange = (e) => {
     const { name, value, checked, type } = e.target
-    const newFilters = { ...filters }
+    let newFilters = { ...filters }
 
     if (type === 'checkbox') {
+      // Đối với checkbox (Size, Material, Brand)
       newFilters[name] = checked
         ? [...(newFilters[name] || []), value]
         : newFilters[name].filter((item) => item !== value)
-    } else {
+    } else if (type === 'radio') {
+      // Đối với radio (Category, Gender)
       newFilters[name] = value
+    } else if (name === 'color') {
+      // Đối với nút màu sắc (xử lý như radio)
+      const isSelected = filters.color === value
+      newFilters.color = isSelected ? '' : value
     }
 
     setFilters(newFilters)
     updateURLParams(newFilters)
   }
 
-  const updateURLParams = (newFilters) => {
-    const params = new URLSearchParams()
-    Object.keys(newFilters).forEach((key) => {
-      const value = newFilters[key]
-      if (Array.isArray(value) && value.length > 0) {
-        params.append(key, value.join(','))
-      } else if (value && value !== '') {
-        params.append(key, value.toString())
-      }
-    })
-    setSearchParams(params)
-    navigate(`?${params.toString()}`)
-  }
-
-  const handlePriceChange = (e) => {
-    const newPrice = Number(e.target.value)
-    const newFilters = { ...filters, minPrice: 0, maxPrice: newPrice }
-    setPriceRange([0, newPrice])
+  const handlePriceChange = (event, newValue) => {
+    // newValue là một số (từ 0 đến MAX_PRICE_VALUE)
+    const newFilters = { ...filters, minPrice: 0, maxPrice: newValue }
+    setPriceRange([0, newValue])
     setFilters(newFilters)
     updateURLParams(newFilters)
   }
@@ -89,164 +320,332 @@ const FilterSidebar = () => {
       material: [],
       brand: [],
       minPrice: 0,
-      maxPrice: 100
+      maxPrice: 500
     }
     setFilters(reset)
-    setPriceRange([0, 100])
-    setSearchParams({})
-    navigate('?')
+    setPriceRange([0, 500])
+
+    // Xóa các params liên quan đến filter, giữ lại search và sortBy
+    const currentSearchParams = new URLSearchParams(searchParams)
+    const search = currentSearchParams.get('search')
+    const sortBy = currentSearchParams.get('sortBy')
+
+    const finalParams = new URLSearchParams()
+    if (search) finalParams.set('search', search)
+    if (sortBy) finalParams.set('sortBy', sortBy)
+
+    setSearchParams(finalParams)
   }
 
-  const labelStyle = 'font-medium mb-2'
-  const checkboxStyle = 'mr-2 h-4 w-4 text-blue-500 focus:ring-blue-400'
+  // --- Render Components ---
+
+  // Component chung cho Radio/Checkbox Group
+  const FilterGroup = ({ title, items, name, type }) => {
+    const isChecked = (value) => {
+      if (type === 'radio') {
+        return filters[name] === value
+      } else {
+        return filters[name]?.includes(value)
+      }
+    }
+
+    return (
+      <Accordion
+        defaultExpanded={
+          name === 'category' || name === 'gender' || name === 'price'
+        }
+        sx={{
+          boxShadow: 'none',
+          '&:before': { display: 'none' },
+          border: 'none',
+          '& .MuiAccordionSummary-root': {
+            minHeight: '40px',
+            padding: '0 8px'
+          }
+        }}
+      >
+        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ p: 0 }}>
+          <Typography
+            variant='subtitle1'
+            fontWeight='medium'
+            color='text.primary'
+          >
+            {title}
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails sx={{ p: '8px 8px 16px 8px' }}>
+          <Grid container spacing={1}>
+            {items.map((item) => (
+              <Grid item xs={12} sm={6} key={item}>
+                <FormControlLabel
+                  sx={{
+                    marginRight: 0,
+                    '& .MuiFormControlLabel-label': {
+                      fontSize: '0.875rem'
+                    }
+                  }}
+                  control={
+                    type === 'radio' ? (
+                      <Radio
+                        size='small'
+                        name={name}
+                        value={item}
+                        checked={isChecked(item)}
+                        onChange={handleFilterChange}
+                        sx={{ p: '4px' }}
+                      />
+                    ) : (
+                      <Checkbox
+                        size='small'
+                        name={name}
+                        value={item}
+                        checked={isChecked(item)}
+                        onChange={handleFilterChange}
+                        sx={{ p: '4px' }}
+                      />
+                    )
+                  }
+                  label={item}
+                />
+              </Grid>
+            ))}
+          </Grid>
+        </AccordionDetails>
+        <Divider />
+      </Accordion>
+    )
+  }
+
+  // Component riêng cho Màu sắc
+  const ColorFilterGroup = () => (
+    <Accordion
+      defaultExpanded
+      sx={{
+        boxShadow: 'none',
+        '&:before': { display: 'none' },
+        border: 'none',
+        '& .MuiAccordionSummary-root': {
+          minHeight: '40px',
+          padding: '0 8px'
+        }
+      }}
+    >
+      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ p: 0 }}>
+        <Typography variant='subtitle1' fontWeight='medium' color='text.primary'>
+          Màu sắc
+        </Typography>
+      </AccordionSummary>
+      <AccordionDetails sx={{ p: '8px 8px 16px 8px' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 1.5
+          }}
+        >
+          {colors.map((color) => {
+            const colorCode = getColorCode(color)
+            const isSelected = filters.color === color
+            const isComplex = colorCode === 'transparent'
+            const isWhite = colorCode === '#ffffff'
+
+            return (
+              <Box
+                key={color}
+                onClick={() =>
+                  handleFilterChange({
+                    target: { name: 'color', value: color }
+                  })
+                }
+                title={color}
+                sx={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  cursor: 'pointer',
+                  backgroundColor: colorCode,
+                  border: `1px solid ${
+                    isWhite || isComplex
+                      ? theme.palette.divider
+                      : 'transparent'
+                  }`,
+                  // Styling viền ngoài khi được chọn
+                  boxShadow: isSelected
+                    ? `0 0 0 3px ${theme.palette.primary.main}, 0 0 0 4px ${theme.palette.background.paper}`
+                    : 'none',
+                  position: 'relative',
+                  // Dành cho các màu phức tạp
+                  ...(isComplex && {
+                    backgroundImage: `linear-gradient(45deg, ${theme.palette.divider} 25%, transparent 25%), linear-gradient(-45deg, ${theme.palette.divider} 25%, transparent 25%), linear-gradient(135deg, transparent 75%, ${theme.palette.divider} 75%), linear-gradient(-135deg, transparent 75%, ${theme.palette.divider} 75%)`,
+                    backgroundSize: '8px 8px',
+                    backgroundColor: theme.palette.background.default
+                  }),
+                  '&:hover': {
+                    opacity: 0.8
+                  }
+                }}
+              />
+            )
+          })}
+        </Box>
+      </AccordionDetails>
+      <Divider />
+    </Accordion>
+  )
+
+  // Component riêng cho Khoảng giá
+  const PriceFilterGroup = () => (
+    <Accordion
+      defaultExpanded
+      sx={{
+        boxShadow: 'none',
+        '&:before': { display: 'none' },
+        border: 'none',
+        '& .MuiAccordionSummary-root': {
+          minHeight: '40px',
+          padding: '0 8px'
+        }
+      }}
+    >
+      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ p: 0 }}>
+        <Typography variant='subtitle1' fontWeight='medium' color='text.primary'>
+          Khoảng giá
+        </Typography>
+      </AccordionSummary>
+      <AccordionDetails sx={{ p: '8px 16px 16px 16px' }}>
+        <Slider
+          size='small'
+          value={priceRange[1]}
+          min={0}
+          max={MAX_PRICE_VALUE}
+          step={10} // Bước nhảy 10.000 VNĐ
+          onChange={handlePriceChange}
+          aria-labelledby='price-range-slider'
+          valueLabelDisplay='auto'
+          valueLabelFormat={(value) => `₫${value}.000`}
+          sx={{
+            '& .MuiSlider-thumb': {
+              height: 12,
+              width: 12
+            }
+          }}
+        />
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            mt: 1
+          }}
+        >
+          <Typography variant='body2' color='text.secondary'>
+            ₫0
+          </Typography>
+          <Typography
+            variant='body2'
+            fontWeight='medium'
+            color='text.secondary'
+          >
+            Đến ₫{priceRange[1].toLocaleString('en-US')}.000
+          </Typography>
+        </Box>
+      </AccordionDetails>
+      <Divider />
+    </Accordion>
+  )
 
   return (
-    <div className='p-4' style={{ backgroundColor: theme.palette.background.paper }}>
-      <h3 className='text-xl font-medium mb-4' style={{ color: theme.palette.text.primary }}>Bộ lọc</h3>
+    <Box
+      sx={{
+        p: 2,
+        backgroundColor: theme.palette.background.paper,
+        border: `1px solid ${theme.palette.divider}`,
+        borderRadius: 1,
+        height: '100%',
+        minWidth: 250
+      }}
+    >
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 1
+        }}
+      >
+        <Typography
+          variant='h6'
+          fontWeight='bold'
+          color='text.primary'
+          sx={{ textTransform: 'uppercase', fontSize: '1rem' }}
+        >
+          Bộ Lọc Tìm Kiếm
+        </Typography>
+      </Box>
+
+      <Divider sx={{ mb: 1 }} />
 
       {/* Danh mục */}
-      <div className='mb-6'>
-        <label className={labelStyle} style={{ color: theme.palette.text.secondary }}>Danh mục</label>
-        {categories.map((category) => (
-          <div key={category} className='flex items-center mb-1'>
-            <input
-              type='radio'
-              name='category'
-              value={category}
-              onChange={handleFilterChange}
-              checked={filters.category === category}
-              className={checkboxStyle}
-            />
-            <span style={{ color: theme.palette.text.primary }}>{category}</span>
-          </div>
-        ))}
-      </div>
+      <FilterGroup
+        title='Danh mục'
+        items={categories}
+        name='category'
+        type='radio'
+      />
 
       {/* Giới tính */}
-      <div className='mb-6'>
-        <label className={labelStyle} style={{ color: theme.palette.text.secondary }}>Giới tính</label>
-        {genders.map((gender) => (
-          <div key={gender} className='flex items-center mb-1'>
-            <input
-              type='radio'
-              name='gender'
-              value={gender}
-              onChange={handleFilterChange}
-              checked={filters.gender === gender}
-              className={checkboxStyle}
-            />
-            <span style={{ color: theme.palette.text.primary }}>{gender}</span>
-          </div>
-        ))}
-      </div>
+      <FilterGroup
+        title='Giới tính'
+        items={genders}
+        name='gender'
+        type='radio'
+      />
 
       {/* Màu sắc */}
-      <div className='mb-6'>
-        <label className={labelStyle} style={{ color: theme.palette.text.secondary }}>Màu sắc</label>
-        <div className='flex flex-wrap gap-2'>
-          {colors.map((color) => (
-            <button
-              type='button'
-              key={color}
-              name='color'
-              value={color}
-              onClick={handleFilterChange}
-              className={`w-8 h-8 rounded-full border cursor-pointer transition hover:scale-105 ${filters.color === color ? 'ring-2 ring-blue-500' : ''}`}
-              style={{
-                backgroundColor: color.toLowerCase(),
-                borderColor: theme.palette.divider
-              }}
-            />
-          ))}
-        </div>
-      </div>
+      <ColorFilterGroup />
 
       {/* Kích cỡ */}
-      <div className='mb-6'>
-        <label className={labelStyle} style={{ color: theme.palette.text.secondary }}>Kích cỡ</label>
-        {sizes.map((size) => (
-          <div key={size} className='flex items-center mb-1'>
-            <input
-              type='checkbox'
-              name='size'
-              value={size}
-              onChange={handleFilterChange}
-              checked={filters.size.includes(size)}
-              className={checkboxStyle}
-            />
-            <span style={{ color: theme.palette.text.primary }}>{size}</span>
-          </div>
-        ))}
-      </div>
+      <FilterGroup title='Kích cỡ' items={sizes} name='size' type='checkbox' />
 
       {/* Chất liệu */}
-      <div className='mb-6'>
-        <label className={labelStyle} style={{ color: theme.palette.text.secondary }}>Chất liệu</label>
-        {materials.map((material) => (
-          <div key={material} className='flex items-center mb-1'>
-            <input
-              type='checkbox'
-              name='material'
-              value={material}
-              onChange={handleFilterChange}
-              checked={filters.material.includes(material)}
-              className={checkboxStyle}
-            />
-            <span style={{ color: theme.palette.text.primary }}>{material}</span>
-          </div>
-        ))}
-      </div>
+      <FilterGroup
+        title='Chất liệu'
+        items={materials}
+        name='material'
+        type='checkbox'
+      />
 
       {/* Thương hiệu */}
-      <div className='mb-6'>
-        <label className={labelStyle} style={{ color: theme.palette.text.secondary }}>Thương hiệu</label>
-        {brands.map((brand) => (
-          <div key={brand} className='flex items-center mb-1'>
-            <input
-              type='checkbox'
-              name='brand'
-              value={brand}
-              onChange={handleFilterChange}
-              checked={filters.brand.includes(brand)}
-              className={checkboxStyle}
-            />
-            <span style={{ color: theme.palette.text.primary }}>{brand}</span>
-          </div>
-        ))}
-      </div>
+      <FilterGroup
+        title='Thương hiệu'
+        items={brands}
+        name='brand'
+        type='checkbox'
+      />
 
       {/* Khoảng giá */}
-      <div className='mb-8'>
-        <label className={labelStyle} style={{ color: theme.palette.text.secondary }}>Khoảng giá</label>
-        <input
-          type='range'
-          name='priceRange'
-          min={0}
-          max={100}
-          value={priceRange[1]}
-          onChange={handlePriceChange}
-          className='w-full h-2 rounded-lg appearance-none cursor-pointer'
-          style={{ backgroundColor: theme.palette.divider }}
-        />
-        <div className='flex justify-between mt-2' style={{ color: theme.palette.text.secondary }}>
-          <span>₫0</span>
-          <span>₫{priceRange[1]}.000</span>
-        </div>
-      </div>
+      <PriceFilterGroup />
 
       {/* Nút xóa bộ lọc */}
-      <button
-        type='button'
-        className='mt-4 px-4 py-2 rounded-md font-medium transition'
-        style={{
-          backgroundColor: theme.palette.action.hover,
-          color: theme.palette.text.primary
-        }}
-        onClick={clearFilters}
-      >
-        Xóa tất cả bộ lọc
-      </button>
-    </div>
+      <Box sx={{ p: '8px 8px 0 8px' }}>
+        <Button
+          fullWidth
+          variant='outlined'
+          color='primary'
+          onClick={clearFilters}
+          sx={{
+            mt: 1,
+            fontWeight: 'bold',
+            borderColor: theme.palette.primary.main,
+            color: theme.palette.primary.main,
+            '&:hover': {
+              backgroundColor: theme.palette.primary.light + '10'
+            }
+          }}
+        >
+          Xóa tất cả bộ lọc
+        </Button>
+      </Box>
+    </Box>
   )
 }
 

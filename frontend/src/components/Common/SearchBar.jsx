@@ -1,11 +1,18 @@
-/* eslint-disable no-console */
+
 import { useState } from 'react'
 import { HiMagnifyingGlass, HiMiniXMark } from 'react-icons/hi2'
 import { useTheme } from '@mui/material/styles'
+import { useDispatch } from 'react-redux'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { fetchProducts, setFilters } from '~/redux/slices/productSlice'
 
 const SearchBar = () => {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
+
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const location = useLocation()
 
   const [searchTerm, setSearchTerm] = useState('')
   const [isOpen, setIsOpen] = useState(false)
@@ -16,7 +23,25 @@ const SearchBar = () => {
 
   const handleSearch = (e) => {
     e.preventDefault()
-    console.log('Từ khóa tìm kiếm: ', searchTerm)
+
+    // 1. Lấy tất cả params hiện tại từ URL (để giữ lại sortBy, filters,...)
+    const currentSearchParams = new URLSearchParams(location.search)
+
+    // 2. Thiết lập tham số search mới
+    if (searchTerm) {
+      currentSearchParams.set('search', searchTerm)
+    } else {
+      currentSearchParams.delete('search') // Xóa nếu ô tìm kiếm rỗng
+    }
+
+    const queryString = currentSearchParams.toString()
+
+    // 3. Cập nhật Redux (Tùy chọn, nhưng tốt cho đồng bộ)
+    dispatch(setFilters({ search: searchTerm }))
+
+    // 4. Điều hướng đến trang collections với tất cả params
+    // KHÔNG CẦN dispatch(fetchProducts) ở đây, vì CollectionPage sẽ tự động fetch khi URL thay đổi.
+    navigate(`/collections?${queryString}`)
     setIsOpen(false)
   }
 

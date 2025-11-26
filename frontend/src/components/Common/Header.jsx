@@ -5,7 +5,7 @@ import { useTheme } from '@mui/material/styles'
 const Header = () => {
   const theme = useTheme()
   return (
-    <header style={{ borderBottom: `1px solid ${theme.palette.divider}` }}>
+    <header className="sticky top-0 z-50 shadow-md" style={{ borderBottom: `1px solid ${theme.palette.divider}` }}>
       {/* Topbar */}
       <Topbar />
       {/* navbar */}

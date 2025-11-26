@@ -8,30 +8,45 @@ import {
   FaCog,
   FaTags,
   FaWarehouse,
-  FaBell
+  FaBell,
+  FaChartBar,
+  FaPenNib,
+  FaEdit,
+  FaTruck
 } from 'react-icons/fa'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useTheme, alpha } from '@mui/material/styles'
+import { useDispatch } from 'react-redux'
+import { logout } from '~/redux/slices/authSlice'
+import { clearCart } from '~/redux/slices/cartSlices'
 
 // Menu items definition
 const menuItems = [
+  { to: '/admin', label: 'Dashboard', icon: <FaChartBar /> },
   { to: '/admin/users', label: 'Người dùng', icon: <FaUser /> },
   { to: '/admin/products', label: 'Sản phẩm', icon: <FaBoxOpen /> },
+  { to: '/admin/categories', label: 'Danh mục', icon: <FaTags /> },
+
   { to: '/admin/orders', label: 'Đơn hàng', icon: <FaClipboardList /> },
-  { to: '/admin/stock-in', label: 'Nhập hàng', icon: <FaWarehouse /> },
-  { to: '/admin/reviews', label: 'Đánh giá', icon: <FaStar /> },
+  { to: '/admin/shipping', label: 'Vận chuyển', icon: <FaTruck /> },
+
   { to: '/admin/coupons', label: 'Mã giảm giá', icon: <FaTags /> },
-  // { to: '/admin/notifications', label: 'Thông báo', icon: <FaBell /> },
-  // { to: '/admin/settings', label: 'Cài đặt', icon: <FaCog /> },
+  { to: '/admin/reviews', label: 'Đánh giá', icon: <FaStar /> },
+  { to: '/admin/stock-in', label: 'Nhập hàng', icon: <FaWarehouse /> },
+
+  { to: '/admin/blog', label: 'Blog', icon: <FaPenNib /> },
+  { to: '/admin/posts', label: 'Bài viết', icon: <FaEdit /> },
   { to: '/', label: 'Cửa hàng', icon: <FaStore /> }
 ]
 
 const AdminSidebar = () => {
-  const navigate = useNavigate()
   const theme = useTheme()
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
 
   const handleLogout = () => {
-    // TODO: Add auth logic (clear token, etc.)
+    dispatch(logout())
+    dispatch(clearCart())
     navigate('/')
   }
 

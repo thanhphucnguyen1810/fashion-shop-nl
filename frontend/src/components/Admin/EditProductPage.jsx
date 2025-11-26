@@ -1,6 +1,11 @@
 /* eslint-disable no-console */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTheme } from '@mui/material/styles'
+import { useDispatch, useSelector } from 'react-redux'
+import { useNavigate, useParams } from 'react-router-dom'
+import { fetchProductDetails } from '~/redux/slices/productSlice'
+import axios from 'axios'
+import { updateProduct } from '~/redux/slices/admin/adminProductSlice'
 
 // Input Field Component
 const InputField = ({ label, name, type = 'text', value, onChange, required, inputStyle }) => (
@@ -41,6 +46,11 @@ const EditProductPage = () => {
   const borderColor = theme.palette.grey[300]
   const inputStyle = `bg-transparent border-[1px] text-sm text-[${textColor}] border-[${borderColor}] placeholder-gray-500`
 
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const { id } = useParams()
+  const { selectedProduct, loading, error } = useSelector((state) => state.products)
+
   const [productData, setProductData] = useState({
     name: '',
     description: '',
@@ -54,11 +64,20 @@ const EditProductPage = () => {
     collections: '',
     material: '',
     gender: '',
-    images: [
-      { url: 'https://picsum.photo/150?random=1' },
-      { url: 'https://picsum.photo/150?random=2' }
-    ]
+    images: []
   })
+
+  const [uploading, setUploading] = useState(false)
+  useEffect(() => {
+    if (id) {
+      dispatch(fetchProductDetails(id))
+    }
+  }, [dispatch, id])
+  useEffect(() => {
+    if (selectedProduct) {
+      setProductData(selectedProduct)
+    }
+  }, [selectedProduct])
 
   const updateProductField = (name, value) => {
     setProductData(prev => ({ ...prev, [name]: value }))
@@ -81,14 +100,36 @@ const EditProductPage = () => {
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0]
-    console.log(file)
-    // TODO: Add upload logic here
+    const formData = new FormData()
+    formData.append('image', file)
+    try {
+      setUploading(true)
+      const { data } = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/upload`,
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        }
+      )
+      setProductData((prevData) => ({
+        ...prevData,
+        images: [...prevData.images, { url: data.imageUrl, altText: '' }]
+      }))
+      setUploading(false)
+    } catch (error) {
+      console.error(error)
+      setUploading(false)
+    }
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    // console.log(productData)
+    dispatch(updateProduct({ id, productData }))
+    navigate('/admin/products')
   }
+
+  if (loading) return <p>Loading...</p>
+  if (error) return <p>Error: {error}</p>
 
   return (
     <div
@@ -162,6 +203,7 @@ const EditProductPage = () => {
         <div className="mb-6">
           <label className="block font-semibold mb-2">Tải ảnh sản phẩm</label>
           <input type="file" onChange={handleImageUpload} />
+          {uploading && <p>Uploading image...</p>}
           <div className="flex gap-4 mt-4">
             {productData.images.map((image, index) => (
               <div key={index}>

@@ -8,11 +8,10 @@ const MobileDrawer = ({ navDrawerOpen, toggleNavDrawer }) => {
 
   const navLinks = [
     { label: 'Trang chủ', path: '/' },
-    { label: 'Sản phẩm mới', path: '/collections/new' },
+    { label: 'Tất cả sản phẩm', path: '/collections/all' },
     { label: 'Thời trang nam', path: '/collections/men' },
     { label: 'Thời trang nữ', path: '/collections/women' },
     { label: 'Phụ kiện', path: '/collections/accessories' },
-    { label: 'Giảm giá', path: '/collections/sale' },
     { label: 'Liên hệ', path: '/contact' },
     { label: 'Đăng nhập', path: '/login' },
     { label: 'Đăng ký', path: '/register' }

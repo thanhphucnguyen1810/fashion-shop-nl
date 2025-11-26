@@ -32,6 +32,11 @@ const cartSchema = new mongoose.Schema({
     type: Number,
     required: true,
     default: 0
+  },
+  coupon: {
+    code: String,
+    discountType: String,
+    discountValue: Number
   }
 },
 { timestamps: true }

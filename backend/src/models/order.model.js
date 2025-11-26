@@ -26,18 +26,38 @@ const orderItemSchema = new mongoose.Schema({
 }, { _id: false }
 )
 
+
 const orderSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: false,
+    default: null
+  },
+  // Thêm trường để lưu Guest ID (là chuỗi)
+  guestId: {
+    type: String,
+    required: false,
+    default: null
   },
   orderItems: [orderItemSchema],
   shippingAddress: {
-    address: { type: String, required: true },
-    city: { type: String, required: true },
-    postalCode: { type: String, required: true },
-    country: { type: String, required: true }
+    firstName: { type: String, required: false },
+    lastName: { type: String, required: false },
+    phone: { type: String, required: false },
+    address: { type: String, required: false },
+    city: { type: String, required: false },
+    postalCode: { type: String, required: false },
+    country: { type: String, required: false }
+  },
+  coupon: {
+    code: { type: String, default: null },
+    discountAmount: { type: Number, default: 0 },
+    couponId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Coupon',
+      default: null
+    }
   },
   paymentMethod: {
     type: String,
@@ -67,10 +87,22 @@ const orderSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Processing', 'Shipped', 'Delivered', 'Cancelled'],
-    default: 'Processing'
+    enum: [
+      'PendingCheckout', // Trạng thái tạm thời cho Buy Now (Chưa hoàn tất thanh toán)
+      'AwaitingConfirmation', // Chờ xác nhận (Tương đương Processing/New Order)
+      'AwaitingShipment', // Chờ lấy hàng (Đã xác nhận, chờ đơn vị vận chuyển)
+      'InTransit', // Đang giao (Tương đương Shipped)
+      'Delivered',
+      'Cancelled'
+    ],
+    default: 'AwaitingConfirmation'
+  },
+  orderType: {
+    type: String,
+    enum: ['Cart', 'BuyNow'],
+    default: 'Cart'
   }
-}, { timeseries: true }
+}, { timestamps: true }
 )
 
 export default mongoose.model('order', orderSchema)

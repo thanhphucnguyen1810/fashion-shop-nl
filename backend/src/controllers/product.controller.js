@@ -1,140 +1,7 @@
 /* eslint-disable no-console */
 import Product from '~/models/product.model.js'
 
-// @desc Create a new Product
-// @route POST /api/products
-// @access Private/Admin
-export const createProduct = async (req, res) => {
-  try {
-    const {
-      name,
-      description,
-      price,
-      disCountPrice,
-      countInStock,
-      category,
-      brand,
-      sizes,
-      colors,
-      collections,
-      materials,
-      gender,
-      images,
-      isFeatured,
-      isPublished,
-      tags,
-      dimensions,
-      weight,
-      sku
-    } = req.body
-
-    const product = new Product({
-      name,
-      description,
-      price,
-      disCountPrice,
-      countInStock,
-      category,
-      brand,
-      sizes,
-      colors,
-      collections,
-      materials,
-      gender,
-      images,
-      isFeatured,
-      isPublished,
-      tags,
-      dimensions,
-      weight,
-      sku,
-      user: req.user._id
-    })
-
-    const createdProduct = await product.save()
-    res.status(201).json(createdProduct)
-  } catch (error) {
-    console.error(error)
-    res.status(500).send('Server Error!!!')
-  }
-}
-
-// @desc Update product by ID
-// @route PUT /api/products/:id
-// @access Private/Admin
-export const updateProduct = async (req, res) => {
-  try {
-    const {
-      name,
-      description,
-      price,
-      disCountPrice,
-      countInStock,
-      category,
-      brand,
-      sizes,
-      colors,
-      collections,
-      materials,
-      gender,
-      images,
-      isFeatured,
-      isPublished,
-      tags,
-      dimensions,
-      weight,
-      sku
-    } = req.body
-
-    const product = await Product.findById(req.params.id)
-    if (!product) return res.status(404).json({ message: 'Product not found' })
-
-    // cập nhật từng trường nếu có
-    product.name = name || product.name
-    product.description = description || product.description
-    product.price = price || product.price
-    product.disCountPrice = disCountPrice || product.disCountPrice
-    product.countInStock = countInStock || product.countInStock
-    product.category = category || product.category
-    product.brand = brand || product.brand
-    product.sizes = sizes || product.sizes
-    product.colors = colors || product.colors
-    product.collections = collections || product.collections
-    product.materials = materials || product.materials
-    product.gender = gender || product.gender
-    product.images = images || product.images
-    product.isFeatured = isFeatured !== undefined ? isFeatured : product.isFeatured
-    product.isPublished = isPublished !== undefined ? isPublished : product.isPublished
-    product.tags = tags || product.tags
-    product.dimensions = dimensions || product.dimensions
-    product.weight = weight || product.weight
-    product.sku = sku || product.sku
-
-    const updatedProduct = await product.save()
-    res.json(updatedProduct)
-  } catch (error) {
-    console.error(error)
-    res.status(500).send('Server Error!!!')
-  }
-}
-
-// @desc Delete product by ID
-// @route DELETE /api/products/:id
-// @access Private/Admin
-export const deleteProduct = async (req, res) => {
-  try {
-    const product = await Product.findById(req.params.id)
-    if (!product) return res.status(404).send({ message: 'Product not found!' })
-
-    await product.deleteOne()
-    res.json({ message: 'Product removed.' })
-  } catch (error) {
-    console.error(error)
-    res.status(500).send('Server Error!!!')
-  }
-}
-
-// @desc Get all products with filters
+// @desc Get all products with filters, search, and pagination
 // @route GET /api/products
 // @access Public
 export const getProducts = async (req, res) => {
@@ -143,31 +10,36 @@ export const getProducts = async (req, res) => {
       collection,
       size,
       color,
-      gender,
       minPrice,
       maxPrice,
       sortBy,
       search,
-      category,
       material,
       brand,
-      limit
+      limit,
+      page
     } = req.query
 
     const query = {}
 
-    if (collection && collection.toLocaleLowerCase() !== 'all') query.collections = collection
-    if (category && category.toLocaleLowerCase() !== 'all') query.category = category
+    // --- Lọc theo collection / category ---
+    if (collection && collection.toLowerCase() !== 'all') {
+      query.category = collection.toLowerCase()
+    }
+
+    // --- Lọc theo các field khác ---
     if (material) query.material = { $in: material.split(',') }
     if (brand) query.brand = { $in: brand.split(',') }
     if (size) query.sizes = { $in: size.split(',') }
     if (color) query.colors = { $in: [color] }
-    if (gender) query.gender = gender
+
     if (minPrice || maxPrice) {
       query.price = {}
       if (minPrice) query.price.$gte = Number(minPrice)
       if (maxPrice) query.price.$lte = Number(maxPrice)
     }
+
+    // --- Tìm kiếm ---
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
@@ -175,17 +47,38 @@ export const getProducts = async (req, res) => {
       ]
     }
 
+    // --- Phân trang ---
+    const pageSize = Number(limit) || 20
+    const currentPage = Number(page) || 1
+    const skip = pageSize * (currentPage - 1)
+
+    // --- Sắp xếp ---
     let sort = {}
     if (sortBy) {
       switch (sortBy) {
       case 'priceAsc': sort = { price: 1 }; break
       case 'priceDesc': sort = { price: -1 }; break
       case 'popularity': sort = { rating: -1 }; break
+      case 'nameAsc': sort = { name: 1 }; break
+      case 'nameDesc': sort = { name: -1 }; break
       }
     }
 
-    const products = await Product.find(query).sort(sort).limit(Number(limit) || 0)
-    res.json(products)
+    // --- Đếm tổng số ---
+    const count = await Product.countDocuments(query)
+
+    // --- Lấy sản phẩm ---
+    const products = await Product.find(query)
+      .sort(sort)
+      .limit(pageSize)
+      .skip(skip)
+
+    res.json({
+      products,
+      page: currentPage,
+      pages: Math.ceil(count / pageSize),
+      totalProducts: count
+    })
   } catch (error) {
     console.error(error)
     res.status(500).send('Server Error!')
@@ -196,7 +89,7 @@ export const getProducts = async (req, res) => {
 // @route GET /api/products/best-seller
 export const getBestSeller = async (req, res) => {
   try {
-    const bestSeller = await Product.findOne().sort({ rating: -1 })
+    const bestSeller = await Product.find({}).sort({ rating: -1, numReviews: -1 }).limit(8).lean()
     if (!bestSeller) return res.status(404).json({ message: 'No best seller found!' })
     res.json(bestSeller)
   } catch (error) {

@@ -1,4 +1,5 @@
 import productModel from '~/models/product.model.js'
+import cloudinary from '~/config/cloudinary.config'
 
 // ================= GET ALL PRODUCTS =================
 // @desc Get all products (Admin only)
@@ -32,27 +33,56 @@ $or: tìm theo nhiều trường cùng lúc (name, sku, category)
 
 // ================= CREATE PRODUCT =================
 export const createProduct = async (req, res) => {
-  const { name, price, sku, category, sizes, colors, collections, user } = req.body
   try {
+    const { name, description, price, countInStock, sku, category, collections } = req.body
     // Kiểm tra SKU trùng
     const existing = await productModel.findOne({ sku })
     if (existing) {
       return res.status(400).json({ message: 'SKU đã tồn tại' })
     }
 
-    const product = new productModel({
+    // Upload image to Cloudinary
+    let imageUrls = []
+    if (req.files && req.files.length > 0) {
+      for (let file of req.files) {
+        const uploadedResult = await cloudinary.uploader.upload(`data:${file.mimetype};base64,${file.buffer.toString('base64')}`, { folder: 'products' })
+
+        // Sửa Lỗi: Lưu public_id và url vào đối tượng
+        imageUrls.push({
+          public_id: uploadedResult.public_id,
+          url: uploadedResult.secure_url
+        })
+      }
+    }
+
+    const cleanData = (data) => {
+      if (!data || !Array.isArray(data)) return []
+      return data.map(item =>
+        String(item) // Đảm bảo là chuỗi
+          .trim() // Loại bỏ khoảng trắng thừa (ví dụ: " L" -> "L")
+          .replace(/^["']|["']$/g, '') // Loại bỏ dấu ngoặc kép hoặc dấu nháy đơn ở đầu/cuối
+      )
+    }
+
+    const newSizes = cleanData(req.body.sizes)
+    const newColors = cleanData(req.body.colors)
+
+    const newProduct = await productModel.create({
       name,
+      description,
       price,
+      countInStock,
       sku,
       category,
-      sizes: sizes || [],
-      colors: colors || [],
+      sizes: newSizes,
+      colors: newColors,
       collections,
-      user
+      images: imageUrls,
+      user: req.user._id
     })
 
-    await product.save()
-    res.status(201).json({ message: 'Thêm sản phẩm thành công', product })
+    // await product.save()
+    res.status(201).json({ message: 'Thêm sản phẩm thành công', newProduct })
   } catch (error) {
     console.error(error)
     res.status(500).json({ message: 'Server Error' })
@@ -67,10 +97,36 @@ export const updateProduct = async (req, res) => {
       return res.status(404).json({ message: 'Sản phẩm không tồn tại' })
     }
 
-    // Cập nhật thông tin từ body
-    Object.assign(product, req.body)
-    const updatedProduct = await product.save()
-    res.json({ message: 'Cập nhật sản phẩm thành công', product: updatedProduct })
+    let imageUrls = product.images
+
+    if (req.files && req.files.length > 0) {
+      // Xóa ảnh cũ trên Cloudinary
+      for (let img of imageUrls) {
+        if (img.public_id) {
+          await cloudinary.uploader.destroy(img.public_id)
+        }
+      }
+
+      // Upload ảnh mới
+      imageUrls = []
+      for (const file of req.files) {
+        const uploadedResult = await cloudinary.uploader.upload(`data:${file.mimetype};base64,${file.buffer.toString('base64')}`, { folder: 'products' })
+
+        // Sửa Lỗi: Lưu public_id và url vào đối tượng
+        imageUrls.push({
+          public_id: uploadedResult.public_id,
+          url: uploadedResult.secure_url
+        })
+      }
+    }
+
+    const updated = await productModel.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body, images: imageUrls },
+      { new: true }
+    )
+
+    res.json({ message: 'Cập nhật sản phẩm thành công', product: updated })
   } catch (error) {
     console.error(error)
     res.status(500).json({ message: 'Server Error' })
@@ -80,16 +136,12 @@ export const updateProduct = async (req, res) => {
 // ================= DELETE PRODUCT =================
 export const deleteProduct = async (req, res) => {
   try {
-    const product = await productModel.findById(req.params.id)
-    if (!product) {
-      return res.status(404).json({ message: 'Sản phẩm không tồn tại' })
-    }
-
-    await product.deleteOne()
-    res.json({ message: 'Xóa sản phẩm thành công' })
+    await productModel.findByIdAndDelete(req.params.id)
+    res.json({ message: 'Đã xóa sản phẩm' })
   } catch (error) {
     console.error(error)
     res.status(500).json({ message: 'Server Error' })
   }
 }
+
 

@@ -1,389 +1,284 @@
 import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useTheme } from '@mui/material/styles'
-import PayPalButton from './PayPalButton'
-
-const cart = {
-  products:[
-    {
-      name: 'T-shirt',
-      size: 'M',
-      color: 'Red',
-      price: 39.99,
-      quantity: 1,
-      image: 'https://picsum.photos/200?random=1'
-    },
-    {
-      name: 'Jeans',
-      size: 'L',
-      color: 'Blue',
-      price: 89.99,
-      quantity: 1,
-      image: 'https://picsum.photos/200?random=2'
-    }
-  ],
-  totalPrice: 129.98
-}
+import { useDispatch, useSelector } from 'react-redux'
+import { toast } from 'sonner'
+import { Radio, RadioGroup, FormControlLabel, FormControl } from '@mui/material'
+import InputField from '../InputField'
+import { createCheckout } from '~/redux/slices/checkoutSlice'
+import { CircularProgress } from '@mui/material' // Thêm import CircularProgress
 
 const Checkout = () => {
+  const theme = useTheme()
   const navigate = useNavigate()
-  const theme = useTheme() // Lấy theme MUI
+  const dispatch = useDispatch()
 
+  const { cart } = useSelector((state) => state.cart)
+  const { user } = useSelector((state) => state.auth)
+  const { loading } = useSelector((state) => state.checkout)
+
+  const [paymentMethod, setPaymentMethod] = useState('COD')
   const [shippingAddress, setShippingAddress] = useState({
     firstName: '',
     lastName: '',
     address: '',
     city: '',
     postalCode: '',
-    country: '',
+    country: 'Vietnam',
     phone: ''
   })
 
-  const [checkoutId, setCheckoutId] = useState(null)
+  // --- 1. KIỂM TRA GIỎ HÀNG & ĐIỀN SẴN THÔNG TIN USER ---
+  useEffect(() => {
+    if (!cart?.products?.length) {
+      navigate('/')
+      toast.error('Giỏ hàng đang trống.')
+      return
+    }
 
-  const handleCreateCheckout = (event) => {
+    if (user) {
+      setShippingAddress(prev => ({
+        ...prev,
+        firstName: user.firstName || user.name?.split(' ')[0] || '',
+        lastName: user.lastName || user.name?.split(' ').slice(1).join(' ') || '',
+        address: user.address || prev.address,
+        city: user.city || prev.city,
+        postalCode: user.postalCode || prev.postalCode,
+        phone: user.phone || prev.phone
+      }))
+    }
+  }, [cart, user, navigate])
+
+  // --- 2. TÍNH TOÁN GIÁ TRỊ ĐƠN HÀNG ---
+  const { subTotal, discountAmount, finalTotal } = useMemo(() => {
+    if (!cart?.products) return { subTotal: 0, discountAmount: 0, finalTotal: 0 }
+
+    const sub = cart.products.reduce((acc, item) => acc + item.quantity * item.price, 0)
+    const discount = cart.coupon?.discountAmount || 0
+
+    return {
+      subTotal: sub,
+      discountAmount: discount,
+      finalTotal: Math.max(0, sub - discount)
+    }
+  }, [cart])
+
+  // --- 3. XỬ LÝ TẠO BẢN GHI CHECKOUT TẠM THỜI ---
+  const handlePlaceOrder = async (event) => {
     event.preventDefault()
-    setCheckoutId(123)
+
+    if (!shippingAddress.firstName || !shippingAddress.address || !shippingAddress.phone) {
+      toast.error('Vui lòng điền đủ Họ tên, Địa chỉ và SĐT.')
+      return
+    }
+
+    try {
+      // BƯỚC 1: GỌI API TẠO BẢN GHI CHECKOUT TẠM THỜI (Status: Pending)
+      const res = await dispatch(
+        createCheckout({
+          checkoutItems: cart.products,
+          shippingAddress,
+          paymentMethod, // 'COD' hoặc 'MOMO'
+          totalPrice: finalTotal,
+          coupon: cart.coupon || null
+        })
+      ).unwrap()
+
+      const newCheckoutId = res.checkout._id
+      toast.success('Đơn hàng tạm thời đã được tạo! Vui lòng xác nhận.')
+
+      // ➡️ BƯỚC 2: CHUYỂN HƯỚNG SANG TRANG CONFIRM ĐỂ THỰC HIỆN ACTION CUỐI CÙNG
+      navigate(`/order-confirm/${newCheckoutId}`)
+
+    } catch (err) {
+      toast.error(err?.message || 'Không tạo được đơn hàng.')
+    }
   }
 
-  const handlePaymentSuccess = (details) => {
-    navigate('/order-confirmation')
-  }
-
-  // Màu border mặc định thay vì dùng class 'border' Tailwind
+  // --- RENDER UI ---
   const borderColor = theme.palette.divider
+  const primaryColor = theme.palette.primary.main
+  const formatCurrency = (amount) => amount?.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })
 
   return (
     <div className='grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto py-10 px-6 tracking-tighter'>
-      {/* Left Section */}
-      <div
-        style={{ backgroundColor: theme.palette.background.paper }}
-        className='rounded-lg p-6'
-      >
-        <h2
-          style={{ color: theme.palette.text.primary }}
-          className='text-2xl uppercase mb-6'
-        >
-          Thanh toán
-        </h2>
-        <form onSubmit={handleCreateCheckout}>
-          <h3
-            style={{ color: theme.palette.text.primary }}
-            className='text-lg mb-4'
-          >
-            Thông tin liên hệ
+      {/* === CỘT TRÁI: FORM THÔNG TIN === */}
+      <div className='rounded-lg p-6 shadow-sm' style={{ backgroundColor: theme.palette.background.paper }}>
+        <h2 className='text-3xl text-center font-semibold mb-6 uppercase'>Thanh toán</h2>
+
+        <form onSubmit={handlePlaceOrder}>
+
+          {/* Thông tin giao hàng... (GIỮ NGUYÊN FORM INPUT) */}
+          <h3 style={{ color: theme.palette.text.primary }} className='text-lg font-semibold mb-4 border-b pb-2'>
+            1. Thông tin nhận hàng
           </h3>
+          {/* Họ Tên */}
+          <div className='grid grid-cols-2 gap-4 mb-4'>
+            <InputField
+              label="Họ" name="firstName" value={shippingAddress.firstName}
+              onChange={(e) => setShippingAddress({ ...shippingAddress, firstName: e.target.value })}
+              theme={theme}
+            />
+            <InputField
+              label="Tên" name="lastName" value={shippingAddress.lastName}
+              onChange={(e) => setShippingAddress({ ...shippingAddress, lastName: e.target.value })}
+              theme={theme}
+            />
+          </div>
+          {/* Địa chỉ & SĐT */}
           <div className='mb-4'>
-            <label
-              style={{ color: theme.palette.text.primary }}
-              className='block'
-            >
-              Email
-            </label>
-            <input
-              type='email'
-              value='user@example.com'
-              className='w-full p-2 border rounded'
-              disabled
-              style={{
-                color: theme.palette.text.primary,
-                backgroundColor: theme.palette.background.paper
-              }}
+            <InputField
+              label="Số điện thoại" name="phone" type="tel" value={shippingAddress.phone}
+              onChange={(e) => setShippingAddress({ ...shippingAddress, phone: e.target.value })}
+              theme={theme}
+            />
+          </div>
+          <div className='mb-4'>
+            <InputField
+              label="Địa chỉ chi tiết" name="address" value={shippingAddress.address}
+              onChange={(e) => setShippingAddress({ ...shippingAddress, address: e.target.value })}
+              theme={theme}
+            />
+          </div>
+          {/* Tỉnh/Thành - Quốc gia */}
+          <div className='grid grid-cols-2 gap-4 mb-6'>
+            <InputField
+              label="Tỉnh / Thành phố" name="city" value={shippingAddress.city}
+              onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
+              theme={theme}
+            />
+            <InputField
+              label="Quốc gia" name="country" value={shippingAddress.country}
+              onChange={(e) => setShippingAddress({ ...shippingAddress, country: e.target.value })}
+              theme={theme}
             />
           </div>
 
-          <h3
-            style={{ color: theme.palette.text.primary }}
-            className='text-lg mb-4'
-          >
-            Địa chỉ giao hàng
+          {/* Phương thức thanh toán */}
+          <h3 style={{ color: theme.palette.text.primary }} className='text-lg font-semibold mb-4 border-b pb-2'>
+            2. Phương thức thanh toán
           </h3>
 
-          <div className='mb-4 grid grid-cols-2 gap-4'>
-            {/* First Name */}
-            <div>
-              <label
-                style={{ color: theme.palette.text.primary }}
-                className='block'
-              >
-                Họ
-              </label>
-              <input
-                type='text'
-                className='w-full p-2 rounded border border-gray-400'
-                style={{
-                  color: theme.palette.text.primary,
-                  backgroundColor: theme.palette.background.default
-                }}
-                value={shippingAddress.firstName}
-                required
-                onChange={(e) =>
-                  setShippingAddress({
-                    ...shippingAddress,
-                    firstName: e.target.value
-                  })
-                }
-              />
-            </div>
-
-            {/* Last Name */}
-            <div>
-              <label
-                style={{ color: theme.palette.text.primary }}
-                className='block'
-              >
-                Tên
-              </label>
-              <input
-                type='text'
-                className='w-full p-2 rounded border border-gray-400'
-                style={{
-                  color: theme.palette.text.primary,
-                  backgroundColor: theme.palette.background.default
-                }}
-                value={shippingAddress.lastName}
-                required
-                onChange={(e) =>
-                  setShippingAddress({
-                    ...shippingAddress,
-                    lastName: e.target.value
-                  })
-                }
-              />
-            </div>
-          </div>
-
-          {/* Address */}
-          <div className='mb-4'>
-            <label
-              style={{ color: theme.palette.text.primary }}
-              className='block'
+          <FormControl component="fieldset" className="w-full mb-6">
+            <RadioGroup
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
             >
-              Địa chỉ
-            </label>
-            <input
-              type='text'
-              className='w-full p-2 rounded border border-gray-400'
-              style={{
-                color: theme.palette.text.primary,
-                backgroundColor: theme.palette.background.default
-              }}
-              value={shippingAddress.address}
-              required
-              onChange={(e) =>
-                setShippingAddress({
-                  ...shippingAddress,
-                  address: e.target.value
-                })
-              }
-            />
-          </div>
-
-          <div className='mb-4 grid grid-cols-2 gap-4'>
-            {/* City */}
-            <div>
-              <label
-                style={{ color: theme.palette.text.primary }}
-                className='block'
-              >
-                Thành phố
-              </label>
-              <input
-                type='text'
-                className='w-full p-2 rounded border border-gray-400'
-                style={{
-                  color: theme.palette.text.primary,
-                  backgroundColor: theme.palette.background.default
-                }}
-                value={shippingAddress.city}
-                required
-                onChange={(e) =>
-                  setShippingAddress({
-                    ...shippingAddress,
-                    city: e.target.value
-                  })
-                }
-              />
-            </div>
-
-            {/* Postal Code */}
-            <div>
-              <label
-                style={{ color: theme.palette.text.primary }}
-                className='block'
-              >
-                Mã bưu điện
-              </label>
-              <input
-                type='text'
-                className='w-full p-2 rounded border border-gray-400'
-                style={{
-                  color: theme.palette.text.primary,
-                  backgroundColor: theme.palette.background.default
-                }}
-                value={shippingAddress.postalCode}
-                required
-                onChange={(e) =>
-                  setShippingAddress({
-                    ...shippingAddress,
-                    postalCode: e.target.value
-                  })
-                }
-              />
-            </div>
-          </div>
-
-          {/* Country */}
-          <div className='mb-4'>
-            <label
-              style={{ color: theme.palette.text.primary }}
-              className='block'
-            >
-              Quốc gia
-            </label>
-            <input
-              type='text'
-              className='w-full p-2 rounded border border-gray-400'
-              style={{
-                color: theme.palette.text.primary,
-                backgroundColor: theme.palette.background.default
-              }}
-              value={shippingAddress.country}
-              required
-              onChange={(e) =>
-                setShippingAddress({
-                  ...shippingAddress,
-                  country: e.target.value
-                })
-              }
-            />
-          </div>
-
-          {/* Phone */}
-          <div className='mb-4'>
-            <label
-              style={{ color: theme.palette.text.primary }}
-              className='block'
-            >
-              Số điện thoại
-            </label>
-            <input
-              type='tel'
-              className='w-full p-2 rounded border border-gray-400'
-              style={{
-                color: theme.palette.text.primary,
-                backgroundColor: theme.palette.background.default
-              }}
-              value={shippingAddress.phone}
-              required
-              onChange={(e) =>
-                setShippingAddress({
-                  ...shippingAddress,
-                  phone: e.target.value
-                })
-              }
-            />
-          </div>
-
-          <div className='mt-6'>
-            {!checkoutId ? (
-              <button
-                type='submit'
-                className='py-3 px-0 rounded-md w-full font-semibold cursor-pointer'
-                style={{
-                  backgroundColor: theme.palette.primary.main,
-                  color: theme.palette.primary.contrastText
-                }}
-              >
-                Tiếp tục thanh toán
-              </button>
-            ) : (
-              <div>
-                <h3
-                  style={{ color: theme.palette.text.primary }}
-                  className='text-lg mb-4'
-                >
-                  Thanh toán bằng PayPal
-                </h3>
-                <PayPalButton
-                  amount={100}
-                  onSuccess={handlePaymentSuccess}
-                  onError={(err) => alert('Thanh toán thất bại. Vui lòng thử lại.')}
+              {/* COD Option */}
+              <div className={`p-3 border rounded-md mb-3 flex items-center transition-colors ${paymentMethod === 'COD' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
+                <FormControlLabel
+                  value="COD"
+                  control={<Radio />}
+                  label={<span className="font-medium text-gray-700">Thanh toán khi nhận hàng (COD)</span>}
+                  className="w-full m-0"
                 />
+                <i className="fa-solid fa-money-bill-wave text-green-600 ml-auto text-xl px-2"></i>
               </div>
-            )}
+
+              {/* SEPAY Option */}
+              <div
+                className={`p-3 border rounded-md flex items-center transition-colors ${
+                  paymentMethod === 'SEPAY'
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200'
+                }`}
+              >
+                <FormControlLabel
+                  value="SEPAY"
+                  control={<Radio />}
+                  label={
+                    <span className="font-medium text-gray-700">
+                    Thanh toán qua Sepay
+                    </span>
+                  }
+                  className="w-full m-0"
+                />
+                <div className="ml-auto flex items-center justify-center">
+                  <img
+                    src="https://sepay.vn/assets/img/logo/sepay-blue-154x50.png"
+                    alt="Sepay"
+                    className="h-8 object-contain"
+                  />
+                </div>
+
+              </div>
+
+            </RadioGroup>
+          </FormControl>
+
+          {/* Nút hành động */}
+          <div className='mt-6'>
+            <button
+              type='submit'
+              disabled={loading}
+              className='w-full py-3 rounded-md font-bold uppercase text-white transition-opacity hover:opacity-90 shadow-md flex items-center justify-center gap-2'
+              style={{ backgroundColor: primaryColor }}
+            >
+              {loading ? (
+                <>
+                  <CircularProgress size={20} color="inherit" />
+                  Đang tạo...
+                </>
+              ) : `Khởi tạo đơn hàng (${formatCurrency(finalTotal)})`}
+            </button>
           </div>
+
         </form>
       </div>
 
-      {/* Right Section */}
-      <div
-        className='p-6 rounded-lg'
-        style={{ backgroundColor: theme.palette.background.default }}
-      >
-        <h3
-          style={{ color: theme.palette.text.primary }}
-          className='text-lg mb-4'
-        >
-          Tóm tắt đơn hàng
-        </h3>
-        <div
-          className='border-t py-4 mb-4'
-          style={{ borderColor: borderColor, borderTopWidth: 1, borderStyle: 'solid' }}
-        >
-          {cart.products.map((product, index) => (
-            <div
-              key={index}
-              className='flex items-start justify-between py-2 border-b'
-              style={{ borderColor: borderColor, borderBottomWidth: 1, borderStyle: 'solid' }}
-            >
-              <div className='flex items-start'>
+      {/* === CỘT PHẢI: TÓM TẮT ĐƠN HÀNG (GIỮ NGUYÊN) === */}
+      <div className='h-fit sticky top-8'>
+        <div className='p-6 rounded-xl shadow-lg border' style={{ backgroundColor: theme.palette.background.paper, borderColor }}>
+          <h3 style={{ color: theme.palette.text.primary }} className='text-xl font-bold pb-4 mb-4 border-b'>
+            Tóm tắt đơn hàng
+          </h3>
+
+          {/* List sản phẩm */}
+          <div className='space-y-4 mb-6 max-h-[400px] overflow-y-auto custom-scrollbar pr-2'>
+            {cart.products.map((product, index) => (
+              <div key={index} className='flex gap-4'>
                 <img
-                  src={product.image}
-                  alt={product.name}
-                  className='w-20 h-24 object-cover mr-4'
+                  src={product.image} alt={product.name}
+                  className='w-16 h-16 object-cover rounded border' style={{ borderColor }}
                 />
-                <div>
-                  <h3 style={{ color: theme.palette.text.primary }} className='text-md'>
-                    {product.name}
-                  </h3>
-                  <p style={{ color: theme.palette.text.secondary }}>
-                    Kích cỡ: {product.size}
-                  </p>
-                  <p style={{ color: theme.palette.text.secondary }}>
-                    Màu sắc: {product.color}
-                  </p>
+                <div className='flex-1'>
+                  <h4 className='text-sm font-medium line-clamp-2' style={{ color: theme.palette.text.primary }}>{product.name}</h4>
+                  <div className='flex justify-between mt-1 text-sm'>
+                    <span style={{ color: theme.palette.text.secondary }}>SL: {product.quantity}</span>
+                    <span className='font-semibold' style={{ color: theme.palette.text.primary }}>
+                      {formatCurrency(product.price * product.quantity)}
+                    </span>
+                  </div>
                 </div>
               </div>
-              <p style={{ color: theme.palette.text.primary }} className='text-xl'>
-                ${product.price?.toLocaleString()}
-              </p>
+            ))}
+          </div>
+
+          {/* Tổng tiền */}
+          <div className='space-y-3 text-sm border-t pt-4' style={{ borderColor }}>
+            <div className='flex justify-between'>
+              <span style={{ color: theme.palette.text.secondary }}>Tạm tính</span>
+              <span style={{ color: theme.palette.text.primary }}>{formatCurrency(subTotal)}</span>
             </div>
-          ))}
-        </div>
+            {discountAmount > 0 && (
+              <div className='flex justify-between text-green-600'>
+                <span>Giảm giá</span>
+                <span>- {formatCurrency(discountAmount)}</span>
+              </div>
+            )}
+            <div className='flex justify-between'>
+              <span style={{ color: theme.palette.text.secondary }}>Phí vận chuyển</span>
+              <span className='font-medium text-green-600'>Miễn phí</span>
+            </div>
 
-        <div className='flex justify-between items-center text-lg mb-4'>
-          <p style={{ color: theme.palette.text.primary }}>Tạm tính</p>
-          <p style={{ color: theme.palette.text.primary }}>
-            ${cart.totalPrice?.toLocaleString()}
-          </p>
-        </div>
-
-        <div className='flex justify-between items-center text-lg'>
-          <p style={{ color: theme.palette.text.primary }}>Phí vận chuyển</p>
-          <p style={{ color: theme.palette.text.primary }}>Miễn phí</p>
-        </div>
-
-        <div
-          className='flex justify-between items-center text-lg mt-4 pt-4 border-t font-semibold'
-          style={{ borderColor: borderColor, borderTopWidth: 1, borderStyle: 'solid' }}
-        >
-          <p style={{ color: theme.palette.text.primary }}>Tổng cộng</p>
-          <p style={{ color: theme.palette.text.primary }}>
-            ${cart.totalPrice?.toLocaleString()}
-          </p>
+            <div className='flex justify-between items-center text-xl font-bold pt-2 border-t mt-2' style={{ borderColor, color: theme.palette.error.main }}>
+              <span>Tổng cộng</span>
+              <span>{formatCurrency(finalTotal)}</span>
+            </div>
+          </div>
         </div>
       </div>
+
     </div>
   )
 }
