@@ -272,7 +272,7 @@ const UserManagement = () => {
               <th className="py-3 px-4">Email</th>
               <th className="py-3 px-4">Giới tính</th>
               <th className="py-3 px-4">Vai trò</th>
-              <th className="py-3 px-4">Trạng thái</th>
+              {/* <th className="py-3 px-4">Trạng thái</th> */}
               <th className="py-3 px-4">Tác vụ</th>
             </tr>
           </thead>
@@ -287,7 +287,6 @@ const UserManagement = () => {
                 <td className="p-4">
                   <img
                     src={
-                      // Lấy URL từ user.avatar.url. Nếu không có (hoặc lỗi), dùng ảnh mặc định
                       user.avatar?.url
                         ? user.avatar.url
                         : 'https://res.cloudinary.com/dgec7q298/image/upload/v1763441107/products/p_img55_1.jpg'
@@ -319,7 +318,7 @@ const UserManagement = () => {
                   </select>
                 </td>
 
-                <td className="p-4">
+                {/* <td className="p-4">
                   <button
                     onClick={() => handleToggleStatus(user)}
                     className={`px-3 py-1 text-sm rounded-full transition-colors font-semibold ${
@@ -327,12 +326,11 @@ const UserManagement = () => {
                         ? 'bg-red-500 hover:bg-red-600 text-white'
                         : 'bg-green-500 hover:bg-green-600 text-white'
                     }`}
-                    // Admin không thể khóa chính tài khoản của mình
                     disabled={user._id === user._id}
                   >
                     {user.isBlocked ? 'Đang Bị Khóa' : 'Hoạt Động'}
                   </button>
-                </td>
+                </td> */}
 
                 {/* Actions */}
                 <td className="p-4 flex gap-2">

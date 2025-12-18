@@ -46,12 +46,10 @@ export const fetchOrderDetails = createAsyncThunk(
 
 export const createTemporaryOrder = createAsyncThunk(
   'orders/createTemporaryOrder',
-  // Bổ sung: shippingAddress và couponInfo
   async ({ orderItems, userId, guestId, shippingAddress, couponInfo }, { rejectWithValue }) => {
     try {
       const response = await axios.post(
         `${API_URL}/api/orders/buy-now`,
-        // Gửi payload đầy đủ
         { orderItems, userId, guestId, shippingAddress, couponInfo },
         {
           headers: {

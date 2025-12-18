@@ -31,7 +31,8 @@ import adminOrderRoutes from './routes/admin/admin.order.routes'
 import adminStockInRoutes from './routes/admin/admin.stock-in.routes'
 import adminReviewRoutes from './routes/admin/admin.review.routes'
 import adminCouponRoutes from './routes/admin/admin.coupon.routes'
-
+import reviewRoutes from './routes/review.routes'
+import addressRoutes from './routes/address.routes'
 
 // Load environment variables
 dotenv.config()
@@ -83,12 +84,14 @@ app.use('/api/users', userRoutes)
 app.use('/api/oauth', oauthRoutes)
 app.use('/api/products', productRoutes)
 app.use('/api/cart', cartRoutes)
+app.use('/api/reviews', reviewRoutes)
 app.use('/api/coupons', couponRoutes)
 app.use('/api/checkout', checkoutRoutes)
 app.use('/api/orders', orderRoutes)
 app.use('/api/upload', uploadRoutes)
 app.use('/api/subscribe', subscribeRoutes)
 app.use('/api/categories', categoryRoutes)
+app.use('/api/address', addressRoutes)
 
 // Admin
 app.use('/api/admin/users', adminUserRoutes)

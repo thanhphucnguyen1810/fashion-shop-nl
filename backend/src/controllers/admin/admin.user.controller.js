@@ -23,7 +23,7 @@ export const createUser = async (req, res) => {
       const fileDataURI = bufferToDataURI(req.file)
 
       const uploadResult = await cloudinary.uploader.upload(fileDataURI, {
-        folder: 'user_avatars' // Thư mục lưu trữ ảnh người dùng
+        folder: 'user_avatars'
       })
 
       avatarData = {
@@ -35,7 +35,7 @@ export const createUser = async (req, res) => {
     user = new userModel({
       name,
       email,
-      password: password, // Mongoose middleware sẽ tự hash
+      password: password,
       role: role || 'customer',
       gender: gender || 'other',
       avatar: avatarData.url ? avatarData : undefined
@@ -60,26 +60,25 @@ export const updateUser = async (req, res) => {
     const { id } = req.params
     const { name, email, role, gender } = req.body
 
-    const user = await userModel.findById(id).select('+avatar') // Đảm bảo lấy trường avatar
+    const user = await userModel.findById(id).select('+avatar')
     if (!user) return res.status(404).json({ message: 'User not found' })
 
     const updatedData = { name, email, role, gender }
 
     if (req.file) {
-      // 1. KIỂM TRA VÀ XÓA ẢNH CŨ TRÊN CLOUDINARY
-      // Kiểm tra nếu có public_id và không phải là ID ảnh mặc định
+      // KIỂM TRA VÀ XÓA ẢNH CŨ TRÊN CLOUDINARY
       const isDefaultAvatar = user.avatar?.public_id === 'default_avatar_id'
       if (user.avatar?.public_id && !isDefaultAvatar) {
         await cloudinary.uploader.destroy(user.avatar.public_id)
       }
 
-      // 2. TẢI ẢNH MỚI LÊN
+      // TẢI ẢNH MỚI LÊN
       const fileDataURI = bufferToDataURI(req.file)
       const uploadResult = await cloudinary.uploader.upload(fileDataURI, {
         folder: 'user_avatars'
       })
 
-      // 3. Cập nhật URL/ID mới
+      // Cập nhật URL/ID mới
       updatedData.avatar = {
         url: uploadResult.secure_url,
         public_id: uploadResult.public_id
@@ -160,7 +159,7 @@ export const getUserById = async (req, res) => {
 export const toggleUserStatus = async (req, res) => {
   try {
     const { id } = req.params
-    const { isBlocked } = req.body // Nhận trạng thái mới (true/false)
+    const { isBlocked } = req.body
 
     if (typeof isBlocked !== 'boolean') {
       return res.status(400).json({ message: 'isBlocked status is required and must be boolean' })

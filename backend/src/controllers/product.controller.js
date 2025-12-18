@@ -3,40 +3,53 @@ import Product from '~/models/product.model.js'
 
 // @desc Get all products with filters, search, and pagination
 // @route GET /api/products
-// @access Public
 export const getProducts = async (req, res) => {
   try {
     const {
       collection,
       size,
       color,
+      gender,
       minPrice,
       maxPrice,
       sortBy,
       search,
       material,
       brand,
+      category,
       limit,
       page
     } = req.query
 
     const query = {}
 
-    // --- Lọc theo collection / category ---
-    if (collection && collection.toLowerCase() !== 'all') {
-      query.category = collection.toLowerCase()
+    if (category) {
+      query.category = category
+    } else if (collection && collection.toLowerCase() !== 'all') {
+      query.category = collection
+    }
+
+    if (gender) {
+      query.gender = gender
+    } else if (collection) {
+      const collectionLower = collection.toLowerCase()
+      if (collectionLower.includes('nam')) {
+        query.gender = 'Nam'
+      } else if (collectionLower.includes('nữ') || collectionLower.includes('nu')) {
+        query.gender = 'Nữ'
+      }
     }
 
     // --- Lọc theo các field khác ---
     if (material) query.material = { $in: material.split(',') }
     if (brand) query.brand = { $in: brand.split(',') }
     if (size) query.sizes = { $in: size.split(',') }
-    if (color) query.colors = { $in: [color] }
+    if (color) query.colors = color
 
     if (minPrice || maxPrice) {
       query.price = {}
-      if (minPrice) query.price.$gte = Number(minPrice)
-      if (maxPrice) query.price.$lte = Number(maxPrice)
+      if (minPrice) query.price.$gte = Number(minPrice) * 1000
+      if (maxPrice) query.price.$lte = Number(maxPrice) * 1000
     }
 
     // --- Tìm kiếm ---
@@ -61,7 +74,10 @@ export const getProducts = async (req, res) => {
       case 'popularity': sort = { rating: -1 }; break
       case 'nameAsc': sort = { name: 1 }; break
       case 'nameDesc': sort = { name: -1 }; break
+      default: sort = { createdAt: -1 }
       }
+    } else {
+      sort = { createdAt: -1 }
     }
 
     // --- Đếm tổng số ---
@@ -84,6 +100,7 @@ export const getProducts = async (req, res) => {
     res.status(500).send('Server Error!')
   }
 }
+
 
 // @desc Get best seller product
 // @route GET /api/products/best-seller

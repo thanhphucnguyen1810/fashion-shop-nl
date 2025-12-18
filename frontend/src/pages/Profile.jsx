@@ -3,7 +3,7 @@ import { useTheme } from '@mui/material/styles'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import { logout, setUser } from '~/redux/slices/authSlice'
+import { logout, setUser, removeFavorite } from '~/redux/slices/authSlice'
 import MyOrdersPage from './MyOrdersPage'
 import { clearCart } from '~/redux/slices/cartSlices'
 import { Box, Typography } from '@mui/material'
@@ -11,28 +11,58 @@ import { toast } from 'sonner'
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
 import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined'
 import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined'
+import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined'
 import LogoutIcon from '@mui/icons-material/Logout'
 import SaveIcon from '@mui/icons-material/Save'
+import AddressManager from '~/components/AddressManager'
+import OrdersStatusTabs from '~/components/OrdersStatusTabs'
 
-// --- FavoriteCard Component (Giữ nguyên) ---
-const FavoriteCard = ({ product, theme }) => (
+
+const FavoriteCard = ({ product, theme, onRemoveFavorite }) => (
   <div
-    className='rounded-lg overflow-hidden shadow-md transition-all hover:shadow-lg duration-300 cursor-pointer'
-    style={{ border: `1px solid ${theme.palette.divider}`, backgroundColor: theme.palette.background.default }}
+    className='relative overflow-hidden transition-all duration-300 group'
+    style={{
+      border: `1px solid ${theme.palette.divider}`,
+      backgroundColor: theme.palette.background.paper,
+      borderRadius: '4px'
+    }}
   >
-    {/* Placeholder for Product Image */}
-    <div className='w-full h-32 bg-gray-200 dark:bg-gray-700 flex items-center justify-center'>
-      <span className='text-gray-500'>
+    {/* Product Image */}
+    <div className='w-full aspect-square overflow-hidden'>
+      <img
+        src={product?.images?.[0]?.url || 'placeholder_url'}
+        alt={product?.name || 'Sản phẩm'}
+        className='w-full h-full object-cover transition-transform duration-300 group-hover:scale-105'
+      />
+    </div>
 
-[Image of {product.name}]
+    {/* Product Info */}
+    <div className='p-2 md:p-3'>
+      <h3 className='text-sm font-medium line-clamp-2' style={{ color: theme.palette.text.primary, minHeight: '40px' }}>
+        {product?.name || 'Tên Sản Phẩm (Thiếu dữ liệu)'}
+      </h3>
+      {/* Giá tiền nổi bật */}
+      <p className='text-md mt-1 font-bold' style={{ color: theme.palette.error.main }}>
+        {product?.price ? `${product.price.toLocaleString('vi-VN')}₫` : 'N/A'}
+      </p>
+    </div>
+
+    {/* Nút Xóa (Unfavorite) - Giống Shopee/Lazada */}
+    <button
+      onClick={(e) => {
+        e.stopPropagation()
+        onRemoveFavorite(product._id)
+      }}
+      className='absolute top-1 right-1 p-1 bg-white dark:bg-gray-800 rounded-full shadow-md text-red-500 hover:bg-red-500 hover:text-white transition-all duration-200 opacity-0 group-hover:opacity-100'
+      title='Xóa khỏi Yêu thích'
+    >
+      <span className='material-icons' style={{ fontSize: '18px' }}>
+            clear
       </span>
-    </div>
-    <div className='p-3'>
-      <h3 className='text-base font-medium truncate' style={{ color: theme.palette.text.primary }}>{product.name}</h3>
-      <p className='text-sm mt-1 font-semibold' style={{ color: theme.palette.primary.main }}>{product.price}₫</p>
-    </div>
+    </button>
   </div>
 )
+
 
 // --- TabPanel Component (Giữ nguyên) ---
 function TabPanel(props) {
@@ -64,7 +94,7 @@ const Profile = () => {
   const [avatarFile, setAvatarFile] = useState(null)
   const [name, setName] = useState(user?.name || '')
   const [gender, setGender] = useState(user?.gender || 'other')
-  const [favorites, setFavorites] = useState([])
+  const favorites = user?.favorites || []
   const [tabValue, setTabValue] = useState(0)
 
   const userToken = token
@@ -76,23 +106,6 @@ const Profile = () => {
     setName(user?.name || '')
     setGender(user?.gender || 'other')
   }, [user, navigate])
-
-  useEffect(() => {
-    const fetchFavorites = async () => {
-      try {
-        if (!userToken) return
-
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
-          headers: { Authorization: `Bearer ${userToken}` }
-        })
-        setFavorites(res.data.favorites || [])
-      } catch (err) {
-        console.error('Lỗi khi fetch favorites:', err)
-        toast.error('Lỗi tải danh sách yêu thích.', { duration: 1000 })
-      }
-    }
-    if (user) fetchFavorites()
-  }, [user, userToken])
 
   const handleLogout = () => {
     dispatch(logout())
@@ -142,11 +155,18 @@ const Profile = () => {
     }
   }
 
+
+  const handleRemoveFavorite = (productId) => {
+  // Gọi action Redux để xóa sản phẩm yêu thích (giả định bạn đã có action này)
+    dispatch(removeFavorite(productId))
+    toast.info('Đã xóa sản phẩm khỏi danh sách yêu thích.', { duration: 1000 })
+  }
   // Cấu hình Menu
   const profileMenu = [
     { index: 0, label: 'Thông tin cá nhân', icon: <PersonOutlineIcon /> },
     { index: 1, label: 'Đơn hàng của tôi', icon: <ShoppingBagOutlinedIcon /> },
-    { index: 2, label: 'Sản phẩm yêu thích', icon: <FavoriteBorderOutlinedIcon /> }
+    { index: 2, label: 'Sản phẩm yêu thích', icon: <FavoriteBorderOutlinedIcon /> },
+    { index: 3, label: 'Địa chỉ nhận hàng', icon: <LocationOnOutlinedIcon /> }
   ]
 
   if (!user) return null
@@ -169,9 +189,8 @@ const Profile = () => {
         <div className='flex flex-col md:flex-row md:space-x-6'>
           {/* Left Section: User Summary + Menu Navigation (1/4 width) */}
           <div className='w-full md:w-1/4 mb-6 md:mb-0'>
-            {/* 1. User Info Card (Prominent Avatar) - ĐÃ PHỤC HỒI ẢNH LỚN */}
             <div
-              className='shadow-md rounded-xl p-6 mb-4 flex flex-col items-center' // Centered content
+              className='shadow-md rounded-xl p-6 mb-4 flex flex-col items-center'
               style={{ backgroundColor: theme.palette.background.paper }}
             >
               {/* Avatar */}
@@ -179,7 +198,7 @@ const Profile = () => {
                 <img
                   src={avatarFile ? URL.createObjectURL(avatarFile) : user?.avatar?.url }
                   alt='Avatar'
-                  className='rounded-full w-20 h-20 object-cover border-4' // Kích thước lớn hơn
+                  className='rounded-full w-20 h-20 object-cover border-4'
                   style={{ borderColor: theme.palette.primary.light }}
                 />
                 <label
@@ -214,7 +233,7 @@ const Profile = () => {
 
             {/* 2. Navigation Menu */}
             <div
-              className='shadow-md rounded-xl p-3 sticky top-4 self-start' // Thêm sticky
+              className='shadow-md rounded-xl p-3 sticky top-4 self-start'
               style={{ backgroundColor: theme.palette.background.paper }}
             >
               {profileMenu.map((item) => (
@@ -324,21 +343,23 @@ const Profile = () => {
               </div>
             </TabPanel>
 
-            {/* Tab 2: Đơn hàng */}
-            <TabPanel value={tabValue} index={1}>
-              <div className='p-6'>
-                <h2 className='text-2xl font-semibold mb-4 border-b pb-3' style={{ color: theme.palette.text.primary, borderColor: theme.palette.divider }}>Lịch sử Đơn hàng</h2>
-                <MyOrdersPage />
-              </div>
+            {/* Tab 3: Quản lý địa chỉ giao hàng */}
+            <TabPanel value={tabValue} index={3}>
+              <AddressManager />
             </TabPanel>
 
-            {/* Tab 3: Sản phẩm yêu thích */}
+            {/* Tab 3: Đơn hàng */}
+            <TabPanel value={tabValue} index={1}>
+              <OrdersStatusTabs />
+            </TabPanel>
+
+            {/* Tab 4: Sản phẩm yêu thích */}
             <TabPanel value={tabValue} index={2}>
               <div className='p-6'>
                 <h2 className='text-2xl font-semibold mb-4 border-b pb-3' style={{ color: theme.palette.text.primary, borderColor: theme.palette.divider }}>Sản phẩm yêu thích</h2>
                 <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
                   {favorites.length > 0 ? (
-                    favorites.map((product) => <FavoriteCard key={product._id} product={product} theme={theme} />)
+                    favorites.map((product) => <FavoriteCard key={product._id} product={product} theme={theme} onRemoveFavorite={handleRemoveFavorite} />)
                   ) : (
                     <p style={{ color: theme.palette.text.secondary }}>Bạn chưa có sản phẩm yêu thích nào. Hãy đi khám phá!</p>
                   )}

@@ -32,6 +32,7 @@ import StockInList from './components/Admin/StockInList'
 import ProtectedRoute from './components/Common/ProtectedRoute'
 import UserOrderHistory from './components/Admin/UserOrderHistory'
 import CategoryManagement from './components/Admin/CategoryManagement'
+import OrdersStatusTabs from './components/OrdersStatusTabs'
 
 
 function App() {
@@ -55,7 +56,7 @@ function App() {
             {/* Collection Pages */}
             <Route path='collections' element={<CollectionPage />} />
             <Route path='collections/:collections' element={<CollectionPage />} />
-            <Route path='collections/:category/:subcategory' element={<CollectionPage />} />
+            {/* <Route path='collections/:category/:subcategory' element={<CollectionPage />} /> */}
 
             {/* Product Details */}
             <Route path='products/:id' element={<ProductDetails />} />
@@ -63,7 +64,7 @@ function App() {
             <Route path='order-confirm/:id' element={<OrderConfirmationPage />} />
             <Route path="/order-success/:id" element={<OrderSuccessPage />} />
             <Route path='order/:id' element={<OrderDetailsPage />} />
-            <Route path='my-orders' element={<MyOrdersPage />} />
+            <Route path='my-orders' element={<OrdersStatusTabs />} />
 
           </Route>
           {/* Admin Layout */}

@@ -116,8 +116,10 @@ export const loginUser = async (req, res) => {
   // console.log('Login body:', req.body)
   try {
     // Find the user by email
-    const user = await User.findOne({ email })
-    // console.log(user)
+    const user = await User.findOne({ email }).populate({
+      path: 'favorites',
+      select: 'name price images slug'
+    })
     if (!user || !(await user.matchPassword(password))) {
 
       return res.status(400).json({ message: 'Invalid Credentials' })
@@ -138,7 +140,10 @@ export const loginUser = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        isVerified: user.isVerified
+        isVerified: user.isVerified,
+        avatar: user.avatar,
+        gender: user.gender,
+        favorites: user.favorites
       },
       token
     })
@@ -151,14 +156,23 @@ export const loginUser = async (req, res) => {
 // ============= SOCIAL LOGIN CALLBACK =============
 export const socialLogin = async (req, res) => {
   const user = req.user
-  const token = generateToken(user)
+  const populatedUser = await User.findById(user._id).populate({
+    path: 'favorites',
+    select: 'name price images slug'
+  })
+  if (!populatedUser) return res.redirect(`${env.FRONTEND_URL}/login`)
+
+  const token = generateToken(populatedUser)
 
   const redirectURL = `${env.FRONTEND_URL}/login?token=${token}&user=${encodeURIComponent(
     JSON.stringify({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role
+      _id: populatedUser._id,
+      name: populatedUser.name,
+      email: populatedUser.email,
+      role: populatedUser.role,
+      avatar: populatedUser.avatar,
+      gender: populatedUser.gender,
+      favorites: populatedUser.favorites
     })
   )}`
 
@@ -277,15 +291,25 @@ export const getUserProfile = async (req, res) => {
   try {
     const user = req.user
 
+    const populatedUser = await User.findById(user._id).populate({
+      path: 'favorites',
+      select: 'name price images slug'
+    })
+
+    // Xử lý nếu không tìm thấy user (hiếm khi xảy ra nếu auth middleware đúng)
+    if (!populatedUser) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
     res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      avatar: user.avatar,
-      avatarCloudId: user.avatarCloudId,
-      gender: user.gender,
-      favorites: user.favorites
+      _id: populatedUser._id,
+      name: populatedUser.name,
+      email: populatedUser.email,
+      role: populatedUser.role,
+      avatar: populatedUser.avatar,
+      avatarCloudId: populatedUser.avatarCloudId,
+      gender: populatedUser.gender,
+      favorites: populatedUser.favorites
     })
   } catch (error) {
     console.error(error)
@@ -356,7 +380,14 @@ export const addFavorite = async (req, res) => {
     await user.save()
   }
 
-  res.status(200).json(user.favorites)
+  const populatedUser = await User.findById(user._id).populate({
+    path: 'favorites',
+    // Chỉ chọn các trường cần thiết cho FE: Tên, Giá, Ảnh
+    select: 'name price images slug'
+  })
+
+  // Trả về mảng favorites đã được populate
+  res.status(200).json(populatedUser.favorites)
 }
 
 // DELETE /api/users/favorites/:productId
@@ -367,31 +398,13 @@ export const removeFavorite = async (req, res) => {
   user.favorites = user.favorites.filter(id => id.toString() !== productId)
   await user.save()
 
-  res.status(200).json(user.favorites)
+  // 💡 SỬA: Lấy lại User object từ DB và POPULATE favorites
+  const populatedUser = await User.findById(user._id).populate({
+    path: 'favorites',
+    // Chỉ chọn các trường cần thiết
+    select: 'name price images slug'
+  })
+
+  // Trả về mảng favorites đã được populate
+  res.status(200).json(populatedUser.favorites)
 }
-
-
-/**
-
-Khi người dùng đăng ký:
-
-Client gửi POST /api/users/register với { name, email, password }
-Route /register gọi hàm registerUser trong user.controller.js
-Controller kiểm tra email, tạo User mới, hash mật khẩu, lưu DB.
-Controller tạo token JWT và trả JSON { user, token } về client.
-
-
-Khi người dùng đăng nhập:
-
-Client gửi POST /api/users/login với { email, password }
-Controller kiểm tra email và mật khẩu (dùng user.matchPassword())
-Nếu đúng, tạo token JWT và trả { user, token }.
-
-
-Khi lấy thông tin profile:
-
-Client gửi GET /api/users/profile kèm header Authorization: Bearer <token>
-Middleware protect xác thực token → gắn req.user
-Controller getUserProfile trả req.user (user hiện tại) về client.
-
- */

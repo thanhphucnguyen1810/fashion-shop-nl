@@ -112,7 +112,21 @@ export const applyCoupon = createAsyncThunk(
   async ({ code, userId, guestId }, { rejectWithValue }) => {
     try {
       const response = await axios.post(`${API_URL}/api/coupons/apply`, { code, userId, guestId })
-      return response.data // { discountAmount, code }
+      return response.data
+    } catch (err) {
+      return rejectWithValue(err.response.data)
+    }
+  }
+)
+
+// Remove applied coupon
+export const removeCoupon = createAsyncThunk(
+  'cart/removeCoupon',
+  async ({ userId, guestId }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`${API_URL}/api/coupons/remove`, { userId, guestId })
+      // The backend should return the updated cart or simply confirmation
+      return response.data
     } catch (err) {
       return rejectWithValue(err.response.data)
     }
@@ -123,7 +137,7 @@ export const applyCoupon = createAsyncThunk(
 const cartSlice = createSlice({
   name: 'cart',
   initialState: {
-    cart: loadCartFromStorage(),
+    cart: { products: [] },
     loading: false,
     error: null
   },
@@ -215,22 +229,27 @@ const cartSlice = createSlice({
       })
       .addCase(applyCoupon.fulfilled, (state, action) => {
         state.loading = false
-        if (!state.cart) state.cart = { products: [] }
-
-        if (action.payload && action.payload.code) {
-          state.cart.coupon = {
-            code: action.payload.code,
-            discountAmount: action.payload.discountAmount
-          }
-          saveCartToStorage(state.cart)
-        } else {
-          state.error = action.payload?.message || 'Failed to apply coupon'
-        }
+        state.cart = action.payload // Gán toàn bộ Cart mới
+        saveCartToStorage(action.payload)
       })
-
       .addCase(applyCoupon.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload?.message || 'Failed to apply coupon'
+      })
+
+      // --- Add removeCoupon logic here ---
+      .addCase(removeCoupon.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(removeCoupon.fulfilled, (state, action) => {
+        state.loading = false
+        state.cart = action.payload // Gán toàn bộ Cart mới
+        saveCartToStorage(action.payload)
+      })
+      .addCase(removeCoupon.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload?.message || 'Failed to remove coupon'
       })
 
   }

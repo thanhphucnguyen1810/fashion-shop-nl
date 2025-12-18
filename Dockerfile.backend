@@ -1,0 +1,23 @@
+# Dockerfile.backend
+# Sử dụng Node.js LTS làm base image
+FROM node:20-slim
+
+# Thiết lập thư mục làm việc trong Container
+WORKDIR /usr/src/app
+
+# Sao chép package.json và package-lock.json (quan trọng cho tốc độ build)
+COPY backend/package*.json ./
+
+# Cài đặt dependencies
+RUN npm install
+
+# Sao chép toàn bộ mã nguồn backend
+COPY backend/ .
+
+# Mở port mà Node server đang lắng nghe (đã định nghĩa là 8000)
+EXPOSE 8000
+
+# Lệnh chạy ứng dụng
+# Tùy chọn: Nếu bạn dùng nodemon trong dev, dùng ["npm", "run", "dev"]
+CMD [ "npm", "start" ]
+CMD ["npm", "run", "dev"]

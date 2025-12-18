@@ -6,23 +6,19 @@ export const getAllOrders = async (req, res) => {
   try {
     const { userId, status, page = 1, limit = 10 } = req.query
     let filter = {}
-    if (userId) {
-      filter.user = userId
-    }
+    if (userId) { filter.user = userId }
 
-    if (status) {
-      filter.status = status
-    }
+    if (status) { filter.status = status }
 
     const orders = await orderModel
       .find(filter)
       .limit(limit)
       .skip((page - 1) * limit)
-      .sort({ createdAt: -1 }) // Sắp xếp đơn hàng mới nhất lên đầu
-      .populate('user', 'name email') // Lấy thông tin user (nếu cần)
+      .sort({ createdAt: -1 })
+      .populate('user', 'name email')
+      .populate('orderItems.productId', 'name price images')
     res.json(orders)
   } catch (error) {
-    console.error('Error fetching all orders:', error)
     res.status(500).json({ message: 'Server Error' })
   }
 }
@@ -85,7 +81,7 @@ export const getOrderById = async (req, res) => {
     const order = await orderModel
       .findById(req.params.id)
       .populate('user', 'name email')
-      .populate('orderItems.product', 'name price images')
+      .populate('orderItems.productId', 'name price images')
 
     if (!order) {
       return res.status(404).json({ message: 'Order not found' })

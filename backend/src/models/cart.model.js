@@ -8,7 +8,7 @@ const cartItemSchema = new mongoose.Schema({
   },
   name: String,
   image: String,
-  price: String,
+  price: Number,
   size: String,
   color: String,
   quantity: {
@@ -36,8 +36,10 @@ const cartSchema = new mongoose.Schema({
   coupon: {
     code: String,
     discountType: String,
-    discountValue: Number
-  }
+    discountValue: Number,
+    discountAmount: Number
+  },
+  grandTotal: Number
 },
 { timestamps: true }
 )

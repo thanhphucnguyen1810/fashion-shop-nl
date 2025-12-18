@@ -1,40 +1,32 @@
 import { useEffect, useRef, useState } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { FaFilter } from 'react-icons/fa'
 import { useDispatch, useSelector } from 'react-redux'
 import FilterSidebar from '~/components/Products/FilterSidebar'
 import ProductGrid from '~/components/Products/ProductGrid'
 import SortOptions from '~/components/Products/SortOptions'
 import { fetchProducts, setFilters } from '~/redux/slices/productSlice'
+import Loading from '~/components/Common/Loading'
 
 const CollectionPage = () => {
-  const { collections } = useParams()
   const [searchParams] = useSearchParams()
   const dispatch = useDispatch()
-  // Lấy filters từ Redux để sử dụng (tùy chọn)
-  const { products, loading, error, filters } = useSelector((state) => state.products)
+  const { products, loading, error, filters, isFetching } = useSelector((state) => state.products)
   const sidebarRef = useRef(null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   // Gộp tất cả logic tải dữ liệu và đồng bộ trạng thái vào một useEffect
   useEffect(() => {
     const queryParams = Object.fromEntries([...searchParams])
-
-    // 1. Cập nhật Redux state filters từ URL
-    // Mục tiêu là set tất cả bộ lọc (bao gồm search) lên Redux
-    // và đảm bảo 'collection' từ route cũng được đưa vào Redux filters
     const allFilters = {
-      ...queryParams,
-      collection: collections || ''
+      ...queryParams
     }
-
     // Dispatch action để cập nhật Redux filters state
     dispatch(setFilters(allFilters))
-
-    // 2. Gọi API fetchProducts với tất cả các bộ lọc đã được đồng bộ
+    // Gọi API fetchProducts với tất cả các bộ lọc đã được đồng bộ
     dispatch(fetchProducts(allFilters))
 
-  }, [dispatch, collections, searchParams])
+  }, [dispatch, searchParams])
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen)
 
@@ -84,7 +76,12 @@ const CollectionPage = () => {
 
         <SortOptions />
 
-        <ProductGrid products={products} loading={loading} error={error} columnCount={4} />
+        {loading === 'pending' && products.length === 0 ? (
+          <Loading />
+        ) : (
+          <ProductGrid products={products} error={error} columnCount={4} isFetching={isFetching} />
+        )}
+
       </div>
     </div>
   )

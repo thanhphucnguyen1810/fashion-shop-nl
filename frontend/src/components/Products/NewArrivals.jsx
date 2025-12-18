@@ -1,18 +1,19 @@
 /* eslint-disable no-console */
 import { useEffect, useRef, useState } from 'react'
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi'
-import { FaStar } from 'react-icons/fa'
+import { FaStar, FaHeart } from 'react-icons/fa'
 import { Link } from 'react-router-dom'
 import { useTheme } from '@mui/material/styles'
 import palette from '~/theme/palette'
 import axios from 'axios'
+import { useSelector, useDispatch } from 'react-redux'
+import { addFavorite, removeFavorite } from '~/redux/slices/authSlice'
 
-// Component NewArrivals
+const FAVORITE_COLOR = '#ff4d4f'
+
 const NewArrivals = () => {
-  // Hàm định dạng tiền tệ
   const formatCurrency = (amount) => {
     if (amount === undefined || amount === null) return '0đ'
-    // Sử dụng Intl.NumberFormat để định dạng số theo chuẩn Việt Nam (dùng dấu chấm)
     return new Intl.NumberFormat('vi-VN').format(amount) + 'đ'
   }
   const theme = useTheme()
@@ -37,23 +38,31 @@ const NewArrivals = () => {
     fetchNewArrivals()
   }, [])
 
+  const dispatch = useDispatch()
   const scrollRef = useRef(null)
   const [isDragging, setIsDragging] = useState(false)
   const [startX, setStartX] = useState(0)
-  const [scrollLeft, setScrollLeft] = useState(false)
+  const [scrollLeft, setScrollLeft] = useState(0)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(true)
+  const user = useSelector((state) => state.auth.user)
+  const favoriteProductIds = user?.favorites || []
+  const isLoggedIn = !!user
+
 
   const handleMouseDown = (e) => {
     setIsDragging(true)
-    setStartX(e.pageX - scrollRef.current.offsetLeft)
-    setScrollLeft(scrollRef.current.scrollLeft)
+    // Kiểm tra null trước khi truy cập offsetLeft
+    if (scrollRef.current) {
+      setStartX(e.pageX - scrollRef.current.offsetLeft)
+      setScrollLeft(scrollRef.current.scrollLeft)
+    }
   }
 
   const handleMouseMove = (e) => {
-    if (!isDragging) return
+    if (!isDragging || !scrollRef.current) return
     const x = e.pageX - scrollRef.current.offsetLeft
-    const walk = (x - startX)
+    const walk = (x - startX) * 1.5 // Nhân 1.5 để cuộn nhanh hơn
     scrollRef.current.scrollLeft = scrollLeft - walk
   }
 
@@ -62,18 +71,21 @@ const NewArrivals = () => {
   }
 
   const scroll = (direction) => {
-    const scrollAmount = direction === 'left' ? -300 : 300
-    scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' })
+    const scrollAmount = direction === 'left' ? -350 : 350 // Điều chỉnh khoảng cuộn
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' })
+    }
   }
 
   const updateScrollButtons = () => {
     const container = scrollRef.current
     if (container) {
       const leftScroll = container.scrollLeft
-      const rightScrollable = container.scrollWidth > leftScroll + container.clientWidth
+      // Thêm một buffer nhỏ (ví dụ: 1) để đảm bảo nút cuộn bên phải biến mất khi cuộn hết
+      const isScrolledToRight = container.scrollWidth - container.clientWidth - leftScroll < 1
 
       setCanScrollLeft(leftScroll > 0)
-      setCanScrollRight(rightScrollable)
+      setCanScrollRight(!isScrolledToRight)
     }
   }
 
@@ -81,9 +93,12 @@ const NewArrivals = () => {
     const container = scrollRef.current
     if (container) {
       container.addEventListener('scroll', updateScrollButtons)
+      // Thêm listener cho sự kiện resize để cập nhật button khi kích thước cửa sổ thay đổi
+      window.addEventListener('resize', updateScrollButtons)
       updateScrollButtons()
       return () => {
         container.removeEventListener('scroll', updateScrollButtons)
+        window.removeEventListener('resize', updateScrollButtons)
       }
     }
   }, [newArrivals])
@@ -91,7 +106,7 @@ const NewArrivals = () => {
   // Hàm render Rating Stars
   const renderRatingStars = (rating) => {
     const stars = []
-    const fullStars = Math.floor(rating)
+    const fullStars = Math.floor(rating || 0)
     const hasHalfStar = rating % 1 !== 0
 
     for (let i = 0; i < 5; i++) {
@@ -107,6 +122,28 @@ const NewArrivals = () => {
     return <div className='flex space-x-0.5'>{stars}</div>
   }
 
+  const handleToggleFavorite = (e, productId) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (!isLoggedIn) {
+      alert('Vui lòng đăng nhập để thêm sản phẩm yêu thích.')
+      // Chuyển hướng đến trang login nếu cần
+      // navigate('/login')
+      return
+    }
+
+    const isCurrentlyFavorite = favoriteProductIds.includes(productId)
+
+    if (isCurrentlyFavorite) {
+      // Bỏ yêu thích
+      dispatch(removeFavorite(productId))
+    } else {
+      // Thêm yêu thích
+      dispatch(addFavorite(productId))
+    }
+  }
+
   return (
     <section className='py-12 px-4 lg:px-0' style={{ backgroundColor: theme.palette.background.default }}>
       <div className='container mx-auto text-center mb-10 relative'>
@@ -117,8 +154,8 @@ const NewArrivals = () => {
         Chất lượng vượt thời gian, thiết kế mới nhất.
         </p>
 
-        {/* Scroll Buttons - Đơn giản hóa kiểu dáng */}
-        <div className='absolute right-0 bottom-[30px] flex space-x-2'>
+        {/* Scroll Buttons - Căn chỉnh lại vị trí để dễ nhìn */}
+        <div className='absolute right-0 top-1/2 -mt-6 hidden md:flex space-x-2 z-10'>
           <button
             onClick={() => scroll('left')}
             disabled={!canScrollLeft}
@@ -148,94 +185,134 @@ const NewArrivals = () => {
         </div>
       </div>
 
-      {/* Scrollable Content */}
-      <div
-        ref={scrollRef}
-        className={`container mx-auto overflow-x-scroll flex space-x-8 relative ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUpOrLeave}
-        onMouseLeave={handleMouseUpOrLeave}
-      >
-        {newArrivals.map((product) => (
-          <div
-            key={product._id}
-            className='min-w-full sm:min-w-[50%] md:min-w-[33.333%] lg:min-w-[20%] relative cursor-pointer group overflow-hidden transition-all duration-300' // Bỏ rounded-xl để ảnh có thể full width
-            style={{
-              backgroundColor: theme.palette.background.paper,
-              border: `1px solid ${theme.palette.divider}`,
-              borderRadius: '4px',
-              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)'
-            }}
-          >
-            <Link to={`/products/${product._id}`} className='block'>
-              {/* Hình ảnh */}
-              <img
-                src={product.images && product.images.length > 0 ? product.images[0].url : 'placeholder_image_url'}
-                alt={product.name}
-                className='w-full h-[350px] object-contain transition-transform duration-500 group-hover:scale-105'
-                draggable='false'
-              />
-
-              {/*TAGS (Chỉ hiển thị NEW & SALE) */}
-              <div className='absolute top-3 left-3 flex space-x-2'>
-                <span
-                  className='px-3 py-1 text-xs font-bold tracking-widest text-white shadow-md'
-                  style={{ backgroundColor: PRIMARY_COLOR }}
-                >
-                        NEW
-                </span>
-
-                {/* Sale Tag (Nếu có giảm giá) */}
-                {product.disCountPrice && product.disCountPrice < product.price && (
-                  <span
-                    className='px-3 py-1 text-xs font-bold tracking-widest text-white shadow-md'
-                    style={{ backgroundColor: ERROR_COLOR }}
-                  >
-                            SALE
-                  </span>
-                )}
-              </div>
-
+      {/* Scrollable Content CONTAINER */}
+      <div className='relative mx-auto container'>
+        <div
+          ref={scrollRef}
+          className={'flex overflow-x-scroll gap-4 sm:gap-6 pb-4 cursor-grab'}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUpOrLeave}
+          onMouseLeave={handleMouseUpOrLeave}
+          style={{
+            '--tw-bg-opacity': 1,
+            scrollbarWidth: 'none',
+            'msOverflowStyle': 'none'
+          }}
+        >
+          {newArrivals.map((product) => {
+            const isFavorite = favoriteProductIds.includes(product._id)
+            return (
               <div
-                className='p-4 text-left transition-all duration-300'
+                key={product._id}
+                // Thiết lập chiều rộng cố định và ngăn co lại
+                className='relative group overflow-hidden transition-all duration-300 shrink-0 w-56 md:w-64 lg:w-72'
                 style={{
-                  backgroundColor: 'transparent',
-                  color: theme.palette.text.primary
+                  backgroundColor: theme.palette.background.paper,
+                  border: `1px solid ${theme.palette.divider}`,
+                  borderRadius: '4px',
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)'
                 }}
               >
-                <div className='flex items-center mb-1'>
-                  {renderRatingStars(product.rating)}
-                  <span className='ml-2 text-xs' style={{ color: colors.mutedText }}>
-                        ({product.numReviews || 0} Đánh giá)
-                  </span>
-                </div>
-                {/* Tên Sản phẩm */}
-                <h4 className='font-normal text-lg mb-1 line-clamp-1 tracking-wide'>
-                  {product.name}
-                </h4>
+                <Link to={`/products/${product._id}`} className='block' style={{ textDecoration: 'none' }}>
+                  <div className='flex flex-col h-full'>
+                    {/* 1. Khu vực Hình ảnh & Sale Tag */}
+                    <div className='w-full h-96 relative overflow-hidden'>
+                      {/* Ảnh Sản Phẩm */}
+                      <img
+                        src={product.images && product.images.length > 0 ? product.images[0].url : 'placeholder_image_url'}
+                        alt={product.name}
+                        className='w-full h-full object-contain transition-transform duration-500 group-hover:scale-105'
+                        draggable='false'
+                      />
 
-                {/* Hiển thị Giá */}
-                {product.disCountPrice && product.disCountPrice < product.price ? (
-                  <div className='flex items-end space-x-2'>
-                    {/* Giá Khuyến Mãi (Màu Đỏ/Error) */}
-                    <p className='text-lg font-bold' style={{ color: ERROR_COLOR }}>
-                      {formatCurrency(product.disCountPrice)}
-                    </p>
-                    {/* Giá Gốc */}
-                    <p className='text-sm line-through' style={{ color: colors.mutedText }}>
-                      {formatCurrency(product.price)}
-                    </p>
+                      {/* TAGS (NEW & SALE) */}
+                      <div className='absolute top-3 left-3 flex space-x-2'>
+                        <span
+                          className='px-3 py-1 text-xs font-bold tracking-widest text-white shadow-md'
+                          style={{ backgroundColor: PRIMARY_COLOR }}
+                        > NEW
+                        </span>
+
+                        {/* Sale Tag (Nếu có giảm giá) */}
+                        {product.disCountPrice && product.disCountPrice < product.price && (
+                          <span
+                            className='px-3 py-1 text-xs font-bold tracking-widest text-white shadow-md'
+                            style={{ backgroundColor: ERROR_COLOR }}
+                          > SALE
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Thêm sp yêu thích */}
+                      <button
+                        className='absolute top-3 right-3 p-2 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110'
+                        style={{
+                          backgroundColor: theme.palette.background.paper,
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                          opacity: isFavorite ? 1 : 0.6
+                        }}
+                        onClick={(e) => handleToggleFavorite(e, product._id)}
+                        aria-label={isFavorite ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}
+                      >
+                        <FaHeart
+                          className='w-5 h-5 transition-all'
+                          style={{
+                            color: isFavorite ? FAVORITE_COLOR : colors.mutedText,
+                            fill: isFavorite ? FAVORITE_COLOR : 'none',
+                            stroke: colors.mutedText,
+                            strokeWidth: isFavorite ? 0 : 30
+                          }}
+                        />
+                      </button>
+                    </div>
+
                   </div>
-                ) : (
-                  <p className='text-lg font-bold'>
-                    {formatCurrency(product.price)}
-                  </p>
-                )}
+
+                  {/* 2. Khu vực Thông tin (p-4) */}
+                  <div
+                    className='p-4 text-left transition-all duration-300'
+                    style={{
+                      backgroundColor: 'transparent',
+                      color: theme.palette.text.primary
+                    }}
+                  >
+                    {/* Đánh giá & Số lượng đánh giá */}
+                    <div className='flex items-center mb-1'>
+                      {renderRatingStars(product.rating)}
+                      <span className='ml-2 text-xs' style={{ color: colors.mutedText }}>
+                        ({product.numReviews || 0} Đánh giá)
+                      </span>
+                    </div>
+
+                    {/* Tên Sản Phẩm */}
+                    <h4 className='font-normal text-lg mb-1 line-clamp-1 tracking-wide'>
+                      {product.name}
+                    </h4>
+
+                    {/* Giá Khuyến Mãi & Giá Gốc */}
+                    {product.disCountPrice && product.disCountPrice < product.price ? (
+                      <div className='flex items-end space-x-2'>
+                        {/* Giá Khuyến Mãi (Màu Đỏ/Error) */}
+                        <p className='text-lg font-bold' style={{ color: ERROR_COLOR }}>
+                          {formatCurrency(product.disCountPrice)}
+                        </p>
+                        {/* Giá Gốc */}
+                        <p className='text-sm line-through' style={{ color: colors.mutedText }}>
+                          {formatCurrency(product.price)}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className='text-lg font-bold' style={{ color: theme.palette.text.primary }}>
+                        {formatCurrency(product.price)}
+                      </p>
+                    )}
+                  </div>
+                </Link>
               </div>
-            </Link>
-          </div>
-        ))}
+            )
+          })}
+        </div>
       </div>
     </section>
   )

@@ -37,9 +37,10 @@ export const applyCoupon = async (req, res) => {
       discountValue: coupon.discountValue,
       discountAmount: discountAmount
     }
+
     await cart.save()
 
-    return res.json({ discountAmount, code: coupon.code })
+    return res.json(cart)
   } catch (err) {
     console.error(err)
     res.status(500).json({ message: 'Server Error' })
@@ -54,11 +55,18 @@ export const removeCoupon = async (req, res) => {
     const cart = await Cart.findOne({ $or: [{ user: userId }, { guestId }] })
     if (!cart) return res.status(404).json({ message: 'Giỏ hàng không tồn tại' })
 
-    // Xóa thông tin coupon khỏi cart
-    cart.coupon = undefined
+    const subtotal = cart.products.reduce((acc, item) => acc + item.price * item.quantity, 0)
+
+    if (cart.coupon) {
+      console.log(`Coupon ${cart.coupon.code} removed.`)
+      cart.coupon = undefined
+    }
+
+    cart.totalPrice = subtotal
+
     await cart.save()
 
-    return res.json({ message: 'Mã giảm giá đã được gỡ bỏ.', newDiscountAmount: 0 })
+    return res.json(cart)
   } catch (err) {
     console.error(err)
     res.status(500).json({ message: 'Server Error' })
@@ -74,13 +82,11 @@ export const getAllActiveCoupons = async (req, res) => {
     const coupons = await CouponModel.find({
       // Mã phải đang hoạt động
       isActive: true,
-
       // Mã phải chưa hết hạn ($gt: greater than - lớn hơn ngày hiện tại)
       expiresAt: { $gt: now },
-
       // Số lần đã dùng phải nhỏ hơn giới hạn sử dụng
       // $where là toán tử Mongoose/MongoDB cho phép kiểm tra bằng JavaScript
-      $where: 'this.usedCount < this.usageLimit'
+      $expr: { $lt: ['$usedCount', '$usageLimit'] }
     })
       .select('code discountType discountValue minimumOrderAmount usageLimit usedCount expiresAt description') // Chỉ lấy các trường cần thiết
       .sort({ expiresAt: 1 }) // Sắp xếp theo ngày hết hạn sớm nhất lên trước

@@ -9,6 +9,7 @@ import {
   checkPaymentStatus // Import mới: Check thanh toán
 } from '~/redux/slices/checkoutSlice'
 import { Divider, CircularProgress } from '@mui/material'
+import EnhancedQRCodePayment from '~/components/Checkout/EnhancedQRCodePayment'
 
 // --- HÀM HỖ TRỢ FORMAT TIỀN ---
 const formatCurrency = (amount) => amount?.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })
@@ -25,7 +26,7 @@ const OrderConfirm = () => {
   const [isFinalizing, setIsFinalizing] = useState(false)
 
   // Lấy dữ liệu từ Redux
-  const { checkout, loading, error, qrData, isPaidSuccess } = useSelector((state) => state.checkout)
+  const { checkout, loading, error, qrData, isPaidSuccess, finalOrderId } = useSelector((state) => state.checkout)
 
   // Biến kiểm tra xem đây là đơn COD hay Online
   const isCOD = checkout?.paymentMethod === 'COD'
@@ -57,16 +58,16 @@ const OrderConfirm = () => {
 
   // 3. LOGIC CHUYỂN TRANG KHI SEPAY THANH TOÁN THÀNH CÔNG
   useEffect(() => {
-    if (isPaidSuccess) {
+    if (isPaidSuccess && finalOrderId) {
       if (pollingInterval.current) clearInterval(pollingInterval.current)
       toast.success('Thanh toán thành công!')
 
       setTimeout(() => {
-        const orderId = checkout?.orderId
+        const orderId = finalOrderId
         navigate(`/order-success/${orderId}`, { replace: true })
       }, 1500)
     }
-  }, [isPaidSuccess, navigate, checkout, id])
+  }, [isPaidSuccess, finalOrderId, navigate])
 
 
   // 4. LOGIC XỬ LÝ NÚT BẤM CHO COD (Giữ nguyên của bạn)
@@ -144,28 +145,10 @@ const OrderConfirm = () => {
               </div>
             ) : (
             /* ================= TRƯỜNG HỢP 2: SEPAY (MỚI THÊM) ================= */
-              <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">THANH TOÁN QUA MÃ QR</h2>
-                <p className="text-gray-600 mb-6">Quét mã bên dưới để thanh toán. Hệ thống tự động xác nhận sau vài giây.</p>
-
-                {qrData ? (
-                  <div className="inline-block p-2 border rounded-lg shadow-sm bg-white relative">
-                    <img src={qrData.qrUrl} alt="QR Sepay" className="w-64 h-64 object-contain" />
-                    <div className="mt-2 flex items-center justify-center gap-2 text-green-600 font-medium animate-pulse">
-                      <CircularProgress size={14} color="success" /> Đang chờ thanh toán...
-                    </div>
-                  </div>
-                ) : (
-                  <div className="h-64 flex flex-col items-center justify-center">
-                    <CircularProgress />
-                    <span className="mt-2 text-gray-500">Đang tạo mã QR...</span>
-                  </div>
-                )}
-
-                <div className="mt-6 bg-yellow-50 p-3 rounded border border-yellow-200 inline-block w-full max-w-md text-left text-sm text-yellow-800">
-                  <strong>Lưu ý:</strong> Nội dung chuyển khoản bắt buộc là <span className="font-mono font-bold bg-white px-1 border border-gray-300">{qrData?.transferContent || '...'}</span>
-                </div>
-              </div>
+              <EnhancedQRCodePayment
+                qrData={qrData}
+                isPaidSuccess={isPaidSuccess}
+              />
             )}
           </div>
 

@@ -1,24 +1,22 @@
 import React, { useEffect, useState } from 'react'
-import { FaStar, FaTrash, FaCheckCircle, FaBan, FaSearch } from 'react-icons/fa'
-import { useTheme, alpha } from '@mui/material/styles'
-import axios from 'axios'
+import { useDispatch, useSelector } from 'react-redux'
+import { deleteReview, fetchAllReviewsAdmin, updateReviewStatus } from '~/redux/slices/reviewSlice'
+import { toast } from 'sonner'
+import { FaBan, FaCheckCircle, FaSearch, FaStar, FaTrash } from 'react-icons/fa'
 
 export default function AdminReviews() {
-  const theme = useTheme()
-  const [reviews, setReviews] = useState([])
-  const [filteredReviews, setFilteredReviews] = useState([]) //<---> danh sách sau khi search
+  const dispatch = useDispatch()
+  const { adminReviews } = useSelector((state) => state.reviews)
+
+  const [filteredReviews, setFilteredReviews] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
 
   const fetchReviews = async () => {
     try {
-      const res = await axios.get('/api/admin/reviews')
-      const data = Array.isArray(res.data)
-        ? res.data
-        : res.data.reviews || []
-      setReviews(data)
-      setFilteredReviews(data)
-    } catch (error) {
-      console.error('Lỗi khi tải đánh giá:', error)
+      dispatch(fetchAllReviewsAdmin())
+    } catch (err) {
+      console.error(err)
+      toast.error('Lỗi khi tải danh sách đánh giá')
     }
   }
 
@@ -26,77 +24,66 @@ export default function AdminReviews() {
     fetchReviews()
   }, [])
 
-  // 🔍 Lọc danh sách khi người dùng gõ vào ô tìm kiếm
+  // Lọc theo từ khóa
   useEffect(() => {
     const term = searchTerm.toLowerCase()
-    const filtered = reviews.filter(
+    const filtered = adminReviews?.filter(
       (r) =>
-        r.product?.name?.toLowerCase().includes(term) ||
+        r.productId?.name?.toLowerCase().includes(term) ||
         r.user?.name?.toLowerCase().includes(term)
     )
     setFilteredReviews(filtered)
-  }, [searchTerm, reviews])
+  }, [searchTerm, adminReviews])
 
   const handleStatusChange = async (id, newStatus) => {
-    try {
-      await axios.patch(`/api/admin/reviews/${id}/status`, { status: newStatus })
-      fetchReviews()
-    } catch (error) {
-      console.error('Lỗi khi cập nhật trạng thái:', error)
-    }
+    dispatch(updateReviewStatus({ id, status: newStatus }))
+      .unwrap()
+      .catch ((error) => {
+        toast.error('Lỗi khi cập nhật trạng thái')
+        console.error(error)
+      })
   }
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Xóa đánh giá này?')) {
-      try {
-        await axios.delete(`/api/admin/reviews/${id}`)
-        fetchReviews()
-      } catch (error) {
-        console.error('Lỗi khi xóa đánh giá:', error)
-      }
+  const handleDelete = (reviewId) => {
+    if (window.confirm('Bạn chắc chắn muốn xóa đánh giá này?')) {
+      dispatch(deleteReview(reviewId))
+        .unwrap()
+        .then(() => toast.success('Đã xóa đánh giá!'))
+        .catch(() => toast.error('Lỗi khi xóa đánh giá'))
     }
   }
 
   return (
-    <div className="p-6" style={{ color: theme.palette.text.primary }}>
-      <h2 className="text-2xl font-bold mb-4">Quản Lý Đánh Giá Sản Phẩm</h2>
+    <div className="p-6 bg-white text-gray-800">
+      {/* Title */}
+      <h2 className="text-2xl font-semibold mb-2">Danh sách đánh giá sản phẩm</h2>
 
-      {/* 🔍 Search Bar */}
-      <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <p className="text-sm text-gray-500 mb-6">
+        Dashboard / Đánh giá sản phẩm
+      </p>
+
+      {/* Search */}
+      <div className="mb-5">
         <div className="relative w-full md:w-1/2">
           <input
             type="text"
-            placeholder="Tìm kiếm theo tên sản phẩm hoặc khách hàng ..."
+            placeholder="Tìm kiếm sản phẩm hoặc khách hàng..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full py-2.5 pl-11 pr-24 text-sm rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 border border-gray-300"
+            className="w-full py-2.5 pl-11 pr-20 border border-gray-300 rounded-full shadow-sm focus:ring-2 focus:ring-blue-500 outline-none"
           />
-          <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none" />
-          <button
-            onClick={() => console.log('Tìm:', searchTerm)}
-            className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-blue-600 text-white text-sm font-semibold px-4 py-1.5 rounded-full hover:bg-blue-700 active:scale-95 transition-all duration-200"
-          >
-            Tìm
-          </button>
+          <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-base" />
         </div>
       </div>
 
-      {/* Bảng hiển thị đánh giá */}
-      <div className="overflow-x-auto shadow-md sm:rounded-lg">
-        <table
-          className="w-full text-sm text-left"
-          style={{
-            backgroundColor: theme.palette.background.paper,
-            color: theme.palette.text.primary
-          }}
-        >
-          <thead
-            className="uppercase"
-            style={{ backgroundColor: alpha(theme.palette.grey[500], 0.2) }}
-          >
+      {/* Table */}
+      <div className="overflow-x-auto rounded-lg shadow-sm border border-gray-200">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-100 text-gray-700 text-xs uppercase">
             <tr>
-              <th className="p-3">Sản phẩm</th>
+              <th className="p-3 text-left">Sản phẩm</th>
               <th className="p-3">Khách hàng</th>
+              <th className="p-3 text-left">Nội dung</th>
               <th className="p-3">Mức đánh giá</th>
               <th className="p-3">Trạng thái</th>
               <th className="p-3">Ngày gửi</th>
@@ -105,65 +92,87 @@ export default function AdminReviews() {
           </thead>
 
           <tbody>
-            {filteredReviews.length > 0 ? (
+            {filteredReviews?.length > 0 ? (
               filteredReviews.map((r) => (
                 <tr
                   key={r._id}
-                  className="border-b hover:bg-gray-50 dark:hover:bg-gray-800"
+                  className="border-b hover:bg-gray-50 transition"
                 >
                   <td className="p-3 flex items-center gap-3">
                     <img
-                      src={r.product?.images?.[0]}
-                      alt={r.product?.name}
-                      className="w-10 h-10 rounded object-cover"
+                      src={r.productId?.images[0]?.url}
+                      className="w-12 h-12 rounded object-cover"
                     />
-                    <span>{r.product?.name}</span>
+
                   </td>
-                  <td className="p-3">{r.user?.name}</td>
+
+                  <td className="p-3">
+                    <p className="font-medium">{r.user?.name}</p>
+                    <p className="text-xs text-gray-500">{r.user?.email}</p>
+                  </td>
+
+                  <td className="p-3 text-left max-w-xs">
+                    <p className="text-sm truncate">{r.comment}</p>
+                  </td>
+
                   <td className="p-3 flex items-center gap-1">
                     {Array.from({ length: r.rating }).map((_, i) => (
                       <FaStar key={i} className="text-yellow-500" />
                     ))}
-                  </td>
-                  <td className="p-3">
-                    <span
-                      className={`px-2 py-1 rounded text-sm ${
-                        r.status === 'approved'
-                          ? 'bg-green-100 text-green-700'
-                          : r.status === 'blocked'
-                            ? 'bg-red-100 text-red-700'
-                            : 'bg-gray-100 text-gray-600'
-                      }`}
-                    >
-                      {r.status === 'approved'
-                        ? 'Đã duyệt'
-                        : r.status === 'blocked'
-                          ? 'Chặn hiển thị'
-                          : 'Chờ duyệt'}
+                    <span className="text-gray-600 text-xs ml-1">
+                      {r.rating}.0
                     </span>
                   </td>
+
                   <td className="p-3">
+                    <span
+                      className={`px-2 py-1 rounded-md text-xs font-medium
+                        ${
+                r.status === 'approved'
+                  ? 'bg-green-100 text-green-700'
+                  : r.status === 'blocked'
+                    ? 'bg-red-100 text-red-700'
+                    : 'bg-blue-100 text-blue-600'
+                }
+                      `}
+                    >
+                      {r.status === 'approved'
+                        ? 'Duyệt'
+                        : r.status === 'blocked'
+                          ? 'Chặn'
+                          : 'Chờ'}
+                    </span>
+                  </td>
+
+                  <td className="p-3 text-gray-600">
                     {new Date(r.createdAt).toLocaleString('vi-VN')}
                   </td>
-                  <td className="p-3 text-center flex gap-2 justify-center">
+
+                  <td className="p-3 flex gap-2 justify-center">
+
+                    {/* Approve */}
                     {r.status !== 'approved' && (
                       <button
-                        className="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
+                        className="p-2 rounded border border-green-500 text-green-600 hover:bg-green-500 hover:text-white transition"
                         onClick={() => handleStatusChange(r._id, 'approved')}
                       >
                         <FaCheckCircle />
                       </button>
                     )}
+
+                    {/* Block */}
                     {r.status !== 'blocked' && (
                       <button
-                        className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600"
+                        className="p-2 rounded border border-yellow-500 text-yellow-600 hover:bg-yellow-500 hover:text-white transition"
                         onClick={() => handleStatusChange(r._id, 'blocked')}
                       >
                         <FaBan />
                       </button>
                     )}
+
+                    {/* Delete */}
                     <button
-                      className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                      className="p-2 rounded border border-red-500 text-red-600 hover:bg-red-500 hover:text-white transition"
                       onClick={() => handleDelete(r._id)}
                     >
                       <FaTrash />
@@ -175,9 +184,9 @@ export default function AdminReviews() {
               <tr>
                 <td
                   colSpan="6"
-                  className="text-center py-6 text-gray-500 italic"
+                  className="py-6 text-center text-gray-500 italic"
                 >
-                  Không có đánh giá nào phù hợp.
+                  Không có đánh giá phù hợp.
                 </td>
               </tr>
             )}
@@ -187,3 +196,4 @@ export default function AdminReviews() {
     </div>
   )
 }
+

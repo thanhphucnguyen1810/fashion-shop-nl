@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useLocation } from 'react-router-dom'
 import { useTheme } from '@mui/material/styles'
 import {
   Box,
@@ -65,8 +65,9 @@ const getColorCode = (colorName) => {
 const FilterSidebar = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const theme = useTheme()
+  const location = useLocation()
 
-  const MAX_PRICE_VALUE = 500 // Giả định 500 = 500.000 VNĐ
+  const MAX_PRICE_VALUE = 500 //500.000 VNĐ
 
   const [filters, setFilters] = useState({
     category: '',
@@ -76,14 +77,13 @@ const FilterSidebar = () => {
     material: [],
     brand: [],
     minPrice: 0,
-    maxPrice: 500 // Mặc định hiển thị ₫500.000
+    maxPrice: 500
   })
 
   const [priceRange, setPriceRange] = useState([0, 500])
 
-  // Dữ liệu bộ lọc (giữ nguyên từ file bạn cung cấp)
+  // Dữ liệu bộ lọc
   const categories = [
-    'Áo Nam',
     'Áo Len Nữ',
     'Áo Polo Nam',
     'Áo Sơ Mi Nam',
@@ -92,19 +92,16 @@ const FilterSidebar = () => {
     'Áo Thun Nữ',
     'Áo Kiểu Nữ',
     'Thời Trang Trẻ Em',
-    'Quần Nam',
-    'Quần Nữ',
     'Áo Khoác Nữ',
     'Áo Khoác Nam',
     'Quần Jeans Trẻ Em',
-    'Quần Legging Bé Gái',
-    'Quần Culottes Bé Gái',
     'Đầm Maxi Nữ',
     'Giày Lười Nam',
     'Mũ Bucket',
     'Túi Đeo Chéo',
     'Phụ Kiện'
   ]
+
   const colors = [
     'Vàng Mustard',
     'Đen',
@@ -112,41 +109,21 @@ const FilterSidebar = () => {
     'Nâu',
     'Tím',
     'Vàng',
-    'Nâu Đất',
     'Xanh Navy',
     'Trắng',
-    'Xanh Jeans Đậm',
     'Đỏ',
-    'Vàng Bò',
-    'Đen Phối Nâu',
-    'Xám Phối Đen',
     'Xanh Mint',
-    'Hoa Văn Tím/Hồng',
-    'Hoa Nhí Pastel',
     'Xám',
-    'Kem/Đỏ Rượu Vang',
-    'Trắng/Đen',
     'Xanh Lá',
     'Họa Tiết Đen Trắng',
     'Đỏ Burgundy',
     'Xanh Teal',
-    'Xanh Nhạt (Light Wash)',
-    'Hồng Nhạt (Blush Pink)',
-    'Kem Họa Tiết',
-    'Hồng Đất',
     'Be',
     'Xanh Rêu',
-    'Xanh Jeans Trung Bình',
-    'Hồng Nhạt Họa Tiết Tim',
-    'Hồng Đỏ (Fuchsia)',
-    'Xanh Nhạt',
-    'Đen Họa Tiết',
-    'Trắng Họa Tiết',
-    'Kem/Be',
-    'Đen/Trắng',
     'Vàng Mù Tạt',
     'Đỏ Rượu'
   ]
+
   const sizes = [
     'S',
     'M',
@@ -155,11 +132,6 @@ const FilterSidebar = () => {
     'XXL',
     'XS',
     'X',
-    '2T',
-    '3T',
-    '4T',
-    '5T',
-    '6T',
     '29',
     '30',
     '31',
@@ -170,36 +142,22 @@ const FilterSidebar = () => {
     '41',
     '42'
   ]
+
   const materials = [
     'Cotton Thấm Hút',
     'Len Mềm Mại',
     'Cotton',
     'Cotton Pha',
     'Denim Cotton Mềm',
-    'Da PU (Vân Hạt)',
-    'Da PU',
     'Thun Gân Cotton Co Giãn',
     'Vải Cotton/Lụa Pha',
     'Voan/Cotton Mỏng',
-    'Kaki/Cotton Co Giãn',
     'Cotton Dệt Nổi',
     'Vải Lụa/Voan Mềm',
     'Vải Nỉ (Fleece)',
-    'Vải Denim',
-    'Vải Phao',
-    'Vải Denim (Jeans)',
-    'Vải Dù (Nylon/Polyester)',
-    'Cotton Co Giãn',
-    'Vải Dập Nổi (Textured)',
-    'Voan/Lụa',
-    'Vải Nỉ Mỏng (French Terry)',
-    'Vải Nỉ Bông (Fleece)',
-    'Cotton Mềm',
-    'Vải Lưới/Suede Giả',
-    'Cotton Dệt',
-    'Da PU Mềm',
-    'Da Tổng Hợp & Vải Dệt'
+    'Vải Denim'
   ]
+
   const brands = [
     'ZENITH APPAREL',
     'Haint Boutique',
@@ -207,29 +165,9 @@ const FilterSidebar = () => {
     'RUSTIC WEAR',
     'URBAN CHIC',
     'LUXURY HANDBAGS (Ví dụ)',
-    'OFFICE ELEGANCE',
-    'GIRLY CHIC',
-    'SUMMER VIBE',
-    'KIDS FASHION',
-    'MODERN MAN',
-    'STREET LEGENDS',
-    'CASUAL YOUTH',
-    'BOLD STYLE',
-    'SPORTY GEAR',
-    'DENIM STREET',
-    'WINTER GLAM',
-    'SPORTS JUNIOR',
-    'SMART CASUAL',
-    'CASUAL OUTDOOR',
-    'BLUE LEGACY',
-    'FASHION JUNIOR',
-    'ELEGANT WEAR',
-    'NEWCHIC',
-    'SHOES MASTER',
-    'ACCESSORIES FUN',
-    'MINI BAGS CO.',
-    'DAISY FASHION'
+    'OFFICE ELEGANCE'
   ]
+
   const genders = ['Nam', 'Nữ', 'Unisex']
 
   // --- Logic Hooks ---
@@ -253,17 +191,20 @@ const FilterSidebar = () => {
   const updateURLParams = (newFilters) => {
     const params = new URLSearchParams(searchParams)
 
-    // Xóa tất cả các filters cũ mà component này quản lý
+    // 1. Xóa các filters cũ mà component này quản lý
     const filterKeys = Object.keys(filters)
     filterKeys.forEach((key) => params.delete(key))
 
-    // Thêm các filters mới
+    // 2. Thêm các filters mới
     filterKeys.forEach((key) => {
       const value = newFilters[key]
+
+      // BỎ QUA 'collection' vì nó là route param
+      if (key === 'collection') return
+
       if (Array.isArray(value) && value.length > 0) {
         params.set(key, value.join(','))
       } else if (key === 'maxPrice' && value !== 500) {
-        // Chỉ thêm maxPrice nếu nó khác giá trị mặc định (500)
         params.set('maxPrice', value.toString())
       } else if (key === 'minPrice' && value !== 0) {
         params.set('minPrice', value.toString())
@@ -278,7 +219,25 @@ const FilterSidebar = () => {
       }
     })
 
-    setSearchParams(params)
+    const newCategory = newFilters.category
+    const currentPath = location.pathname
+
+    if (newCategory) {
+      // Ví dụ: Nếu URL ban đầu là /collections/thoi-trang-nam
+      // Và người dùng chọn Category, ta sẽ chuyển hướng đến /collections
+      // hoặc giữ nguyên path nhưng chỉ dùng query params.
+
+      const basePath = '/collections'
+      const newUrl = `${basePath}?${params.toString()}`
+
+      if (currentPath !== basePath) {
+        window.history.replaceState({}, '', newUrl)
+      }
+      setSearchParams(params)
+
+    } else {
+      setSearchParams(params)
+    }
   }
 
   const handleFilterChange = (e) => {
@@ -286,15 +245,13 @@ const FilterSidebar = () => {
     let newFilters = { ...filters }
 
     if (type === 'checkbox') {
-      // Đối với checkbox (Size, Material, Brand)
       newFilters[name] = checked
         ? [...(newFilters[name] || []), value]
         : newFilters[name].filter((item) => item !== value)
     } else if (type === 'radio') {
-      // Đối với radio (Category, Gender)
-      newFilters[name] = value
+      const isCurrentlySelected = filters[name] === value
+      newFilters[name] = isCurrentlySelected ? '' : value
     } else if (name === 'color') {
-      // Đối với nút màu sắc (xử lý như radio)
       const isSelected = filters.color === value
       newFilters.color = isSelected ? '' : value
     }
@@ -336,8 +293,6 @@ const FilterSidebar = () => {
 
     setSearchParams(finalParams)
   }
-
-  // --- Render Components ---
 
   // Component chung cho Radio/Checkbox Group
   const FilterGroup = ({ title, items, name, type }) => {
@@ -391,7 +346,8 @@ const FilterSidebar = () => {
                         name={name}
                         value={item}
                         checked={isChecked(item)}
-                        onChange={handleFilterChange}
+                        onClick={handleFilterChange}
+                        onChange={() => {}}
                         sx={{ p: '4px' }}
                       />
                     ) : (
@@ -454,7 +410,7 @@ const FilterSidebar = () => {
                 key={color}
                 onClick={() =>
                   handleFilterChange({
-                    target: { name: 'color', value: color }
+                    target: { name: 'color', value: color, type: 'text' }
                   })
                 }
                 title={color}
@@ -469,12 +425,10 @@ const FilterSidebar = () => {
                       ? theme.palette.divider
                       : 'transparent'
                   }`,
-                  // Styling viền ngoài khi được chọn
                   boxShadow: isSelected
                     ? `0 0 0 3px ${theme.palette.primary.main}, 0 0 0 4px ${theme.palette.background.paper}`
                     : 'none',
                   position: 'relative',
-                  // Dành cho các màu phức tạp
                   ...(isComplex && {
                     backgroundImage: `linear-gradient(45deg, ${theme.palette.divider} 25%, transparent 25%), linear-gradient(-45deg, ${theme.palette.divider} 25%, transparent 25%), linear-gradient(135deg, transparent 75%, ${theme.palette.divider} 75%), linear-gradient(-135deg, transparent 75%, ${theme.palette.divider} 75%)`,
                     backgroundSize: '8px 8px',
@@ -538,14 +492,14 @@ const FilterSidebar = () => {
           }}
         >
           <Typography variant='body2' color='text.secondary'>
-            ₫0
+            0đ
           </Typography>
           <Typography
             variant='body2'
             fontWeight='medium'
             color='text.secondary'
           >
-            Đến ₫{priceRange[1].toLocaleString('en-US')}.000
+            Đến {priceRange[1].toLocaleString('en-US')}.000đ
           </Typography>
         </Box>
       </AccordionDetails>
