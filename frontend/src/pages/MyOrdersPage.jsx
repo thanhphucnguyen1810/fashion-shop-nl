@@ -10,51 +10,87 @@ import { vi } from 'date-fns/locale'
 
 // --- Hàm chuyển đổi trạng thái (Giả định trạng thái order của bạn) ---
 const getOrderStatusDisplay = (order) => {
-  // Giả định trạng thái đơn hàng có trường 'status' trong DB
-  const status = order.status || 'Pending' // Thêm trường status vào Order Model
+  const status = order.status || 'AwaitingConfirmation' // Giả định default status
 
-  // Nếu chưa thanh toán và không phải COD => Cần thanh toán
+  // 1. Kiểm tra ưu tiên: Chờ thanh toán Online
   if (!order.isPaid && order.paymentMethod !== 'COD') {
-    return { text: 'Chờ thanh toán', color: 'bg-red-100 text-red-700', icon: 'fa-solid fa-hourglass-half' }
+    return { text: 'Chờ thanh toán', color: 'bg-red-100 text-red-700', icon: 'fa-solid fa-credit-card' }
   }
 
+  // Sử dụng .toLowerCase() cho việc so khớp
   switch (status.toLowerCase()) {
-  case 'pending':
-    return { text: 'Đang chờ xử lý', color: 'bg-yellow-100 text-yellow-700', icon: 'fa-solid fa-box-open' }
-  case 'processing':
-    return { text: 'Đang đóng gói', color: 'bg-orange-100 text-orange-700', icon: 'fa-solid fa-box' }
-  case 'shipped':
-    return { text: 'Đang vận chuyển', color: 'bg-blue-100 text-blue-700', icon: 'fa-solid fa-truck-fast' }
+  case 'awaitingconfirmation': // Thay thế 'pending'
+    return { text: 'Chờ xác nhận', color: 'bg-yellow-100 text-yellow-700', icon: 'fa-solid fa-box-open' }
+  case 'awaitingshipment': // Thay thế 'processing'
+    return { text: 'Chờ lấy hàng', color: 'bg-orange-100 text-orange-700', icon: 'fa-solid fa-box' }
+  case 'intransit': // Thay thế 'shipped'
+    return { text: 'Đang giao hàng', color: 'bg-blue-100 text-blue-700', icon: 'fa-solid fa-truck-fast' }
   case 'delivered':
     return { text: 'Đã giao hàng', color: 'bg-green-100 text-green-700', icon: 'fa-solid fa-circle-check' }
   case 'cancelled':
     return { text: 'Đã hủy', color: 'bg-gray-100 text-gray-700', icon: 'fa-solid fa-circle-xmark' }
   default:
-    return { text: 'Không xác định', color: 'bg-gray-100 text-gray-700', icon: 'fa-solid fa-circle-question' }
+    return { text: 'Không rõ', color: 'bg-gray-100 text-gray-700', icon: 'fa-solid fa-circle-question' }
+  }
+}
+const getTabDisplayName = (filterStatus) => {
+  if (!filterStatus) {
+    return 'Tất cả'
+  }
+
+  // Chuyển sang chữ thường, viết liền để so khớp (ví dụ: 'awaitingconfirmation')
+  const status = String(filterStatus).toLowerCase().replace(/[^a-z0-9]/g, '')
+
+  switch (status) {
+  case 'pendingcheckout':
+    return 'Chờ thanh toán' // Tab cho các đơn hàng chưa thanh toán online
+
+  case 'awaitingconfirmation':
+    return 'Chờ xác nhận' // Tương đương "Chờ xác nhận" của Shopee
+
+  case 'awaitingshipment':
+  case 'processing': // Giữ lại 'processing' để bắt các lỗi cũ/tên tab cũ
+    return 'Chờ lấy hàng' // Tương đương "Chờ lấy hàng" của Shopee
+
+  case 'intransit':
+  case 'shipped': // Giữ lại 'shipped' để bắt các lỗi cũ/tên tab cũ
+    return 'Đang giao' // Tương đương "Đang giao" của Shopee
+
+  case 'delivered':
+    return 'Đã giao/Đánh giá' // Tương đương "Đã giao" của Shopee
+
+  case 'cancelled':
+    return 'Đã hủy' // Tương đương "Đã hủy" của Shopee
+
+    // case 'returned': // Nếu bạn không có trạng thái này trong Schema, KHÔNG NÊN HIỂN THỊ
+    //   return 'Trả hàng/Hoàn tiền'
+
+  default:
+    return 'Không xác định'
   }
 }
 
 const formatCurrency = (amount) => amount?.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })
 
-const MyOrdersPage = () => {
+const MyOrdersList = ({ currentStatusFilter }) => {
   const theme = useTheme()
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const { orders, loading, error } = useSelector((state) => state.orders)
 
+  // Giữ lại searchTerm để người dùng vẫn có thể tìm kiếm trong tab hiện tại
   const [searchTerm, setSearchTerm] = useState('')
-  const [filterStatus, setFilterStatus] = useState('all')
 
   useEffect(() => {
+    // Vẫn gọi fetchOrders, logic lọc sẽ dùng useMemo bên dưới
     dispatch(fetchUserOrders())
   }, [dispatch])
 
   const handleRowClick = (orderId) => {
-    // Chuyển hướng đến trang chi tiết đơn hàng
     navigate(`/order/${orderId}`)
   }
 
-  // Lọc đơn hàng
+  // Lọc đơn hàng dựa trên searchTerm VÀ currentStatusFilter (từ component cha truyền vào)
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
       const matchesSearch =
@@ -62,16 +98,44 @@ const MyOrdersPage = () => {
                 order.shippingAddress?.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 order.orderItems.some(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()))
 
-      const matchesStatus = filterStatus === 'all' ||
-                (order.status || 'pending').toLowerCase() === filterStatus
+      // Logic lọc theo Tab: 'all' hoặc khớp với trạng thái hiện tại
+      const dbStatus = (order.status || 'AwaitingConfirmation').toLowerCase()
+
+      const matchesStatus = (() => {
+        switch (currentStatusFilter) {
+        case 'all':
+          return true
+        case 'awaiting_confirmation':
+          // Chờ xác nhận = AwaitingConfirmation trong DB
+          return dbStatus === 'awaitingconfirmation'
+        case 'processing':
+          // Chờ lấy hàng = AwaitingShipment trong DB (giả định)
+          return dbStatus === 'awaitingshipment'
+        case 'shipped':
+          // Chờ giao hàng = InTransit trong DB
+          return dbStatus === 'intransit'
+        case 'delivered':
+          // Đã giao/Đánh giá = Delivered trong DB
+          return dbStatus === 'delivered'
+        case 'cancelled':
+          // Đã hủy = Cancelled trong DB
+          return dbStatus === 'cancelled'
+        case 'returned':
+          // Trả hàng/Hoàn tiền (Giả định bạn dùng Delivered và có trường khác để đánh dấu)
+          // **Cần tùy chỉnh thêm nếu có trường 'isReturned' trong DB**
+          return false // Mặc định chưa lọc được vì chưa có trạng thái Returned trong Schema bạn cung cấp
+        default:
+          return false
+        }
+      })()
 
       return matchesSearch && matchesStatus
     })
-  }, [orders, searchTerm, filterStatus])
+  }, [orders, searchTerm, currentStatusFilter])
 
 
   if ( loading ) return (
-    <Box className="min-h-[60vh] flex flex-col items-center justify-center">
+    <Box className="min-h-[40vh] flex flex-col items-center justify-center">
       <CircularProgress color="primary" />
       <p className="mt-4 text-gray-500">Đang tải danh sách đơn hàng...</p>
     </Box>
@@ -79,17 +143,8 @@ const MyOrdersPage = () => {
   if ( error ) return <p className="text-red-600 text-center mt-10">Lỗi khi tải đơn hàng: {error}</p>
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-      <Typography
-        variant="h4"
-        component="h1"
-        className="mb-8 font-bold"
-        sx={{ color: theme.palette.text.primary }}
-      >
-            Đơn Hàng Của Tôi ({orders.length})
-      </Typography>
-
-      {/* --- Toolbar: Tìm kiếm & Lọc trạng thái --- */}
+    <div className="p-4 sm:p-6 lg:p-8">
+      {/* --- Toolbar: Tìm kiếm (Lọc trạng thái đã được chuyển lên component cha) --- */}
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <TextField
           label="Tìm kiếm theo Mã đơn hàng/Tên sản phẩm"
@@ -104,22 +159,6 @@ const MyOrdersPage = () => {
             }
           }}
         />
-        <FormControl size="small" sx={{ minWidth: 200, backgroundColor: theme.palette.background.paper }}>
-          <InputLabel id="status-filter-label">Trạng thái</InputLabel>
-          <Select
-            labelId="status-filter-label"
-            value={filterStatus}
-            label="Trạng thái"
-            onChange={(e) => setFilterStatus(e.target.value)}
-          >
-            <MenuItem value="all">Tất cả</MenuItem>
-            <MenuItem value="pending">Chờ xử lý</MenuItem>
-            <MenuItem value="processing">Đang đóng gói</MenuItem>
-            <MenuItem value="shipped">Đang vận chuyển</MenuItem>
-            <MenuItem value="delivered">Đã giao hàng</MenuItem>
-            <MenuItem value="cancelled">Đã hủy</MenuItem>
-          </Select>
-        </FormControl>
       </div>
 
       <div
@@ -149,7 +188,7 @@ const MyOrdersPage = () => {
             {filteredOrders.length > 0 ? (
               filteredOrders.map((order) => {
                 const statusDisplay = getOrderStatusDisplay(order)
-                const isMomoPending = !order.isPaid && order.paymentMethod !== 'COD'
+                const isSepayPending = !order.isPaid && order.paymentMethod !== 'COD'
 
                 return (
                   <tr
@@ -161,10 +200,9 @@ const MyOrdersPage = () => {
                       color: theme.palette.text.primary
                     }}
                   >
-                    {/* Cột Sản phẩm (Đã tối ưu) */}
+                    {/* Cột Sản phẩm */}
                     <td className="py-3 px-4">
                       <div className="flex items-center space-x-2">
-                        {/* Hiển thị tối đa 3 ảnh sản phẩm */}
                         {order.orderItems.slice(0, 3).map((item, index) => (
                           <img
                             key={index}
@@ -173,10 +211,9 @@ const MyOrdersPage = () => {
                             className="w-10 h-10 object-cover rounded-lg border border-gray-200"
                           />
                         ))}
-                        {/* Nếu còn nhiều sản phẩm hơn */}
                         {order.orderItems.length > 3 && (
                           <div className="w-10 h-10 flex items-center justify-center bg-gray-200 rounded-lg text-xs font-semibold text-gray-700">
-                                    +{order.orderItems.length - 3}
+                                                        +{order.orderItems.length - 3}
                           </div>
                         )}
                       </div>
@@ -186,7 +223,7 @@ const MyOrdersPage = () => {
                     <td
                       className="py-3 px-4 font-bold whitespace-nowrap text-sm"
                     >
-                    #{order._id.slice(-8).toUpperCase()}
+                                        #{order._id.slice(-8).toUpperCase()}
                     </td>
 
                     {/* Cột Ngày đặt */}
@@ -201,7 +238,7 @@ const MyOrdersPage = () => {
                       {formatCurrency(order.totalPrice)}
                     </td>
 
-                    {/* Cột Trạng thái (Trạng thái đơn hàng) */}
+                    {/* Cột Trạng thái */}
                     <td className="py-3 px-4">
                       <span
                         className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap inline-flex items-center gap-2 ${statusDisplay.color}`}
@@ -217,18 +254,18 @@ const MyOrdersPage = () => {
                         variant="contained"
                         size="small"
                         onClick={(e) => {
-                          e.stopPropagation() // Ngăn chặn sự kiện click lan truyền lên hàng (tránh navigate 2 lần)
+                          e.stopPropagation()
                           handleRowClick(order._id)
                         }}
                         sx={{
-                          backgroundColor: isMomoPending ? theme.palette.error.main : theme.palette.primary.main,
+                          backgroundColor: isSepayPending ? theme.palette.error.main : theme.palette.primary.main,
                           '&:hover': {
-                            backgroundColor: isMomoPending ? theme.palette.error.dark : theme.palette.primary.dark
+                            backgroundColor: isSepayPending ? theme.palette.error.dark : theme.palette.primary.dark
                           },
                           color: 'white'
                         }}
                       >
-                        {isMomoPending ? 'Thanh Toán Ngay' : 'Xem Chi Tiết'}
+                        {isSepayPending ? 'Thanh Toán Ngay' : 'Xem Chi Tiết'}
                       </Button>
                     </td>
 
@@ -241,7 +278,7 @@ const MyOrdersPage = () => {
                   className="py-10 px-4 text-center text-lg font-medium"
                   style={{ color: theme.palette.text.secondary }}
                 >
-                  🛒 Bạn chưa có đơn hàng nào. Hãy bắt đầu mua sắm!
+                  Không có đơn hàng nào trong mục {currentStatusFilter === 'all' ? 'Tất cả' : getTabDisplayName(currentStatusFilter)}.
                 </td>
               </tr>
             )}
@@ -252,4 +289,4 @@ const MyOrdersPage = () => {
   )
 }
 
-export default MyOrdersPage
+export default MyOrdersList

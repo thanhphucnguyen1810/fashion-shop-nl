@@ -1,30 +1,39 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useTheme } from '@mui/material/styles'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchOrderDetails } from '~/redux/slices/orderSlice'
+import { Button } from '@mui/material'
+import RateReviewIcon from '@mui/icons-material/RateReview'
+import ReviewFormModal from '~/components/ReviewFormModal'
 
-// Hàm format tiền tệ Việt Nam
 const formatCurrency = (amount) => {
-  // FIX: Đảm bảo format an toàn, không lỗi khi amount là null/undefined
   const numAmount = typeof amount === 'number' ? amount : parseFloat(amount) || 0
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(numAmount)
 }
 
-// Hàm chuyển đổi trạng thái đơn hàng (để hiển thị bằng Tiếng Việt)
 const getOrderStatusText = (status) => {
   switch (status) {
-  case 'AwaitingConfirmation':
-    return 'Chờ xác nhận'
-  case 'Processing':
-  case 'Shipped':
-    return 'Đang vận chuyển'
-  case 'Delivered':
-    return 'Đã giao hàng'
-  case 'Cancelled':
-    return 'Đã hủy'
   case 'PendingCheckout':
     return 'Chờ thanh toán Online'
+
+  case 'AwaitingConfirmation':
+    return 'Chờ xác nhận' // Tương đương "Chờ xác nhận" của Shopee
+
+  case 'AwaitingShipment':
+  case 'Processing': // (Nếu bạn vẫn dùng Processing ở đâu đó)
+    return 'Chờ lấy hàng' // Tương đương "Chờ lấy hàng" của Shopee
+
+  case 'InTransit':
+  case 'Shipped': // (Nếu bạn vẫn dùng Shipped ở đâu đó)
+    return 'Đang giao' // Tương đương "Đang giao" của Shopee
+
+  case 'Delivered':
+    return 'Đã giao' // Tương đương "Đã giao" của Shopee
+
+  case 'Cancelled':
+    return 'Đã hủy' // Tương đương "Đã hủy" của Shopee
+
   default:
     return status || 'Không rõ'
   }
@@ -48,7 +57,6 @@ const getStatusColor = (theme, status) => {
   }
 }
 
-
 const OrderDetailsPage = () => {
   const { id } = useParams()
   const theme = useTheme()
@@ -61,12 +69,29 @@ const OrderDetailsPage = () => {
     }
   }, [dispatch, id])
 
-  // FIX: Hiển thị trạng thái Loading/Error an toàn hơn
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState(null)
+
+  // Xử lý mở Modal
+  const handleOpenReviewModal = (item) => {
+    setSelectedProduct({
+      productId: item.productId,
+      productName: item.name,
+      productImage: item.image
+    })
+    setIsReviewModalOpen(true)
+  }
+
+  // Xử lý đóng Modal
+  const handleCloseReviewModal = () => {
+    setIsReviewModalOpen(false)
+    setSelectedProduct(null)
+  }
+
   if (loading) return <div className="text-center p-8 text-xl">Đang tải chi tiết đơn hàng...</div>
   if (error) return <div className="text-center p-8 text-red-600">Lỗi tải dữ liệu: {error}</div>
   if (!orderDetails) return <div className="text-center p-8">Không tìm thấy thông tin đơn hàng.</div>
 
-  // --- LẤY DỮ LIỆU THỰC TẾ VÀ XỬ LÝ AN TOÀN (Dựa trên Schema HIỆN TẠI) ---
   const shippingAddress = orderDetails.shippingAddress || {}
   const user = orderDetails.user || {}
   const coupon = orderDetails.coupon || {}
@@ -172,14 +197,35 @@ const OrderDetailsPage = () => {
                   />
                   <div className='flex flex-col min-w-0'>
                     <Link
-                      to={`/product/${item.productId}`}
+                      to={`/products/${item.productId}`}
                       style={{ color: theme.palette.primary.main }}
                       className='font-semibold hover:text-red-500 transition-colors truncate'
                     >
-                      {item.name} {/* ✅ Đã Fix */}
+                      {item.name}
                     </Link>
                     <span className='text-xs text-gray-500'>Phân loại: {item.size || 'Mặc định'}</span>
                     <span className='text-sm text-gray-500 mt-1'>x{item.quantity}</span>
+                    {
+                      // Hiển thị nút khi đơn hàng Đã giao
+                      orderDetails.status === 'Delivered' && (
+                        <Button
+                          onClick={() => handleOpenReviewModal(item)}
+                          variant="contained"
+                          size="small"
+                          startIcon={<RateReviewIcon />}
+                          sx={{
+                            marginTop: 1.5,
+                            width: 'fit-content',
+                            borderColor: theme.palette.primary.main,
+                            '&:hover': {
+                              borderColor: theme.palette.primary.dark
+                            }
+                          }}
+                        >
+                                                Viết đánh giá
+                        </Button>
+                      )
+                    }
                   </div>
                 </div>
                 <div className='text-right ml-4'>
@@ -187,7 +233,7 @@ const OrderDetailsPage = () => {
                     {formatCurrency(item.price * item.quantity)}
                   </p>
                   <p className='text-sm text-gray-500'>
-                                    Đơn giá: {formatCurrency(item.price)}
+                    Đơn giá: {formatCurrency(item.price)}
                   </p>
                 </div>
               </div>
@@ -243,6 +289,16 @@ const OrderDetailsPage = () => {
           </Link>
         </div>
       </div>
+
+      {selectedProduct && (
+        <ReviewFormModal
+          open={isReviewModalOpen}
+          handleClose={handleCloseReviewModal}
+          productId={selectedProduct.productId}
+          productName={selectedProduct.productName}
+          productImage={selectedProduct.productImage}
+        />
+      )}
     </div>
   )
 }

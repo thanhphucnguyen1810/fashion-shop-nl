@@ -1,115 +1,182 @@
 import React, { useRef } from 'react'
-import { FaTimes, FaReceipt, FaUser, FaHome, FaMoneyBillWave, FaTruck } from 'react-icons/fa'
+import { FaTimes, FaPrint } from 'react-icons/fa'
 import { useReactToPrint } from 'react-to-print'
+import { QRCodeSVG } from 'qrcode.react'
 
 export default function OrderDetailModal({ selectedOrder, showDetailModal, closeOrderDetail }) {
-  const invoiceRef = useRef() // đây mới là ref chính
+  const invoiceRef = useRef(null)
 
-  // Xử lý in
   const handlePrint = useReactToPrint({
-    content: () => invoiceRef.current,
-    documentTitle: selectedOrder ? `HoaDon_${selectedOrder._id}` : 'HoaDon',
-    onAfterPrint: () => alert('Đã in hóa đơn!'),
-    removeAfterPrint: true,
-    pageStyle: `
-    @page { size: auto; margin: 20mm; }
-    @media print {
-      body { -webkit-print-color-adjust: exact; }
-    }
-  `
+    contentRef: invoiceRef,
+    documentTitle: `HoaDon_TheAurora_${selectedOrder?._id.slice(-6)}`
   })
 
+  if (!selectedOrder || !showDetailModal) return null
 
-  if (!selectedOrder) return null
+  // Helper để lấy ID đơn hàng sạch sẽ
+  const orderId = selectedOrder._id?.toString() || ''
 
   return (
-    <div
-      className={`fixed inset-0 z-50 flex justify-center items-center p-4 ${!showDetailModal ? 'hidden' : ''}`}
-      style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}
-    >
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] overflow-y-auto p-6 relative">
-        {/* Nút đóng */}
-        <button
-          onClick={closeOrderDetail}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl"
-          aria-label="Đóng chi tiết"
-        >
-          <FaTimes />
-        </button>
+    <div className="fixed inset-0 z-50 flex justify-center items-center p-4 bg-black/60 no-print">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col">
 
-        {/* Nội dung hóa đơn để in */}
-        <div ref={invoiceRef}>
-          {/* Header */}
-          <div className="mb-4 border-b pb-4">
-            <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-              <FaReceipt /> Đơn hàng #{selectedOrder._id}
-            </h3>
-            <p className="text-sm text-gray-500">
-              Ngày đặt: {new Date(selectedOrder.createdAt).toLocaleString()}
-            </p>
-          </div>
-
-          {/* Thông tin khách hàng & đơn hàng */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div className="p-4 border rounded-md bg-gray-50 dark:bg-gray-700">
-              <p className="flex items-center gap-2">
-                <FaUser className="text-gray-500" /> <span className="font-medium">Khách hàng:</span> {selectedOrder.user.name}
-              </p>
-              <p className="flex items-center gap-2 mt-2">
-                <FaHome className="text-blue-500" /> <span className="font-medium">Địa chỉ:</span> {selectedOrder.address}
-              </p>
-            </div>
-            <div className="p-4 border rounded-md bg-gray-50 dark:bg-gray-700">
-              <p className="flex items-center gap-2">
-                <FaMoneyBillWave className="text-green-500" /> <span className="font-medium">Thanh toán:</span> {selectedOrder.paymentMethod}
-              </p>
-              <p className="flex items-center gap-2 mt-2">
-                <FaTruck className="text-yellow-600" /> <span className="font-medium">Trạng thái:</span> {selectedOrder.status}
-              </p>
-            </div>
-          </div>
-
-          {/* Sản phẩm */}
-          <div className="mb-4">
-            <h4 className="font-semibold text-gray-800 mb-2">Sản phẩm</h4>
-            <div className="overflow-x-auto">
-              <table className="min-w-full border rounded-md">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="py-2 px-4 text-left text-sm">Sản phẩm</th>
-                    <th className="py-2 px-4 text-left text-sm">Số lượng</th>
-                    <th className="py-2 px-4 text-left text-sm">Giá</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedOrder.items.map((item) => (
-                    <tr key={item.id} className="border-b last:border-b-0">
-                      <td className="py-2 px-4">{item.name}</td>
-                      <td className="py-2 px-4">{item.quantity}</td>
-                      <td className="py-2 px-4 font-medium">{item.price.toLocaleString()} đ</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Tổng tiền */}
-          <div className="mt-4 text-right p-4 border-t">
-            <p className="text-xl font-bold text-gray-900 flex items-center justify-end gap-2">
-              <FaMoneyBillWave className="text-green-600" /> Tổng cộng: {selectedOrder.totalPrice.toLocaleString()} đ
-            </p>
+        {/* Header Modal - Chỉ hiện trên web */}
+        <div className="p-4 border-b flex justify-between items-center bg-gray-50">
+          <h2 className="font-bold text-lg text-gray-700">Chi tiết hóa đơn</h2>
+          <div className="flex gap-2">
+            <button onClick={() => handlePrint()} className="bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-blue-700">
+              <FaPrint /> In hóa đơn
+            </button>
+            <button onClick={closeOrderDetail} className="text-gray-400 hover:text-red-500 text-2xl"> <FaTimes /> </button>
           </div>
         </div>
 
-        {/* Nút in hóa đơn */}
-        <div className="mt-4 flex justify-end gap-2">
-          <button
-            onClick={handlePrint}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            In hóa đơn / Xuất PDF
-          </button>
+        {/* VÙNG IN HÓA ĐƠN */}
+        <div className="overflow-y-auto flex-1 p-10 bg-white text-black" ref={invoiceRef}>
+          <style>{`
+    @media print {
+      .no-print { display: none !important; }
+      body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+      @page { size: A4; margin: 10mm; }
+      .print-shadow { box-shadow: none !important; }
+    }
+  `}</style>
+
+          {/* Header: Logo & QR Code */}
+          <div className="flex justify-between items-start mb-8 border-b-4 border-black pb-4">
+            <div>
+              <h1 className="text-4xl font-extrabold tracking-tighter text-gray-900">THE AURORA</h1>
+              <p className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-bold">Premium Fashion Store</p>
+              <div className="mt-2 text-[11px] leading-relaxed">
+                <p>Đ/C: 123 Xuân Khánh, Ninh Kiều, Cần Thơ</p>
+                <p>Hotline: 1900 6789 - Website: theaurora.vn</p>
+              </div>
+            </div>
+            <div className="text-right flex flex-col items-end">
+              <div className="flex flex-col items-end">
+                <QRCodeSVG
+                  value={`http://localhost:5173/${selectedOrder._id}`}
+                  size={60}
+                  level={'H'}
+                />
+                <p className="text-[9px] mt-1 font-mono">Quét để kiểm tra</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-black uppercase tracking-widest">Hóa Đơn Giá Trị Gia Tăng</h2>
+            <p className="text-sm font-mono italic">Số: {orderId.toUpperCase()}</p>
+          </div>
+
+          {/* Thông tin khách hàng & vận chuyển */}
+          <div className="grid grid-cols-2 gap-8 mb-8 text-xs border p-4 rounded-lg bg-gray-50">
+            <div>
+              <h3 className="font-bold border-b mb-2 pb-1 text-gray-600">THÔNG TIN KHÁCH HÀNG</h3>
+              <p className="text-sm font-bold">{selectedOrder.shippingAddress?.lastName} {selectedOrder.shippingAddress?.firstName}</p>
+              <p>SĐT: {selectedOrder.shippingAddress?.phone}</p>
+              <p>Địa chỉ: {selectedOrder.shippingAddress?.address}, {selectedOrder.shippingAddress?.city}</p>
+            </div>
+            <div className="text-right">
+              <h3 className="font-bold border-b mb-2 pb-1 text-gray-600">VẬN CHUYỂN & THANH TOÁN</h3>
+              <p>Ngày đặt: {new Date(selectedOrder.createdAt).toLocaleDateString('vi-VN')}</p>
+              <p>Phương thức: <span className="font-bold">{selectedOrder.paymentMethod}</span></p>
+              <p>Đơn vị vận chuyển: <span className="font-bold underline">Aurora Express</span></p>
+            </div>
+          </div>
+
+          {/* Bảng sản phẩm */}
+          <table className="w-full text-xs mb-8">
+            <thead>
+              <tr className="bg-black text-white uppercase">
+                <th className="py-2 px-2 text-left">STT</th>
+                <th className="py-2 px-2 text-left">Sản phẩm</th>
+                <th className="py-2 px-2 text-center">SL</th>
+                <th className="py-2 px-2 text-right">Đơn giá</th>
+                <th className="py-2 px-2 text-right">Thành tiền</th>
+              </tr>
+            </thead>
+            <tbody className="border-b-2 border-black">
+              {selectedOrder.orderItems?.map((item, index) => (
+                <tr key={index} className="border-b border-gray-200">
+                  <td className="py-2">
+                    {index+1}
+                  </td>
+                  <td className="py-2">
+                    <div className="font-bold">{item.name}</div>
+                    <div className="text-[10px] text-gray-500">
+                      Phân loại: {item.color || 'N/A'} - {item.size || 'N/A'}
+                    </div>
+                  </td>
+                  <td className="py-3 px-2 text-center">{item.quantity}</td>
+                  <td className="py-2 text-right">
+                    {item.price?.toLocaleString()}đ
+                  </td>
+                  <td className="py-2 text-right font-bold">
+                    {(item.price * item.quantity).toLocaleString()}đ
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* Tổng kết tiền */}
+          <div className="flex justify-end pr-2 mt-4">
+            <div className="w-1/2 space-y-2">
+              {/* Tạm tính = Tổng sản phẩm trước giảm giá */}
+              <div className="flex justify-between text-[11px]">
+                <span className="text-gray-600">Tạm tính (Tiền hàng):</span>
+                <span className="font-medium">
+                  {selectedOrder.orderItems?.reduce((acc, item) => acc + (item.price * item.quantity), 0).toLocaleString()}đ
+                </span>
+              </div>
+
+              {/* Phí ship - Nếu model có shippingPrice thì lấy, không thì mặc định 0 */}
+              <div className="flex justify-between text-[11px]">
+                <span className="text-gray-600">Phí vận chuyển:</span>
+                <span>{selectedOrder.shippingPrice?.toLocaleString() || '0'}đ</span>
+              </div>
+
+              {/* Giảm giá */}
+              {selectedOrder.coupon?.discountAmount > 0 && (
+                <div className="flex justify-between text-[11px] text-red-600 font-medium italic">
+                  <span>Voucher giảm giá ({selectedOrder.coupon.code}):</span>
+                  <span>-{selectedOrder.coupon.discountAmount.toLocaleString()}đ</span>
+                </div>
+              )}
+
+              {/* Thành tiền */}
+              <div className="flex justify-between border-t-2 border-black pt-2 text-lg font-black bg-gray-100 p-2">
+                <div className="flex flex-col">
+                  <span>THÀNH TIỀN:</span>
+                  <span className="text-[9px] font-normal italic text-gray-500">(Đã bao gồm VAT)</span>
+                </div>
+                <span className="text-blue-700">{selectedOrder.totalPrice?.toLocaleString()}đ</span>
+              </div>
+
+              {/* Logic hiển thị phương thức thanh toán */}
+              <div className="text-right text-[10px] mt-2 italic font-bold uppercase">
+       Hình thức: {selectedOrder.paymentMethod}
+                {selectedOrder.isPaid ? ' (Đã thanh toán)' : ' (Thu hộ COD)'}
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="mt-12 grid grid-cols-2 text-center text-[11px] font-bold">
+            <div>
+              <p className="uppercase mb-16">Xác nhận người mua</p>
+              <p className="text-gray-400 font-normal italic">(Ký và ghi rõ họ tên)</p>
+            </div>
+            <div>
+              <p className="uppercase mb-16">Đại diện cửa hàng</p>
+              <p className="text-lg font-black text-gray-800">THE AURORA</p>
+            </div>
+          </div>
+
+          <div className="mt-16 text-center border-t pt-4">
+            <p className="text-[10px] text-gray-500 italic">Cảm ơn bạn đã tin tưởng The Aurora. Vui lòng quay video lúc mở gói hàng để được hỗ trợ tốt nhất!</p>
+          </div>
         </div>
       </div>
     </div>

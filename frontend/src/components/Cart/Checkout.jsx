@@ -6,7 +6,8 @@ import { toast } from 'sonner'
 import { Radio, RadioGroup, FormControlLabel, FormControl } from '@mui/material'
 import InputField from '../InputField'
 import { createCheckout } from '~/redux/slices/checkoutSlice'
-import { CircularProgress } from '@mui/material' // Thêm import CircularProgress
+import { fetchAddresses } from '~/redux/slices/addressSlice'
+import { CircularProgress } from '@mui/material'
 
 const Checkout = () => {
   const theme = useTheme()
@@ -16,6 +17,7 @@ const Checkout = () => {
   const { cart } = useSelector((state) => state.cart)
   const { user } = useSelector((state) => state.auth)
   const { loading } = useSelector((state) => state.checkout)
+  const { list: addresses } = useSelector((state) => state.address)
 
   const [paymentMethod, setPaymentMethod] = useState('COD')
   const [shippingAddress, setShippingAddress] = useState({
@@ -37,19 +39,46 @@ const Checkout = () => {
     }
 
     if (user) {
-      setShippingAddress(prev => ({
-        ...prev,
-        firstName: user.firstName || user.name?.split(' ')[0] || '',
-        lastName: user.lastName || user.name?.split(' ').slice(1).join(' ') || '',
-        address: user.address || prev.address,
-        city: user.city || prev.city,
-        postalCode: user.postalCode || prev.postalCode,
-        phone: user.phone || prev.phone
-      }))
-    }
-  }, [cart, user, navigate])
+      if (!addresses.length) {
+        dispatch(fetchAddresses())
+      }
 
-  // --- 2. TÍNH TOÁN GIÁ TRỊ ĐƠN HÀNG ---
+      const defaultAddress = addresses?.find(addr => addr.isDefault)
+
+      let initialData = { ...shippingAddress }
+
+      if (defaultAddress) {
+        const fullNameParts = defaultAddress.name?.split(' ')
+
+        initialData = {
+          firstName: fullNameParts?.[0] || '',
+          lastName: fullNameParts?.slice(1).join(' ') || '',
+          address: `${defaultAddress.street}, ${defaultAddress.ward}, ${defaultAddress.district}`,
+          city: defaultAddress.province || '',
+          phone: defaultAddress.phone || '',
+          country: 'Vietnam',
+          postalCode: defaultAddress.postalCode || ''
+        }
+
+      } else {
+        // Ưu tiên 2: Thông tin User cơ bản (chỉ áp dụng nếu chưa có địa chỉ mặc định)
+        initialData = {
+          ...initialData,
+          firstName: user.firstName || user.name?.split(' ')[0] || '',
+          lastName: user.lastName || user.name?.split(' ').slice(1).join(' ') || '',
+          address: user.address || initialData.address,
+          city: user.city || initialData.city,
+          postalCode: user.postalCode || initialData.postalCode,
+          phone: user.phone || initialData.phone
+        }
+      }
+
+      // CẬP NHẬT STATE
+      setShippingAddress(initialData)
+    }
+  }, [cart, user, navigate, addresses, dispatch])
+
+  // --- TÍNH TOÁN GIÁ TRỊ ĐƠN HÀNG ---
   const { subTotal, discountAmount, finalTotal } = useMemo(() => {
     if (!cart?.products) return { subTotal: 0, discountAmount: 0, finalTotal: 0 }
 
@@ -63,7 +92,7 @@ const Checkout = () => {
     }
   }, [cart])
 
-  // --- 3. XỬ LÝ TẠO BẢN GHI CHECKOUT TẠM THỜI ---
+  // --- XỬ LÝ TẠO BẢN GHI CHECKOUT TẠM THỜI ---
   const handlePlaceOrder = async (event) => {
     event.preventDefault()
 
@@ -78,7 +107,7 @@ const Checkout = () => {
         createCheckout({
           checkoutItems: cart.products,
           shippingAddress,
-          paymentMethod, // 'COD' hoặc 'MOMO'
+          paymentMethod,
           totalPrice: finalTotal,
           coupon: cart.coupon || null
         })
@@ -87,7 +116,7 @@ const Checkout = () => {
       const newCheckoutId = res.checkout._id
       toast.success('Đơn hàng tạm thời đã được tạo! Vui lòng xác nhận.')
 
-      // ➡️ BƯỚC 2: CHUYỂN HƯỚNG SANG TRANG CONFIRM ĐỂ THỰC HIỆN ACTION CUỐI CÙNG
+      // BƯỚC 2: CHUYỂN HƯỚNG SANG TRANG CONFIRM ĐỂ THỰC HIỆN ACTION CUỐI CÙNG
       navigate(`/order-confirm/${newCheckoutId}`)
 
     } catch (err) {

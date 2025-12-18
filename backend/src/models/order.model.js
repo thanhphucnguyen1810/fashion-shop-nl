@@ -101,6 +101,11 @@ const orderSchema = new mongoose.Schema({
     type: String,
     enum: ['Cart', 'BuyNow'],
     default: 'Cart'
+  },
+  checkoutId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Checkout',
+    required: false
   }
 }, { timestamps: true }
 )

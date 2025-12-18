@@ -84,6 +84,10 @@ const checkoutScheme = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  orderId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Order'
+  },
   finalizedAt: {
     type: Date
   }

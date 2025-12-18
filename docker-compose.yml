@@ -1,0 +1,51 @@
+# docker-compose.yml
+version: "3.8"
+
+services:
+  # 1. DỊCH VỤ MONGODB
+  mongodb:
+    image: mongo:latest # Dùng image MongoDB chính thức
+    container_name: mern_mongodb
+    restart: always
+    # Map port 27017 trong container ra port 27017 trên máy host (để bạn có thể xem DB bằng Compass)
+    ports:
+      - "27017:27017"
+    volumes:
+      # Lưu trữ dữ liệu lâu dài ngay cả khi container bị xóa
+      - mongo_data:/data/db
+
+  # 2. DỊCH VỤ BACKEND
+  backend:
+    build:
+      context: . # Bối cảnh build là thư mục hiện tại
+      dockerfile: Dockerfile.backend # Chỉ định dùng Dockerfile.backend
+    container_name: mern_backend
+    restart: always
+    # Map port 8000 trong container ra port 8000 trên máy host
+    ports:
+      - "8000:8000"
+    environment:
+      # *** ĐIỀU CHỈNH QUAN TRỌNG: Kết nối DB bằng TÊN SERVICE (mongodb) ***
+      - MONGODB_URI=mongodb://mongodb:27017/mywebstore
+      # Cấu hình API URL cho frontend (nếu cần)
+      - VITE_API_URL=http://localhost:8000
+      # *** ĐIỀU CHỈNH CHO WEBOOK SEPAY (IPN) ***
+      # Khi dùng ngrok, URL này phải là URL ngrok của bạn
+      - SEPAY_WEBHOOK_URL=http://<ĐỊA CHỈ NGROK CỦA BẠN>/api/checkout/sepay/ipn
+    depends_on:
+      - mongodb # Đảm bảo DB khởi động trước
+
+  # 3. DỊCH VỤ FRONTEND
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend # Chỉ định dùng Dockerfile.frontend
+    container_name: mern_frontend
+    restart: always
+    # Map port 80 của Nginx ra port 5173 trên máy host
+    ports:
+      - "5173:80"
+    # Lưu ý: Frontend sẽ gọi đến http://localhost:8000 (Backend Host)
+
+volumes:
+  mongo_data:

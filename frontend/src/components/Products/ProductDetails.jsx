@@ -1,5 +1,5 @@
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import ProductGrid from './ProductGrid'
 import { useTheme } from '@mui/material/styles'
@@ -7,8 +7,10 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchProductDetails, fetchSimilarProducts, createTemporaryOrder } from '~/redux/slices/productSlice'
 import { addToCart } from '~/redux/slices/cartSlices'
+import { fetchProductReviews, submitReview } from '~/redux/slices/reviewSlice'
 import Loading from '../Common/Loading'
 import { FaStar } from 'react-icons/fa'
+import ProductReviews from '../ProductReviews'
 
 const formatCurrency = (amount) => {
   if (amount === undefined || amount === null) return '0đ'
@@ -38,6 +40,7 @@ const ProductDetails = ({ productId }) => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const { selectedProduct, loading, error, similarProducts } = useSelector((state) => state.products)
+  const { reviews, loading: reviewsLoading } = useSelector((state) => state.reviews)
   const { user, guestId } = useSelector((state) => state.auth)
 
   const [mainImage, setMainImage] = useState('')
@@ -46,12 +49,20 @@ const ProductDetails = ({ productId }) => {
   const [quantity, setQuantity] = useState(1)
   const [isButtonDisabled, setIsButtonDisabled] = useState(false)
   const [activeTab, setActiveTab] = useState('description')
-
   const productFetchId = productId || id
+
+  const totalReviews = reviews.length
+
+  const averageRating =
+  totalReviews > 0
+    ? (reviews.reduce((a, b) => a + b.rating, 0) / totalReviews).toFixed(1)
+    : 0
+
   useEffect(() => {
     if (productFetchId) {
       dispatch(fetchProductDetails(productFetchId))
       dispatch(fetchSimilarProducts({ id: productFetchId }))
+      dispatch(fetchProductReviews(productFetchId))
     }
   }, [dispatch, productFetchId])
 
@@ -94,53 +105,6 @@ const ProductDetails = ({ productId }) => {
     }).finally(() => {
       setIsButtonDisabled(false)
     })
-  }
-
-  // --- Component con cho phần Reviews (Tạo thanh cuộn) ---
-  const ProductReviews = () => {
-    // Giả lập dữ liệu reviews (vì dữ liệu thật không có trong selectedProduct)
-    // Dựa trên ảnh Shopee, chúng ta có thể giả lập 6 reviews
-    const fakeReviews = [
-      { id: 1, user: 'ejgfdqr_437', rating: 5, date: '2024-12-19 21:37', comment: 'Gói hàng nhận được giống như hàng mình đặt, hàng gửi đi rất tốt và không có gì sai sót, nói chung là mình rất hài lòng về hàng hóa', media: true },
-      { id: 2, user: 'thaidoanhien', rating: 5, date: '2025-09-25 21:55', comment: 'Đúng với mô tả, chất liệu: cao su êm xịn, màu sắc: rất đẹp. Shop làm ăn uy tín, giao đúng hàng.', media: false },
-      { id: 3, user: 'anhlm_01', rating: 4, date: '2025-01-10 10:30', comment: 'Sản phẩm ổn, giao hàng nhanh. Nhưng màu hơi tối hơn so với ảnh.', media: false },
-      { id: 4, user: 'linh_nguyen', rating: 5, date: '2025-02-20 15:45', comment: 'Đế dép êm chân, đi không bị đau. Rất đáng tiền.', media: true },
-      { id: 5, user: 'phuong_d', rating: 3, date: '2025-03-01 08:00', comment: 'Size hơi nhỏ so với chân mình, nên đặt lớn hơn 1 size.', media: false },
-      { id: 6, user: 'duc_tran', rating: 5, date: '2025-04-15 17:22', comment: 'Tuyệt vời, sẽ ủng hộ shop tiếp. Đóng gói cẩn thận.', media: false },
-      { id: 7, user: 'hoang_t', rating: 5, date: '2025-05-05 11:11', comment: 'Chất lượng quá ok so với giá. Không có gì để chê.', media: false }
-    ]
-
-    return (
-      <div className='p-4 border-t' style={{ borderColor: theme.palette.divider }}>
-        <h3 className='text-xl font-bold mb-4' style={{ color: theme.palette.text.primary }}>ĐÁNH GIÁ SẢN PHẨM</h3>
-        <div className='flex items-center mb-6 p-4 rounded' style={{ backgroundColor: theme.palette.grey[100] }}>
-          <p className='text-3xl font-bold mr-4' style={{ color: theme.palette.error.main }}>{selectedProduct.rating?.toFixed(1) || '0.0'}</p>
-          <div className='flex flex-col'>
-            {renderRatingStars(selectedProduct.rating || 0)}
-            <span className='text-sm mt-1' style={{ color: theme.palette.text.secondary }}>({selectedProduct.numReviews || 0} Đánh giá)</span>
-          </div>
-        </div>
-
-        {/* Khung chứa Reviews có thanh cuộn */}
-        <div
-          className='space-y-4 overflow-y-auto pr-4' // pr-4 để tránh thanh cuộn che chữ
-          style={{ maxHeight: '450px' }} // Chiều cao tối đa, tạo thanh cuộn sau khoảng 5-6 bình luận
-        >
-          {fakeReviews.map(review => (
-            <div key={review.id} className='border-b pb-4' style={{ borderColor: theme.palette.divider }}>
-              <div className='flex items-start justify-between mb-1'>
-                <div className='flex items-center'>
-                  {renderRatingStars(review.rating)}
-                  <span className='ml-4 text-sm font-semibold' style={{ color: theme.palette.text.primary }}>{review.user}</span>
-                </div>
-                <span className='text-xs' style={{ color: theme.palette.text.secondary }}>{review.date.split(' ')[0]}</span>
-              </div>
-              <p className='text-sm mt-1' style={{ color: theme.palette.text.primary }}>{review.comment}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    )
   }
 
   const handleBuyNow = () => {
@@ -203,13 +167,11 @@ const ProductDetails = ({ productId }) => {
         <div className='max-w-6xl mx-auto'>
           {/* --------------------------- PHẦN TRÊN (HÌNH ẢNH & CHI TIẾT) --------------------------- */}
           <div
-            // 👇 SỬA: Thêm gap-10 để tách 2 cột ra, bỏ các margin thủ công
             className='p-6 md:p-8 rounded-lg shadow-md flex flex-col md:flex-row gap-8 md:gap-12 items-start'
             style={{ backgroundColor: theme.palette.background.paper }}
           >
 
             {/* --- CỘT TRÁI: HÌNH ẢNH (Chiếm 50%) --- */}
-            {/* 👇 SỬA: Thêm h-[500px] để cố định khung hình, tránh bị dài ngắn lộn xộn */}
             <div className='w-full md:w-1/2 flex h-[450px] md:h-[500px] gap-4'>
 
               {/* List hình nhỏ (Scroll dọc) */}
@@ -219,7 +181,6 @@ const ProductDetails = ({ productId }) => {
                     key={index}
                     src={image.url}
                     alt={image.altText || `Hình ${index}`}
-                    // 👇 SỬA: shrink-0 và aspect-square để luôn vuông đẹp
                     className='w-full aspect-square shrink-0 object-cover rounded-lg cursor-pointer border hover:opacity-80 transition'
                     style={{
                       borderColor: mainImage === image.url ? theme.palette.primary.main : 'transparent',
@@ -235,7 +196,6 @@ const ProductDetails = ({ productId }) => {
                 <img
                   src={mainImage}
                   alt='Sản phẩm chính'
-                  // 👇 SỬA: object-contain để thấy trọn vẹn sản phẩm
                   className='w-full h-full object-contain mix-blend-multiply'
                 />
               </div>
@@ -243,7 +203,6 @@ const ProductDetails = ({ productId }) => {
 
 
             {/* --- CỘT PHẢI: THÔNG TIN (Chiếm 50%) --- */}
-            {/* 👇 SỬA: Bỏ md:ml-10, chỉ cần w-full md:w-1/2 là đủ */}
             <div className='w-full md:w-1/2 flex flex-col'>
 
               <h1
@@ -257,13 +216,13 @@ const ProductDetails = ({ productId }) => {
               <div className='flex items-center mb-6'>
                 <div className='flex items-center mr-3'>
                   <p className='text-base font-bold mr-2 border-b border-orange-500' style={{ color: theme.palette.error.main }}>
-                    {selectedProduct.rating?.toFixed(1) || '0.0'}
+                    {averageRating}
                   </p>
-                  {renderRatingStars(selectedProduct.rating || 0)}
+                  {renderRatingStars(Math.round(averageRating))}
                 </div>
                 <div className='h-4 border-l mx-3' style={{ borderColor: theme.palette.divider }}></div>
                 <p className='text-sm hover:underline cursor-pointer' style={{ color: theme.palette.text.secondary }}>
-                  {selectedProduct.numReviews || 0} Đánh giá
+                  {totalReviews} Đánh giá
                 </p>
               </div>
 
@@ -441,7 +400,7 @@ const ProductDetails = ({ productId }) => {
                 </div>
               )}
 
-              {activeTab === 'reviews' && <ProductReviews />}
+              {activeTab === 'reviews' && <ProductReviews productId={productFetchId} />}
             </div>
           </div>
 

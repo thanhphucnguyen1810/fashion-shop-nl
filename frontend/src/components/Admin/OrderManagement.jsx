@@ -1,16 +1,14 @@
-import { useTheme, alpha } from '@mui/material/styles'
+import { useTheme } from '@mui/material/styles'
 import React, { useEffect, useState } from 'react'
-import { FaTimes, FaUser, FaMoneyBillWave, FaTruck, FaHome, FaBox, FaReceipt, FaSearch } from 'react-icons/fa'
-// Giả định OrderDetailModal và Loading có sẵn
-// import OrderDetailModal from './OrderDetails'
-// import Loading from '../Common/Loading'
+import { FaTimes, FaPrint, FaSearch } from 'react-icons/fa'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
-import { fetchAllOrders, updateOrderStatus as updateOrderThunk } from '~/redux/slices/admin/adminOrderSlice'
+import { fetchAdminOrderDetails, fetchAllOrders, updateOrderStatus as updateOrderThunk } from '~/redux/slices/admin/adminOrderSlice'
+import OrderDetailModal from './OrderDetails'
 
 // === CẬP NHẬT TRẠNG THÁI CHO KHỚP VỚI MODEL ===
 const ORDER_STATUSES = [
-  { value: 'PendingCheckout', label: 'Tạo đơn tạm', color: 'bg-gray-300 text-gray-700' }, // Trạng thái này có thể không cần hiển thị cho Admin, nhưng tôi giữ lại để đảm bảo tính đầy đủ
+  { value: 'PendingCheckout', label: 'Tạo đơn tạm', color: 'bg-gray-300 text-gray-700' },
   { value: 'AwaitingConfirmation', label: 'Chờ xác nhận', color: 'bg-yellow-300 text-yellow-900' },
   { value: 'AwaitingShipment', label: 'Chờ giao hàng', color: 'bg-blue-300 text-blue-900' },
   { value: 'InTransit', label: 'Đang giao hàng', color: 'bg-purple-300 text-purple-900' },
@@ -35,7 +33,6 @@ const OrderManagement = () => {
   }, [dispatch, user, navigate])
 
   const handleStatusChange = (orderId, status) => {
-    // Sử dụng thunk đã đổi tên để tránh xung đột
     dispatch(updateOrderThunk({ id: orderId, status }))
   }
 
@@ -45,7 +42,6 @@ const OrderManagement = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
-  // Sử dụng state để mô phỏng thông báo thay vì alert()
   const [statusMessage, setStatusMessage] = useState(null)
 
   const theme = useTheme()
@@ -85,8 +81,6 @@ const OrderManagement = () => {
     dispatch(updateOrderThunk({ id: orderId, status: 'Cancelled' }))
       .then(() => setStatusMessage(`Đơn hàng #${orderId} đã được hủy thành công.`))
       .catch(() => setStatusMessage(`Lỗi khi hủy đơn hàng #${orderId}.`))
-
-    // Lưu ý: Không cần gọi setOrders thủ công nếu Redux Thunk (updateOrderStatus.fulfilled) hoạt động đúng
   }
 
   const openOrderDetail = (order) => {
@@ -99,24 +93,23 @@ const OrderManagement = () => {
     setShowDetailModal(false)
   }
 
-  // Dùng placeholder cho OrderDetailModal và Loading vì code chưa cung cấp
-  const OrderDetailModalPlaceholder = ({ showDetailModal, closeOrderDetail, selectedOrder }) => showDetailModal ? (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full">
-        <h3 className="text-xl font-bold mb-4">Chi tiết đơn hàng #{selectedOrder?._id}</h3>
-        <p>Khách hàng: {selectedOrder?.user?.name || selectedOrder?.guestId || 'Guest'}</p>
-        <p>Tổng tiền: {Number(selectedOrder?.totalPrice || 0).toLocaleString('vi-VN')} đ</p>
-        <button onClick={closeOrderDetail} className="mt-4 bg-red-500 text-white p-2 rounded">Đóng</button>
-      </div>
-    </div>
-  ) : null
-
   const LoadingPlaceholder = () => (
     <div className="text-center p-8">Đang tải dữ liệu...</div>
   )
 
+  const handleViewAndPrint = (orderId) => {
+  // 1. Gọi API lấy chi tiết đã populate (orderItems.product, etc.)
+    dispatch(fetchAdminOrderDetails(orderId)).then((result) => {
+      if (result.payload) {
+        setSelectedOrder(result.payload) // Lưu đơn hàng đầy đủ vào state
+        setShowDetailModal(true)
+      }
+    })
+  }
+
   if (loading) return <LoadingPlaceholder />
   if (error) return <p className="text-red-500 p-4 text-center">Lỗi: {error}</p>
+
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -254,7 +247,7 @@ const OrderManagement = () => {
                           <span className="text-sm text-gray-500 italic px-2 py-1">Chưa hoàn tất thanh toán</span>
                         )}
                         <button
-                          onClick={() => openOrderDetail(order)}
+                          onClick={() => handleViewAndPrint(order._id)}
                           className="bg-blue-500 text-white px-3 py-1.5 rounded-lg hover:bg-blue-600 shadow-md transition active:scale-95"
                         > Xem chi tiết
                         </button>
@@ -302,8 +295,8 @@ const OrderManagement = () => {
         </div>
       )}
 
-      {/* Chi tiết đơn hàng (Dùng Placeholder) */}
-      <OrderDetailModalPlaceholder
+      {/* Chi tiết đơn hàng */}
+      <OrderDetailModal
         selectedOrder={selectedOrder}
         showDetailModal={showDetailModal}
         closeOrderDetail={closeOrderDetail}
@@ -313,8 +306,4 @@ const OrderManagement = () => {
   )
 }
 
-// Giả định bạn đã có OrderDetailModal và Loading thực tế
-// export default OrderManagement
-
-// Dùng export mặc định để chạy component này trong môi trường hiện tại
 export default OrderManagement

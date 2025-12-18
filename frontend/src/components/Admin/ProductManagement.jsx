@@ -253,7 +253,7 @@ const ProductManagement = () => {
                   onChange={(e) => {
                     setFormData(prev => ({
                       ...prev,
-                      images: Array.from(e.target.files) // lưu mảng file
+                      images: Array.from(e.target.files)
                     }))
                   }}
                   className="w-full p-2 border rounded"

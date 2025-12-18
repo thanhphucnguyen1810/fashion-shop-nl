@@ -10,7 +10,6 @@ export const fetchAllOrders = createAsyncThunk(
     try {
       const response = await axios.get(
         `${API_URL}/api/admin/orders`,
-        // Lấy token từ localStorage hoặc cơ chế quản lý token của bạn
         { headers: { Authorization: `Bearer ${localStorage.getItem('userToken')}` } }
       )
       return response.data
@@ -43,8 +42,8 @@ export const updateOrderStatus = createAsyncThunk(
 
 // delete an order
 export const deleteOrder = createAsyncThunk(
-  'adminOrders/deleteOrder', // Đã xóa khoảng trắng dư thừa trong tên
-  async (id, { rejectWithValue }) => { // Chỉ nhận ID là tham số
+  'adminOrders/deleteOrder',
+  async (id, { rejectWithValue }) => {
     try {
       await axios.delete(
         `${API_URL}/api/admin/orders/${id}`,
@@ -54,13 +53,42 @@ export const deleteOrder = createAsyncThunk(
           }
         }
       )
-      return id // Trả về ID để filter trong reducer
+      return id
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message)
     }
   }
 )
 
+export const fetchAdminOrderDetails = createAsyncThunk(
+  'adminOrders/fetchOrderDetails',
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/api/admin/orders/${id}`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('userToken')}` } }
+      )
+      return response.data
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message)
+    }
+  }
+)
+
+export const fetchOrdersByUser = createAsyncThunk(
+  'adminOrders/fetchOrdersByUser',
+  async (userId, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/api/admin/orders/user/${userId}`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('userToken')}` } }
+      )
+      return response.data
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message)
+    }
+  }
+)
 
 const adminOrderSlice = createSlice({
   name: 'adminOrders',
@@ -99,23 +127,29 @@ const adminOrderSlice = createSlice({
         const updatedOrder = action.payload
         const orderIndex = state.orders.findIndex((order) => order._id === updatedOrder._id)
         if ( orderIndex !== -1) {
-          // Thay thế đơn hàng cũ bằng dữ liệu mới nhất (có user populated)
           state.orders[orderIndex] = updatedOrder
         }
       })
       .addCase(updateOrderStatus.rejected, (state, action) => {
-        // Xử lý lỗi nếu cần
         console.error('Update status failed:', action.payload)
       })
 
     // Delete Orders
       .addCase(deleteOrder.fulfilled, (state, action) => {
-        // action.payload là ID của đơn hàng đã xóa
         state.orders = state.orders.filter((order) => order._id !== action.payload)
       })
       .addCase(deleteOrder.rejected, (state, action) => {
-        // Xử lý lỗi nếu cần
         console.error('Delete order failed:', action.payload)
+      })
+
+      // fetchOrdersByUser
+      .addCase(fetchOrdersByUser.fulfilled, (state, action) => {
+        state.loading = false
+        state.orders = action.payload
+      })
+      .addCase(fetchOrdersByUser.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
       })
   }
 })

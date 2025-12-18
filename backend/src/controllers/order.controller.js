@@ -3,7 +3,6 @@ import productModel from '~/models/product.model'
 
 // @desc Get logged-in user's orders
 // @route GET /api/orders/my-orders
-// @access Private
 export const getMyOrders = async (req, res) => {
   try {
     const orders = await orderModel.find({ user: req.user._id }).sort({ createdAt: -1 })
@@ -16,7 +15,6 @@ export const getMyOrders = async (req, res) => {
 
 // @desc Get order details by ID
 // @route GET /api/orders/:id
-// @access Private
 export const getOrderById = async (req, res) => {
   try {
     const order = await orderModel.findById(req.params.orderId)
@@ -35,21 +33,17 @@ export const getOrderById = async (req, res) => {
 
 // @desc Create a temporary order for Buy Now action
 // @route POST /api/orders/buy-now
-// @access Private/Public
 export const createCheckoutOrder = async (req, res) => { // Đổi tên hàm
   try {
-    // 1. NHẬN DỮ LIỆU ĐẦU VÀO ĐẦY ĐỦ
-    // LẤY THÊM TRƯỜNG paymentMethod
     const { orderItems, userId, guestId, shippingAddress, couponInfo, paymentMethod } = req.body
 
     if (!orderItems || orderItems.length === 0) {
       return res.status(400).json({ message: 'Không có sản phẩm để tạo đơn hàng.' })
     }
 
-    // 2. TÍNH TOÁN GIÁ CƠ BẢN VÀ KIỂM TRA TỒN KHO
+    //TÍNH TOÁN GIÁ CƠ BẢN VÀ KIỂM TRA TỒN KHO
     let calculatedTotalPrice = 0
-    let finalOrderItems = [] // Khai báo list sản phẩm đã kiểm tra
-
+    let finalOrderItems = []
     for (const item of orderItems) {
       const product = await productModel.findById(item.productId)
       if (!product) {
@@ -87,13 +81,9 @@ export const createCheckoutOrder = async (req, res) => { // Đổi tên hàm
     if (paymentMethod === 'COD') {
       // Nếu là COD, đơn hàng được tạo xong và chờ Admin duyệt
       initialStatus = 'AwaitingConfirmation'
-      isPaid = false // Chưa trả tiền
+      isPaid = false
     }
-    // Note: Nếu là MOMO/Online, nó sẽ giữ nguyên PendingCheckout (chờ thanh toán từ bên thứ 3)
 
-    // 4. TẠO ORDER OBJECT VỚI DỮ LIỆU ĐẦY ĐỦ
-    // KHẮC PHỤC LỖI: newOrder phải được khai báo trước khi sử dụng.
-    // Tôi đã khai báo 'finalOrderItems' ở trên và sử dụng nó ở đây.
     const newOrderData = {
       user: userId ? userId : null,
       guestId: userId ? null : guestId,

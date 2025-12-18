@@ -2,8 +2,6 @@ import checkoutModel from '~/models/checkout.model.js'
 import orderModel from '~/models/order.model.js'
 import cartModel from '~/models/cart.model.js'
 import productModel from '~/models/product.model.js'
-import axios from 'axios'
-import crypto from 'crypto'
 import { env } from '~/config/environment'
 
 
@@ -47,18 +45,17 @@ export const getSepayQrInfo = async (req, res) => {
     const BANK_ACC = env.SEPAY_BANK_ACCOUNT
     const BANK_NAME = env.SEPAY_BANK_NAME
 
-    console.log(BANK_ACC)
-    console.log(BANK_NAME)
+    const shortCode = checkout._id.toString().slice(-6).toUpperCase()
+    const fullCode = checkout._id.toString()
 
-    // Tạo nội dung chuyển khoản: DH + 6 số cuối của ID (hoặc dùng full ID nếu cấu hình Sepay yêu cầu)
-    // Lưu ý: Nội dung này phải KHỚP với cấu hình "Mẫu nội dung" bạn cài trên my.sepay.vn
-    const transferContent = `DH${checkout._id.toString().slice(-6).toUpperCase()}`
+    const transferContent = `DH${fullCode}`
 
     // Tạo URL ảnh QR theo chuẩn Sepay (Template: compact, qr_only, print...)
     const qrUrl = `https://qr.sepay.vn/img?acc=${BANK_ACC}&bank=${BANK_NAME}&amount=${checkout.totalPrice}&des=${transferContent}&template=compact`
 
     res.status(200).json({
       qrUrl,
+      transferContentDisplay: `DH${shortCode}`,
       transferContent,
       amount: checkout.totalPrice
     })
@@ -69,29 +66,19 @@ export const getSepayQrInfo = async (req, res) => {
 }
 
 export const sepayIpn = async (req, res) => {
-  const data = req.body
-  // Sepay gửi về: { content: "DH123456 ...", amount: 50000, ... }
+  const { content, amount } = req.body
 
   try {
-    // 1. Phân tích nội dung để lấy Checkout ID
-    // Giả sử content là "DH66EF12", bạn cần regex hoặc logic để tìm lại checkout._id
-    // Cách đơn giản nhất cho đồ án: Duyệt tìm checkout nào có totalPrice == amount VÀ trạng thái chưa thanh toán
-    // Hoặc tốt nhất: Cấu hình Sepay gửi transaction chứa đúng checkoutId.
+    // Tách ID dạng DH{ObjectId}
+    const match = content.match(/DH([a-fA-F0-9]{24})/)
 
-    // Ở đây tôi giả định bạn dùng pattern "DH" + 6 ký tự cuối của ID như hàm getSepayQrInfo ở trên
-    // Tuy nhiên, để đơn giản cho IPN chạy được ngay, tôi sẽ tìm theo regex content trong DB (cách này hơi chậm nhưng dễ code)
+    if (!match) {
+      console.log('Không tìm thấy mã đơn trong content:', content)
+      return res.status(200).json({ error: 'Invalid content' })
+    }
 
-    const { content, amount } = data
+    const checkoutId = match[1]
 
-    // Tìm checkout có amount khớp VÀ chưa thanh toán
-    // Lưu ý: Logic này cần chặt chẽ hơn trong thực tế (check content contains id)
-    // Ví dụ content: "CHUYEN KHOAN DH66EF12" -> Lấy "DH66EF12" -> Tìm trong DB
-
-    // Tạm thời để demo báo cáo: Tìm checkout khớp tiền và chưa thanh toán gần nhất
-    // Bạn nên cấu hình Sepay bắn về order_code chính xác thì dùng logic cũ của bạn ok hơn.
-
-    // === NẾU DÙNG LOGIC CŨ CỦA BẠN (Dựa trên order_code) ===
-    const checkoutId = data.order_code // Nếu Sepay trả về đúng ID này
     const checkout = await checkoutModel.findById(checkoutId)
 
     if (!checkout) return res.status(200).json({ error: 'Order not found' }) // Trả 200 để Sepay không gửi lại
@@ -117,7 +104,7 @@ export const sepayIpn = async (req, res) => {
       totalPrice: checkout.totalPrice,
       isPaid: true,
       paymentStatus: 'completed',
-      status: 'Processing',
+      status: 'AwaitingConfirmation',
       orderType: 'Cart'
     })
 
@@ -144,33 +131,31 @@ export const sepayIpn = async (req, res) => {
 
 // --- 2. HÀM MỚI: Kiểm tra trạng thái thanh toán (Polling) ---
 export const checkPaymentStatus = async (req, res) => {
-  try {
-    const { id } = req.params
-    const checkout = await checkoutModel.findById(id)
+  try {
+    const { id } = req.params
+    const checkout = await checkoutModel.findById(id)
 
-    if (!checkout) return res.status(404).json({ message: 'Not found' })
+    if (!checkout) return res.status(404).json({ message: 'Not found' })
 
-    if (checkout.isPaid) {
-      // Sau khi sửa Bước 1, checkout.orderId sẽ có giá trị.
-      // Dùng orderId đã lưu trong checkout (từ Bước 1)
-      const orderId = checkout.orderId; 
-      
+    if (checkout.isPaid) {
+      let orderId = checkout.orderId
+
       // Nếu orderId chưa được lưu vào checkout, ta phải tìm trong Order collection
-      if(!orderId) {
-          const order = await orderModel.findOne({ checkoutId: checkout._id })
-          orderId = order ? order._id : null
+      if (!orderId) {
+        const order = await orderModel.findOne({ checkoutId: checkout._id })
+        orderId = order ? order._id : null
       }
-      
-      return res.status(200).json({
-        isPaid: true,
-        orderId: orderId // 👈 CHẮC CHẮN TRẢ VỀ ORDER ID Ở ĐÂY
-      })
-    }
 
-    return res.status(200).json({ isPaid: false })
-  } catch (error) {
-    res.status(500).json({ message: error.message })
-  }
+      return res.status(200).json({
+        isPaid: true,
+        orderId: orderId
+      })
+    }
+
+    return res.status(200).json({ isPaid: false })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
 }
 
 export const finalizeOrder = async (req, res) => {
@@ -207,7 +192,7 @@ export const finalizeOrder = async (req, res) => {
       totalPrice: checkout.totalPrice,
       isPaid,
       paymentStatus,
-      status: isPaid ? 'Processing' : 'AwaitingConfirmation',
+      status: 'AwaitingConfirmation',
       orderType: 'Cart'
     })
 

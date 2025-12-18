@@ -1,17 +1,14 @@
-// routes/review.routes.js
 import express from 'express'
 import {
-  getAllReviews,
-  updateReviewStatus,
-  deleteReview,
-  seedSampleReviews
-} from '~/controllers/admin/admin.review.controller'
+  getAllReviewsAdmin,
+  updateReviewStatus
+} from '~/controllers/admin/admin.review.controller.js'
+
+import { protect, admin } from '~/middlewares/auth.middleware'
 
 const router = express.Router()
 
-router.get('/', getAllReviews)
-router.patch('/:id/status', updateReviewStatus)
-router.delete('/:id', deleteReview)
-router.post('/seed', seedSampleReviews)
+router.get('/', protect, admin, getAllReviewsAdmin)
+router.patch('/:id/status', protect, admin, updateReviewStatus)
 
 export default router

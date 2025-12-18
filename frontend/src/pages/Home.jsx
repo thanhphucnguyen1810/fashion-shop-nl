@@ -10,10 +10,10 @@ import FeaturedCollection from '~/components/Products/FeaturedCollection'
 import FeaturedSection from '~/components/Products/FeaturedSection'
 import GenderCollectionSection from '~/components/Products/GenderCollectionSection'
 import NewArrivals from '~/components/Products/NewArrivals'
-import ProductDetails from '~/components/Products/ProductDetails'
 import ProductGrid from '~/components/Products/ProductGrid'
 import CategoryMenu from '~/components/CategoryMenu'
 import { fetchProducts } from '~/redux/slices/productSlice'
+import { fetchCart } from '~/redux/slices/cartSlices'
 
 const Home = () => {
   const theme = useTheme()
@@ -21,9 +21,14 @@ const Home = () => {
   const colors = palette[mode]
   const dispatch = useDispatch()
   const { error } = useSelector((state) => state.products)
+
+  const { user } = useSelector((state) => state.auth)
+  const { cart } = useSelector((state) => state.cart)
+
   const [bestSellerProduct, setBestSellerProduct] = useState(null)
 
   const [showScrollButton, setShowScrollButton] = useState(false)
+
 
   useEffect(() => {
     //Fetch products for a specific collection
@@ -50,9 +55,9 @@ const Home = () => {
     fetchBestSeller()
     const handleScroll = () => {
       if (window.scrollY > 300) {
-        setShowScrollButton(true) // Hiện nút khi cuộn xuống quá 300px
+        setShowScrollButton(true)
       } else {
-        setShowScrollButton(false) // Ẩn nút khi ở trên đầu
+        setShowScrollButton(false)
       }
     }
 
@@ -68,6 +73,22 @@ const Home = () => {
       behavior: 'smooth'
     })
   }
+
+  useEffect(() => {
+    // Lấy guestId từ localStorage, nếu tồn tại
+    const currentGuestId = localStorage.getItem('guestId')
+    const isUserLoggedIn = !!user?._id
+
+    // Nếu có user đã đăng nhập HOẶC có guestId (khách)
+    if (isUserLoggedIn || currentGuestId) {
+      dispatch(
+        fetchCart({
+          userId: isUserLoggedIn ? user._id : null,
+          guestId: isUserLoggedIn ? null : currentGuestId
+        })
+      )
+    }
+  }, [dispatch, user?._id])
 
   return (
     <div style={{ backgroundColor: theme.palette.background.default }}>

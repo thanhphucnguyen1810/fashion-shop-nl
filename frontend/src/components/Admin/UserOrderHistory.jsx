@@ -1,163 +1,155 @@
-import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom' // Import useNavigate
-import axios from 'axios'
-import { FaBox, FaCalendarAlt, FaMoneyBillAlt, FaTag, FaChevronRight, FaShoppingCart, FaUser } from 'react-icons/fa'
-// Đảm bảo bạn đã import các icon cần thiết
-
-const API_URL = import.meta.env.VITE_API_URL
-
-// Hàm lấy tên khách hàng, cần được gọi ở useEffect bên ngoài
-// Giả định bạn có state [user, setUser] và gọi API user/:id để lấy tên
-const customerName = 'Tên Khách Hàng Ví Dụ' // Thay thế bằng logic state thực tế
+import React, { useEffect, useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
+import { fetchOrdersByUser } from '~/redux/slices/admin/adminOrderSlice'
+import OrderDetailModal from './OrderDetails'
+import { FaArrowLeft, FaEye, FaReceipt, FaHistory } from 'react-icons/fa'
 
 const UserOrderHistory = () => {
   const { userId } = useParams()
-  const navigate = useNavigate() // Dùng để điều hướng đến trang chi tiết
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const { orders, loading } = useSelector((state) => state.adminOrders)
 
-  const [orders, setOrders] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [customerName, setCustomerName] = useState(`Khách hàng ID: ${userId.slice(0, 8)}...`)
+  const [selectedOrder, setSelectedOrder] = useState(null)
+  const [showModal, setShowModal] = useState(false)
 
-  // ... (Code useEffect và fetchOrders/fetchUser ở đây, giữ nguyên logic đã sửa)
+  useEffect(() => {
+    dispatch(fetchOrdersByUser(userId))
+  }, [dispatch, userId])
 
-  // --- Hàm hỗ trợ định dạng Status ---
-  const getStatusStyle = (status) => {
-    switch (status) {
-    case 'Đã giao':
-    case 'Hoàn thành':
-      return 'bg-green-100 text-green-700'
-    case 'Đang xử lý':
-    case 'Đã xác nhận':
-      return 'bg-yellow-100 text-yellow-700'
-    case 'Đã hủy':
-      return 'bg-red-100 text-red-700'
-    default:
-      return 'bg-gray-100 text-gray-700'
-    }
+  const handleOpenDetail = (order) => {
+    setSelectedOrder(order)
+    setShowModal(true)
   }
 
-  // ------------------------------------------
-
-  // Sử dụng useEffect từ phản hồi trước để lấy orders và user name
-  useEffect(() => {
-    const fetchUserDataAndOrders = async () => {
-      try {
-        // 1. Lấy thông tin User
-        const userRes = await axios.get(`${API_URL}/api/admin/users/${userId}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('userToken')}` }
-        })
-        setCustomerName(userRes.data.name || customerName) // Cập nhật tên
-
-        // 2. Lấy đơn hàng của User
-        const ordersRes = await axios.get(
-          `${API_URL}/api/admin/orders/user/${userId}`,
-          { headers: { Authorization: `Bearer ${localStorage.getItem('userToken')}` } }
-        )
-        setOrders(ordersRes.data)
-      } catch (err) {
-        console.error('Error fetching data:', err)
-        setOrders([])
-      } finally {
-        setLoading(false)
-      }
+  // Hàm render nhãn trạng thái "sang" hơn
+  const renderStatus = (status) => {
+    const statusConfig = {
+      Delivered: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+      InTransit: 'bg-blue-100 text-blue-700 border-blue-200',
+      AwaitingConfirmation: 'bg-amber-100 text-amber-700 border-amber-200',
+      Cancelled: 'bg-red-100 text-red-700 border-red-200',
+      default: 'bg-gray-100 text-gray-700 border-gray-200'
     }
-    fetchUserDataAndOrders()
-  }, [userId])
-
-
-  if (loading) return <p className="p-5 text-center text-lg text-blue-600">Đang tải lịch sử đơn hàng...</p>
+    const style = statusConfig[status] || statusConfig.default
+    return (
+      <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${style}`}>
+        {status}
+      </span>
+    )
+  }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="min-h-screen bg-gray-50/50 p-4 md:p-8">
+      {/* Header Section */}
+      <div className="max-w-7xl mx-auto mb-8">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center text-gray-500 hover:text-blue-600 transition-colors mb-4 group"
+        >
+          <FaArrowLeft className="mr-2 group-hover:-translate-x-1 transition-transform" />
+          Trở về danh sách người dùng
+        </button>
 
-      {/* TIÊU ĐỀ ADMIN */}
-      <h2 className="text-2xl font-bold text-gray-800 mb-2">
-        <FaBox className="inline mr-2 text-indigo-500" /> Lịch sử Đơn hàng
-      </h2>
-      <p className="text-lg text-gray-600 mb-6 border-b-2 border-red-500 pb-2 flex items-center">
-        <FaUser className="mr-2 text-red-500"/> Khách hàng: <span className="font-extrabold ml-1">{customerName}</span>
-      </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-extrabold text-gray-900 flex items-center gap-3">
+              <FaHistory className="text-blue-500" />
+              Lịch sử mua hàng
+            </h2>
+            <p className="text-gray-500 mt-1">
+              Quản lý và xem lại tất cả các giao dịch của khách hàng <span className="font-mono text-blue-600">#{userId.slice(-6)}</span>
+            </p>
+          </div>
 
-      {/* KIỂM TRA ĐƠN HÀNG RỖNG */}
-      {Array.isArray(orders) && orders.length === 0 ? (
-        <div className="p-8 text-center bg-white rounded-lg shadow-md mt-10 border border-dashed border-gray-300">
-          <p className="text-xl text-gray-600">Khách hàng này chưa đặt đơn hàng nào.</p>
+          <div className="hidden md:block text-right">
+            <p className="text-sm text-gray-400">Tổng số đơn hàng</p>
+            <p className="text-2xl font-bold text-gray-800">{orders.length}</p>
+          </div>
         </div>
-      ) : (
-        <div className="space-y-6">
+      </div>
 
-          {Array.isArray(orders) && orders.map((order) => {
-            const firstItem = order.orderItems && order.orderItems[0]
-            const itemCount = order.orderItems ? order.orderItems.length : 0
-
-            return (
-              <div
-                key={order._id}
-                className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden"
-              >
-                {/* HEADER: Mã Đơn & Trạng thái (Shopee style) */}
-                <div className="flex justify-between items-center px-5 py-3 bg-gray-50 border-b border-gray-200">
-                  <p className="text-xs text-gray-500 flex items-center">
-                    <FaTag className="mr-2 text-red-500" />
-                    Mã đơn hàng: <span className="text-gray-900 ml-1 font-mono uppercase font-semibold">DH{order._id.slice(-8)}</span>
-                  </p>
-                  <span
-                    className={`px-3 py-1 text-xs font-bold rounded-full ${getStatusStyle(order.status)}`}
-                  >
-                    {order.status}
-                  </span>
-                </div>
-
-                {/* THÔNG TIN SẢN PHẨM (Shopee style - Chỉ hiển thị sản phẩm đầu tiên) */}
-                {firstItem && (
-                  <div className="flex p-4 items-center space-x-4 hover:bg-gray-50 cursor-pointer"
-                    onClick={() => navigate(`/admin/orders/${order._id}`)} // Điều hướng khi click vào sản phẩm
-                  >
-                    <img
-                      src={firstItem.productId?.images?.[0] || 'placeholder-url'} // Giả định cấu trúc ảnh
-                      alt={firstItem.productId?.name || 'Sản phẩm'}
-                      className="w-16 h-16 object-cover border rounded"
-                    />
-                    <div className="flex-grow">
-                      <p className="font-semibold text-gray-800 line-clamp-2">
-                        {firstItem.productId?.name || 'Tên Sản phẩm không rõ'}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                                x{firstItem.quantity || 1}
-                      </p>
-                    </div>
-
-                    <FaChevronRight className="text-gray-400 text-xs"/>
-                  </div>
+      {/* Main Content Card */}
+      <div className="max-w-7xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+            <p className="text-gray-500 animate-pulse">Đang tải lịch sử đơn hàng...</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50/50">
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Mã đơn hàng</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Thời gian</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Thanh toán</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Tổng tiền</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Trạng thái</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {orders.length > 0 ? orders.map((order) => (
+                  <tr key={order._id} className="hover:bg-blue-50/30 transition-colors group">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="font-mono font-medium text-gray-900 group-hover:text-blue-600">
+                        #{order._id.slice(-8).toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {new Date(order.createdAt).toLocaleString('vi-VN', {
+                        day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                      })}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-gray-700">{order.paymentMethod}</span>
+                        <span className="text-[10px] text-gray-400 uppercase tracking-tight">{order.paymentStatus || 'Chưa xác định'}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-base font-bold text-blue-600">
+                        {order.totalPrice?.toLocaleString()}đ
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      {renderStatus(order.status)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <button
+                        onClick={() => handleOpenDetail(order)}
+                        className="inline-flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 hover:border-blue-300 hover:text-blue-600 transition-all shadow-sm"
+                      >
+                        <FaEye className="text-xs" />
+                        Chi tiết
+                      </button>
+                    </td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan="6" className="py-20 text-center">
+                      <div className="flex flex-col items-center">
+                        <FaReceipt className="text-gray-200 text-6xl mb-4" />
+                        <p className="text-gray-400 text-lg">Khách hàng chưa thực hiện giao dịch nào.</p>
+                      </div>
+                    </td>
+                  </tr>
                 )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
-                {/* DÒNG TỔNG KẾT VÀ NÚT HÀNH ĐỘNG */}
-                <div className="px-5 py-4 border-t border-gray-100 flex justify-end items-center space-x-4 bg-white">
-                  <p className="text-sm text-gray-600 flex items-center">
-                    {itemCount} Sản phẩm
-                  </p>
-
-                  <div className="flex items-center">
-                    <FaMoneyBillAlt className="mr-2 text-red-600 text-xl" />
-                    <span className="font-semibold text-gray-800">Tổng tiền:</span>
-                    <span className="text-xl font-extrabold text-red-600 ml-2">
-                      {order.totalPrice ? order.totalPrice.toLocaleString('vi-VN') : 0}₫
-                    </span>
-                  </div>
-
-                  {/* Nút Xem Chi Tiết (Hành động Admin chính) */}
-                  <button
-                    onClick={() => navigate(`/admin/orders/${order._id}`)}
-                    className="px-4 py-2 bg-indigo-500 text-white text-sm font-medium rounded-lg hover:bg-indigo-600 transition duration-150 shadow-md ml-4 flex items-center"
-                  >
-                    <FaShoppingCart className="mr-2"/>
-                        Quản lý Đơn hàng
-                  </button>
-                </div>
-              </div>
-            )
-          })}
-        </div>
+      {/* Modal chi tiết hóa đơn */}
+      {showModal && (
+        <OrderDetailModal
+          selectedOrder={selectedOrder}
+          showDetailModal={showModal}
+          closeOrderDetail={() => setShowModal(false)}
+        />
       )}
     </div>
   )

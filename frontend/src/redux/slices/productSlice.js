@@ -90,14 +90,25 @@ export const createTemporaryOrder = createAsyncThunk(
   }
 )
 
+// fetch reviews
+export const fetchProductReviews = createAsyncThunk(
+  'products/fetchProductReviews',
+  async (productId) => {
+    const response = await axios.get(`${API_URL}/api/reviews/product/${productId}`)
+    return { productId, reviews: response.data }
+  }
+)
+
 const productSlice = createSlice({
   name: 'products',
   initialState: {
     products: [],
     selectedProduct: null,
+    reviews: [],
     similarProducts: [],
     temporaryOrder: null,
-    loading: false,
+    loading: 'idle',
+    isFetching: false,
     error: null,
     page: 1,
     pages: 1,
@@ -138,22 +149,30 @@ const productSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-    // handle fetching products with filters
+      // handle fetching products with filters
       .addCase(fetchProducts.pending, (state) => {
-        state.loading = true
-        state.error = null
+        if (state.products.length > 0) {
+          state.isFetching = true
+        }
+        else {
+          state.loading = 'pending'
+        }
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
-        state.loading = false
-        // Lấy dữ liệu sản phẩm từ payload.products
-        state.products = Array.isArray(action.payload.products) ? action.payload.products : []
-        // Cập nhật thông tin phân trang từ response mới
+        state.products = action.payload.products
+
+        // Cập nhật thông tin phân trang (nếu có)
         state.page = action.payload.page || 1
         state.pages = action.payload.pages || 1
         state.totalProducts = action.payload.totalProducts || 0
+
+        state.loading = 'succeeded'
+        state.isFetching = false
+        state.error = null
       })
       .addCase(fetchProducts.rejected, (state, action) => {
-        state.loading = false,
+        state.loading = 'failed'
+        state.isFetching = false
         state.error = action.error.message
       })
 
@@ -219,6 +238,20 @@ const productSlice = createSlice({
       .addCase(createTemporaryOrder.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload || action.error.message
+      })
+
+      // handle fetching reviews
+      .addCase(fetchProductReviews.pending, (state) => {
+        state.loading = 'pending'
+        state.error = null
+      })
+      .addCase(fetchProductReviews.fulfilled, (state, action) => {
+        state.reviews = action.payload.reviews
+        state.loading = 'succeeded'
+      })
+      .addCase(fetchProductReviews.rejected, (state, action) => {
+        state.loading = 'failed'
+        state.error = action.error.message
       })
   }
 })

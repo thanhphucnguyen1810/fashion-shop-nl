@@ -1,0 +1,20 @@
+# Dockerfile.frontend
+
+# GIAI ĐOẠN 1: BUILD MÃ NGUỒN (Dùng Node)
+FROM node:20-slim AS builder
+WORKDIR /app
+COPY frontend/package*.json ./
+RUN npm install
+COPY frontend/ .
+
+# Lệnh build React/Vite
+RUN npm run build 
+
+# GIAI ĐOẠN 2: PHỤC VỤ FILE TĨNH (Dùng Nginx)
+FROM nginx:alpine
+# Copy file tĩnh đã được build vào thư mục mặc định của Nginx
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Mở port mặc định của Nginx
+EXPOSE 80 
+# Lệnh mặc định của Nginx sẽ chạy, phục vụ các file

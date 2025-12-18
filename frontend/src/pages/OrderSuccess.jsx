@@ -26,7 +26,7 @@ const OrderSuccess = () => {
         </h1>
 
         <p className="text-gray-600 mb-6 text-lg">
-          Cảm ơn bạn đã tin tưởng. Đơn hàng của bạn đã **được ghi nhận chính thức** và đang được chuyển sang bộ phận kho hàng để xử lý.
+          Cảm ơn bạn đã tin tưởng. Đơn hàng của bạn đã được ghi nhận chính thức và đang được chuyển sang bộ phận kho hàng để xử lý.
         </p>
 
         <div className="bg-gray-100 p-4 rounded-lg mb-6">

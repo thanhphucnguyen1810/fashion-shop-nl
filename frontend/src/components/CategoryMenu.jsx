@@ -32,7 +32,7 @@ const CategoryMenu = () => {
           {categories.map((category) => (
             <Link
               key={category._id}
-              to={`/collections/${category.slug}`}
+              to={`/collections?category=${category.slug}`}
               className="group block text-center p-2 rounded-lg transition duration-300 transform hover:scale-[1.03] hover:shadow-md cursor-pointer"
               style={{ backgroundColor: '#FFFFFF', color: TEXT_COLOR }}
             >
