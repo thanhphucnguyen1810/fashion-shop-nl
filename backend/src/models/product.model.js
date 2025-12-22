@@ -96,22 +96,22 @@ const productSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
-  },
-  metaTitle: {
-    type: String
-  },
-  metaDescription: {
-    type: String
-  },
-  metaKeywords: {
-    type: String
-  },
-  dimensions: {
-    length: Number,
-    width: Number,
-    height: Number
-  },
-  weight: Number
+  }
+  // metaTitle: {
+  //   type: String
+  // },
+  // metaDescription: {
+  //   type: String
+  // },
+  // metaKeywords: {
+  //   type: String
+  // },
+  // dimensions: {
+  //   length: Number,
+  //   width: Number,
+  //   height: Number
+  // },
+  // weight: Number
 },
 { timestamps: true }
 )

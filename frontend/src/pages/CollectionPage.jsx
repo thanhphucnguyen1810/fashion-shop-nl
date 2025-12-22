@@ -68,11 +68,11 @@ const CollectionPage = () => {
 
       {/* Nội dung chính */}
       <div className="flex-1 p-4 space-y-4">
-        {filters.search && (
+        {/* {filters.search && (
           <p className="text-sm text-gray-500">
                   Đang tìm kiếm theo từ khóa: "{filters.search}"
           </p>
-        )}
+        )} */}
 
         <SortOptions />
 

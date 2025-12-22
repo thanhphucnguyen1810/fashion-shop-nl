@@ -1,256 +1,290 @@
 import { Link } from 'react-router-dom'
-import { useTheme } from '@mui/material/styles'
+import { useTheme, MenuItem, Select, FormControl, InputLabel, Button, Stack } from '@mui/material'
 import { useDispatch, useSelector } from 'react-redux'
-import { useEffect } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import { fetchAdminProducts } from '~/redux/slices/admin/adminProductSlice'
 import { fetchAllOrders } from '~/redux/slices/admin/adminOrderSlice'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts' // <-- Thêm imports cho Recharts
+import {
+  XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, AreaChart, Area,
+  BarChart, Bar, Cell
+} from 'recharts'
+import { ReportTemplate } from '~/components/Admin/ReportTemplate'
+import { useReactToPrint } from 'react-to-print'
+import ExcelJS from 'exceljs'
+import { saveAs } from 'file-saver'
+import { FaPrint, FaFileExcel } from 'react-icons/fa'
 
-// Format currency
-const formatCurrency = (value) => `${value.toFixed(2).toLocaleString()}đ`
-
-// Reusable Card component
-const StatCard = ({ title, value, link, linkText }) => {
-  const theme = useTheme()
-  const isDark = theme.palette.mode === 'dark'
-
-  return (
-    <div
-      className={`p-4 shadow-md rounded-lg ${
-        isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
-      }`}
-    >
-      <h2 className="text-xl font-semibold mb-1">{title}</h2>
-      <p className="text-2xl font-bold">{value}</p>
-      {link && linkText && (
-        <Link
-          to={link}
-          className={`text-sm mt-2 inline-block ${
-            isDark ? 'text-blue-400 hover:underline' : 'text-blue-600 hover:underline'
-          }`}
-        >
-          {linkText}
-        </Link>
-      )}
-    </div>
-  )
-}
-
-// Component Biểu đồ thống kê trạng thái đơn hàng
-const OrderStatsChart = ({ data, isDark }) => {
-  return (
-    <div
-      className={`p-4 shadow-md rounded-lg ${
-        isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
-      }`}
-    >
-      <h2 className="text-2xl font-bold mb-4">{'Thống kê số lượng đơn hàng theo trạng thái'}</h2>
-      {data.length === 0 ? (
-        <p className='text-center py-10 text-gray-500'>Không có dữ liệu đơn hàng để hiển thị biểu đồ.</p>
-      ) : (
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart
-            data={data}
-            margin={{
-              top: 5,
-              right: 30,
-              left: 20,
-              bottom: 5
-            }}
-            barSize={30}
-          >
-            {/* Đường kẻ ngang mờ */}
-            <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#4b5563' : '#e5e7eb'} />
-            {/* Trục X: Tên trạng thái */}
-            <XAxis dataKey="name" stroke={isDark ? '#d1d5db' : '#4b5563'} />
-            {/* Trục Y: Số lượng đơn */}
-            <YAxis stroke={isDark ? '#d1d5db' : '#4b5563'} allowDecimals={false} />
-            {/* Tooltip khi di chuột */}
-            <Tooltip
-              contentStyle={{
-                backgroundColor: isDark ? '#1f2937' : '#ffffff',
-                border: `1px solid ${isDark ? '#4b5563' : '#e5e7eb'}`,
-                color: isDark ? '#ffffff' : '#1f2937',
-                fontSize: '14px'
-              }}
-              labelStyle={{ color: isDark ? '#ffffff' : '#1f2937', fontWeight: 'bold' }}
-              formatter={(value, name) => [`${value} đơn`, 'Số lượng']}
-            />
-            {/* Thanh Bar. Sử dụng dataKey="value" để lấy số lượng, và fill để lấy màu đã gán */}
-            <Bar dataKey="value" name="Số lượng đơn" fill="#8884d8"
-              data={data.map(item => ({ ...item, fill: item.fill }))}
-            />
-
-          </BarChart>
-        </ResponsiveContainer>
-      )}
-    </div>
-  )
-}
-
-// Hàm gán màu sắc cho từng trạng thái
-const getColorForStatus = (status) => {
-  switch (status) {
-  case 'Pending':
-    return '#ffc107' // Vàng (Đang chờ)
-  case 'Processing':
-    return '#17a2b8' // Xanh lam (Đang xử lý)
-  case 'Delivered':
-    return '#28a745' // Xanh lá (Đã giao)
-  case 'Cancelled':
-    return '#dc3545' // Đỏ (Đã hủy)
-  default:
-    return '#6c757d' // Xám (Không xác định)
-  }
-}
-
-// Hàm xử lý dữ liệu đơn hàng thành định dạng cho biểu đồ
-const getOrderStatusData = (orders) => {
-  if (!orders || orders.length === 0) return []
-
-  // Đếm số lượng đơn hàng theo trạng thái
-  const statusCounts = orders.reduce((acc, order) => {
-    const status = order.status || 'Không xác định'
-    acc[status] = (acc[status] || 0) + 1
-    return acc
-  }, {})
-
-  // Chuyển đổi sang định dạng Recharts: [{ name: 'Status', value: count, fill: color }]
-  // Sắp xếp giảm dần theo số lượng đơn
-  return Object.keys(statusCounts)
-    .map((status) => ({
-      name: status,
-      value: statusCounts[status],
-      fill: getColorForStatus(status)
-    }))
-    .sort((a, b) => b.value - a.value)
-}
-
+const formatCurrency = (value) => `${value?.toLocaleString('vi-VN')}đ`
 
 const AdminHomePage = () => {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const dispatch = useDispatch()
+  const [timeFrame, setTimeFrame] = useState('day')
 
-  const {
-    products,
-    loading: productsLoading,
-    error: productsError
-  } = useSelector((state) => state.adminProducts)
-  const {
-    orders,
-    totalOrders,
-    totalSales,
-    loading: ordersLoading,
-    error:ordersError
-  } = useSelector((state) => state.adminOrders)
+  // 1. Khai báo Refs và Hooks ở cấp cao nhất
+  const reportRef = useRef(null)
+  const handlePrint = useReactToPrint({
+    contentRef: reportRef,
+    documentTitle: `Bao-cao-doanh-thu-${timeFrame}`
+  })
 
-  // Xử lý dữ liệu cho biểu đồ
-  const orderStatusData = getOrderStatusData(orders)
+  const { products } = useSelector((state) => state.adminProducts)
+  const { orders, totalSales, totalOrders, loading } = useSelector((state) => state.adminOrders)
 
   useEffect(() => {
     dispatch(fetchAdminProducts())
     dispatch(fetchAllOrders())
-  }, [dispatch]) // Thêm dispatch vào dependency array để tránh lỗi
+  }, [dispatch])
+
+  // 2. Logic xuất Excel (Đã thêm SĐT, Thanh Toán, Số lượng)
+  const exportToExcel = async () => {
+    const workbook = new ExcelJS.Workbook()
+    const worksheet = workbook.addWorksheet('Báo cáo doanh thu')
+
+    // 1. Định nghĩa các cột (Thêm Phone, Payment, Items)
+    worksheet.columns = [
+      { header: 'MÃ ĐƠN HÀNG', key: 'id', width: 20 },
+      { header: 'NGÀY ĐẶT', key: 'date', width: 15 },
+      { header: 'KHÁCH HÀNG', key: 'user', width: 20 },
+      { header: 'SỐ ĐIỆN THOẠI', key: 'phone', width: 15 },
+      { header: 'SỐ LƯỢNG', key: 'items', width: 12 },
+      { header: 'THANH TOÁN', key: 'payment', width: 18 },
+      { header: 'TỔNG TIỀN (VNĐ)', key: 'total', width: 20 },
+      { header: 'TRẠNG THÁI', key: 'status', width: 20 }
+    ]
+
+    // 2. Định dạng dòng Header
+    const headerRow = worksheet.getRow(1)
+    headerRow.font = { bold: true, color: { argb: 'FFFFFF' }, size: 11 }
+    headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '2563EB' } }
+    headerRow.alignment = { vertical: 'middle', horizontal: 'center' }
+
+    // 3. Thêm dữ liệu
+    orders.forEach(o => {
+      const row = worksheet.addRow({
+        id: o._id.toUpperCase(),
+        date: new Date(o.createdAt).toLocaleDateString('vi-VN'),
+        user: o.user?.name || 'Khách vãng lai',
+        phone: o.shippingAddress?.phone || o.user?.phone || 'N/A', // Lấy từ địa chỉ giao hàng hoặc profile
+        items: o.orderItems?.reduce((acc, item) => acc + item.quantity, 0) || 0, // Tính tổng SP
+        payment: o.paymentMethod || 'Thẻ/Tiền mặt',
+        total: o.totalPrice,
+        status: o.status === 'Delivered' ? 'Đã giao hàng' :
+          o.status === 'Cancelled' ? 'Đã hủy' :
+            o.status === 'InTransit' ? 'Đang giao' : 'Chờ xác nhận'
+      })
+
+      // Căn chỉnh cho đẹp
+      row.getCell('date').alignment = { horizontal: 'center' }
+      row.getCell('items').alignment = { horizontal: 'center' }
+      row.getCell('status').alignment = { horizontal: 'center' }
+      row.getCell('total').numFmt = '#,##0"đ"'
+    })
+
+    // 4. Thêm dòng tổng cộng
+    const totalRowNumber = worksheet.rowCount + 1
+    const totalRow = worksheet.getRow(totalRowNumber)
+    totalRow.getCell('id').value = 'TỔNG CỘNG DOANH THU'
+    totalRow.getCell('total').value = totalSales
+    totalRow.font = { bold: true, size: 12 }
+
+    // Gộp ô từ cột A đến F cho dòng tổng cộng
+    worksheet.mergeCells(`A${totalRowNumber}:F${totalRowNumber}`)
+    totalRow.getCell('id').alignment = { horizontal: 'right' }
+
+    // 5. Xuất file
+    const buffer = await workbook.xlsx.writeBuffer()
+    const data = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    saveAs(data, `TheAurora_Revenue_${timeFrame}.xlsx`)
+  }
+
+  // 3. Xử lý dữ liệu biểu đồ
+  const processedData = useMemo(() => {
+    if (!orders || orders.length === 0) return { revenueData: [], statusData: [] }
+
+    const revenueMap = {}
+    const statusMap = { 'AwaitingConfirmation': 0, 'InTransit': 0, 'Delivered': 0, 'Cancelled': 0 }
+    const now = new Date()
+
+    orders.forEach(order => {
+      if (statusMap[order.status] !== undefined) statusMap[order.status]++
+      if (order.status !== 'Delivered') return
+
+      const date = new Date(order.createdAt)
+      let label = ''
+      if (timeFrame === 'day') label = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })
+      else if (timeFrame === 'month' && date.getFullYear() === now.getFullYear()) label = `Tháng ${date.getMonth() + 1}`
+      else if (timeFrame === 'quarter') label = `Quý ${Math.floor(date.getMonth() / 3) + 1}/${date.getFullYear()}`
+      else if (timeFrame === 'year') label = `${date.getFullYear()}`
+
+      if (label) revenueMap[label] = (revenueMap[label] || 0) + order.totalPrice
+    })
+
+    return {
+      revenueData: Object.keys(revenueMap).map(key => ({ name: key, revenue: revenueMap[key] })),
+      statusData: [
+        { name: 'Chờ xác nhận', value: statusMap['AwaitingConfirmation'], color: '#f59e0b' },
+        { name: 'Đang giao', value: statusMap['InTransit'], color: '#3b82f6' },
+        { name: 'Đã giao', value: statusMap['Delivered'], color: '#10b981' },
+        { name: 'Đã hủy', value: statusMap['Cancelled'], color: '#ef4444' }
+      ]
+    }
+  }, [orders, timeFrame])
+
+  if (loading) return <div className="p-10 text-center font-bold">Đang tải dữ liệu...</div>
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6 text-primary">{'Bảng điều khiển quản trị'}</h1>
+    <div className="max-w-7xl mx-auto p-6 space-y-8">
+      {/* Header & Controls */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Tổng Quan Doanh Thu</h1>
+          <p className="text-gray-500 italic text-sm">Quản lý và xuất báo cáo kinh doanh hệ thống</p>
+        </div>
 
-      {/* Summary Cards */}
-      {productsLoading || ordersLoading ? (
-        <p>Loading...</p>
-      ): productsError ? (
-        <p className='text-red-500'> Error fetching products: {productsError}</p>
-      ): ordersError ? (
-        <p className='text-red-500'> Error fetching orders: {ordersError}</p>
-      ): (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <StatCard
-              title="Doanh thu"
-              value={formatCurrency(totalSales)}
-            />
-            <StatCard
-              title="Tổng đơn hàng"
-              value={totalOrders}
-              link="/admin/orders"
-              linkText="Quản lý đơn hàng"
-            />
-            <StatCard
-              title="Tổng sản phẩm"
-              value={products.length}
-              link="/admin/products"
-              linkText="Quản lý sản phẩm"
-            />
-          </div>
-
-          {/* New Chart Section */}
-          <div className="mt-8">
-            <OrderStatsChart data={orderStatusData} isDark={isDark} />
-          </div>
-        </>
-      )}
-
-
-      {/* Recent Orders */}
-      <div className="mt-8">
-        <h2 className="text-2xl font-bold mb-4">Đơn hàng gần đây</h2>
-        <div
-          className={`overflow-x-auto rounded-md shadow ${
-            isDark ? 'bg-gray-800' : 'bg-white'
-          }`}
-        >
-          <table
-            className={`min-w-full text-left text-sm ${
-              isDark ? 'text-gray-300' : 'text-gray-700'
-            }`}
+        <Stack direction="row" spacing={2} alignItems="center">
+          {/* Nút In & Excel */}
+          <Button
+            variant="contained"
+            color="success"
+            size="small"
+            startIcon={<FaFileExcel />}
+            onClick={exportToExcel}
+            sx={{ borderRadius: '8px', textTransform: 'none' }}
           >
-            <thead
-              className={`text-xs uppercase ${
-                isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'
-              }`}
+            Xuất Excel
+          </Button>
+
+          <Button
+            variant="contained"
+            color="inherit"
+            size="small"
+            startIcon={<FaPrint />}
+            onClick={handlePrint}
+            sx={{ borderRadius: '8px', textTransform: 'none', bgcolor: isDark ? '#374151' : '#f3f4f6', color: isDark ? '#fff' : '#000' }}
+          >
+            In phiếu
+          </Button>
+
+          {/* Bộ lọc thời gian */}
+          <FormControl variant="outlined" size="small" className="w-36">
+            <InputLabel>Xem theo</InputLabel>
+            <Select
+              value={timeFrame}
+              label="Xem theo"
+              onChange={(e) => setTimeFrame(e.target.value)}
+              sx={{ borderRadius: '10px' }}
             >
-              <tr>
-                <th className="py-3 px-4">Mã đơn hàng</th>
-                <th className="py-3 px-4">Người dùng</th>
-                <th className="py-3 px-4">Tổng giá</th>
-                <th className="py-3 px-4">Trạng thái</th>
+              <MenuItem value="day">Theo Ngày</MenuItem>
+              <MenuItem value="month">Theo Tháng</MenuItem>
+              <MenuItem value="quarter">Theo Quý</MenuItem>
+              <MenuItem value="year">Theo Năm</MenuItem>
+            </Select>
+          </FormControl>
+        </Stack>
+      </div>
+
+      {/* Grid Biểu đồ */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className={`lg:col-span-2 p-6 rounded-2xl border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+          <h2 className="text-lg font-bold mb-6 text-blue-500">Biểu đồ doanh thu</h2>
+          <ResponsiveContainer width="100%" height={320}>
+            <AreaChart data={processedData.revenueData}>
+              <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+              <YAxis tickFormatter={(v) => `${v/1000000}M`} />
+              <Tooltip formatter={(v) => formatCurrency(v)} />
+              <Area type="monotone" dataKey="revenue" stroke="#3b82f6" fillOpacity={0.1} fill="#3b82f6" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className={`p-6 rounded-2xl border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+          <h2 className="text-lg font-bold mb-6 text-purple-500">Đơn hàng</h2>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={processedData.statusData}>
+              <Bar dataKey="value">
+                {processedData.statusData.map((entry, index) => <Cell key={index} fill={entry.color} />)}
+              </Bar>
+              <Tooltip />
+            </BarChart>
+          </ResponsiveContainer>
+          {/* Legend */}
+          <div className="mt-4 space-y-1">
+            {processedData.statusData.map((item, idx) => (
+              <div key={idx} className="flex justify-between text-xs font-medium">
+                <span>{item.name}</span>
+                <span>{item.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Thẻ thống kê nhanh */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className={`p-6 rounded-2xl border ${isDark ? 'bg-gray-800' : 'bg-blue-50'}`}>
+          <p className="text-xs font-bold opacity-60 uppercase">Tổng đơn</p>
+          <p className="text-2xl font-black">{totalOrders}</p>
+        </div>
+        <div className={`p-6 rounded-2xl border ${isDark ? 'bg-gray-800' : 'bg-purple-50'}`}>
+          <p className="text-xs font-bold opacity-60 uppercase">Sản phẩm</p>
+          <p className="text-2xl font-black">{products.length}</p>
+        </div>
+        <div className={`p-6 rounded-2xl border ${isDark ? 'bg-gray-800' : 'bg-green-50'}`}>
+          <p className="text-xs font-bold opacity-60 uppercase">Doanh thu</p>
+          <p className="text-2xl font-black text-green-600">{formatCurrency(totalSales)}</p>
+        </div>
+      </div>
+
+      {/* Bảng các đơn hàng gần đây */}
+      <div className={`mt-8 p-6 rounded-xl shadow-md ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">Đơn hàng gần đây</h2>
+          <Link to="/admin/orders" className="text-blue-500 text-sm hover:underline">Xem tất cả</Link>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className={`border-b ${isDark ? 'border-gray-700' : 'border-gray-100'}`}>
+                <th className="p-3 text-gray-500 font-medium">Mã đơn</th>
+                <th className="p-3 text-gray-500 font-medium">Khách hàng</th>
+                <th className="p-3 text-gray-500 font-medium">Ngày đặt</th>
+                <th className="p-3 text-gray-500 font-medium">Tổng tiền</th>
+                <th className="p-3 text-gray-500 font-medium">Trạng thái</th>
               </tr>
             </thead>
+
             <tbody>
-              {orders.length > 0 ? (
-                // Chỉ hiển thị 5 đơn hàng gần nhất cho bảng đơn hàng gần đây
-                orders.slice(0, 5).map((order) => (
-                  <tr
-                    key={order._id}
-                    className={`border-b transition cursor-pointer ${
-                      isDark
-                        ? 'border-gray-600 hover:bg-gray-700'
-                        : 'hover:bg-gray-50'
-                    }`}
-                  >
-                    <td className="p-4">{order._id}</td>
-                    <td className="p-4">{order.user?.name || 'Guest'}</td>
-                    <td className="p-4">{formatCurrency(order.totalPrice)}</td>
-                    <td className="p-4">{order.status}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className={`p-4 text-center ${
-                      isDark ? 'text-gray-400' : 'text-gray-500'
-                    }`}
-                  >
-                    Không tìm thấy đơn hàng gần đây.
+              {orders.slice(0, 5).map(order => (
+                <tr key={order._id} className={`border-b last:border-0 ${isDark ? 'border-gray-700 hover:bg-gray-750' : 'border-gray-50 hover:bg-gray-50'}`}>
+                  <td className="p-3 font-mono text-xs text-blue-500">#{order._id.slice(-8)}</td>
+                  <td className="p-3">{order.user?.name || 'Guest'}</td>
+                  <td className="p-3 text-gray-500">{new Date(order.createdAt).toLocaleDateString('vi-VN')}</td>
+                  <td className="p-3 font-semibold">{formatCurrency(order.totalPrice)}</td>
+                  <td className="p-3">
+                    <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
+                      order.status === 'Delivered' ? 'bg-green-100 text-green-600' :
+                        order.status === 'Pending' ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600'
+                    }`}>
+                      {order.status}
+                    </span>
                   </td>
                 </tr>
-              )}
+              ))}
             </tbody>
           </table>
         </div>
+      </div>
+      {/* Template ẩn để in */}
+      <div style={{ display: 'none' }}>
+        <ReportTemplate
+          ref={reportRef}
+          data={orders}
+          timeFrame={timeFrame}
+          totalSales={totalSales}
+        />
       </div>
     </div>
   )

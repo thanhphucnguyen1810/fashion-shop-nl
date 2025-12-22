@@ -1,34 +1,197 @@
-#   📅 date_time
+<h1 align="center">Fashion Shop</h1>
 
-## 🚀 Features
+## Contents
 
-## 🖼️ Preview
-<!-- ![Preview](./src/demo/preview.PNG) -->
+- [Brief description](#brief-description)
+- [Language and Tools](#language-and-tools)
+- [Project details](#project-details)
+- [Images](#images)
+- [Installation & Setup](#installation-and-setup)
+- [Author and Contact](#author-and-contact)
 
-## 🛠️ Built With
+## Brief description
 
+- Project link (GitHub): [Fashion shop](https://github.com/thanhphucnguyen1810/fashion-shop-nl)
+- 
 
-<!-- ## 📁 Project Structure -->
+## Language and Tools
 
-## 🧑‍💻 Getting Started
-### 1. Clone the repository
+- Backend
+
+![Node.js Badge](https://img.shields.io/badge/Node.js-393?logo=nodedotjs&logoColor=fff&style=flat)
+![Nodemon Badge](https://img.shields.io/badge/Nodemon-76D04B?logo=nodemon&logoColor=fff&style=flat)
+![Express Badge](https://img.shields.io/badge/Express-000?logo=express&logoColor=fff&style=flat)
+![MongoDB Badge](https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=fff&style=flat)
+![MongoDB Driver Badge](https://img.shields.io/badge/MongoDB%20Driver-47A248?logo=mongodb&logoColor=white&style=flat)
+![JSON Web Tokens Badge](https://img.shields.io/badge/JSON%20Web%20Tokens-000?logo=jsonwebtokens&logoColor=fff&style=flat)
+![Postman Badge](https://img.shields.io/badge/Postman-FF6C37?logo=postman&logoColor=fff&style=flat)
+![Joi Badge](https://img.shields.io/badge/Joi-9C0084?logo=joi&logoColor=fff&style=flat)
+![Babel Badge](https://img.shields.io/badge/Babel-F9DC3E?logo=babel&logoColor=000&style=flat)
+![Lodash Badge](https://img.shields.io/badge/Lodash-3492FF?logo=lodash&logoColor=fff&style=flat)
+
+- Frontend
+
+![Vite Badge](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=fff&style=flat)
+![JavaScript Badge](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=000&style=flat)
+![React Badge](https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=000&style=flat)
+![Dnd Kit Badge](https://img.shields.io/badge/Dnd--Kit-0077B6?logo=dnd-kit&logoColor=fff&style=flat) 
+![MUI Badge](https://img.shields.io/badge/Material--UI-007FFF?logo=mui&logoColor=fff&style=flat)
+![Axios Badge](https://img.shields.io/badge/Axios-5A29E4?logo=axios&logoColor=fff&style=flat)
+![Toastify Badge](https://img.shields.io/badge/React%20Toastify-000?logo=reacttoastify&logoColor=fff&style=flat)
+![ESLint Badge](https://img.shields.io/badge/ESLint-4B32C3?logo=eslint&logoColor=fff&style=flat)
+
+- Other tools:
+
+![Git Badge](https://img.shields.io/badge/Git-F05032?logo=git&logoColor=fff&style=flat)
+![GitHub Badge](https://img.shields.io/badge/GitHub-181717?logo=github&logoColor=fff&style=flat)
+![Visual Studio Code Badge](https://img.shields.io/badge/Visual%20Studio%20Code-007ACC?logo=visualstudiocode&logoColor=fff&style=flat)
+![Yarn Badge](https://img.shields.io/badge/Yarn-2C8EBB?logo=yarn&logoColor=fff&style=flat)
+
+## Project details
+
+This project implements the following key features:
+
+1. Board Management (Kanban Core)
+- [x] Board Initialization: Display of the main board with columns and cards.
+- [x] Column Management: Create, delete, and edit column titles.
+- [x] Card Management: Create, and edit card content.
+
+2. Drag and Drop (Powered by dnd-kit)
+- [x] Drag and drop Columns to reorder them on the board.
+- [x] Drag and drop Cards within the same Column.
+- [x] Drag and drop Cards between different Columns (handling data structure changes)
+
+3. Authentication and Authorization
+- [ ] Sign in and sign up with email and password.
+- [ ] Secure Access Token and Refresh Token mechanism (Stateful authentication).
+- [ ] Role-based authorization: User and Admin.
+- [ ] Secure sign out logic.
+
+4. User and Settings Management
+- [ ] Basic profile update functionality.
+- [x] User Dashboard displaying created Boards.
+
+5. Other
+- [x] Home page.
+- [ ] Info page.
+- [ ] Not found page (404).
+
+## Images
+
+1. Authentication and Authorization
+
+<!-- - Sign in and up with email and password; with Google authentication
+
+![](./images/SignInPage.png)
+
+![](./images/SignUpPage.png)
+
+- Verfied account with a code sent to the user's email by Google email
+
+![](./images/VerificationPage.png) -->
+
+2. User
+
+<!-- - Update profile page: User's information and images (Firebase storage)
+
+![](./images/ProfilePage.png)
+
+- Display profile page with user's information and blogs
+
+![](./images/UserPage.png)
+
+- Reset user's password
+
+![](./images/AccountPage.png)
+
+- Dashboard page with user's post and relevant infos
+
+![](./images/DashboardPage.png) -->
+
+3. Board Content
+![](./app-resources/boardContent.png)
+![](./app-resources/cardDrag.png)
+![](./app-resources/columnDrag.png)
+
+4. Others
+
+<!-- - Home page
+
+![](./images/HomePage.png) -->
+
+## Installation and Setup
+
+### Prerequisites
+
+Make sure you have installed the following tools on your machine:
+
+- **Node.js** (v18+ recommended)
+- **MongoDB** (local installation or MongoDB Atlas)
+- **Git**
+- **Yarn** or **npm**
+
+### Clone the repository
+
 ```bash
-
+git clone https://github.com/thanhphucnguyen1810/task-management-app.git
+cd task-management-app
 ```
-### 2. Install dependencies
+
+### Backend Setup
+Navigate to the backend directory and install dependencies:
+
 ```bash
-npm install
-
-yarn install
+cd taskapp-server
+yarn install  or npm install
 ```
-### 3. Run the application
+#### Environment Variables
+Create a .env file inside the taskapp-server folder and configure the following variables:
+
 ```bash
-npm start
-yarn start
+MONGODB_URI=
+DATABASE_NAME=
+APP_HOST='localhost'
+APP_PORT=8017
+AUTHOR=
+```
+You can use MongoDB Atlas if you prefer not to install MongoDB locally.
+
+#### Run backend server
+```bash
+npm run dev
+or
+yarn dev
 ```
 
-## 📝 License
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+### Frontend Setup
+Open a new terminal and navigate to the frontend directory:
+```bash
+cd taskapp-client
+yarn install   or   npm install
+```
+The frontend application will be running at:
+```arduino
+http://localhost:5173
+```
 
-## 📄 Contact
-If you have any questions or suggestions, feel free to reach out to me at [thanhphucnguyen@gmail.com](mailto:thanhphucnguyen@gmail.com).  
+### Project Structure
+```bash
+task-management-app
+│
+├── taskapp-server    # Backend (Node.js, Express, MongoDB)
+└── taskapp-client    # Frontend (React, Vite, Material UI)
+```
+
+## Author and Contact
+
+| Platform | Link |
+| :--- | :--- |
+| **Author** | Nguyen Thanh Phuc - Acus |
+| **GitHub** | [thanhphucnguyen1810](https://github.com/thanhphucnguyen1810) |
+| **Contact Email (Optional)** | `thanhphuc1810.work@gmail.com` |
+
+## Contributing
+Your contributions are always welcome! If you have suggestions for improvements or find a bug, please feel free to create an Issue or submit a Pull Request.
+
+## License
+This project is licensed under the MIT License. See the [LICENSE] file for more details.

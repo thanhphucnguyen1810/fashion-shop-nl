@@ -43,10 +43,10 @@ const categorySchema = new mongoose.Schema(
       index: true
     },
     image: {
-      type: Object, // Chứa { url: String, public_id: String }
+      type: Object,
       required: [true, 'Ảnh đại diện là bắt buộc'],
       default: {
-        url: 'https://placehold.co/100x100/eeeeee/333333?text=No+Image', // Placeholder mặc định
+        url: 'https://placehold.co/100x100/eeeeee/333333?text=No+Image',
         public_id: 'default_placeholder'
       }
     }

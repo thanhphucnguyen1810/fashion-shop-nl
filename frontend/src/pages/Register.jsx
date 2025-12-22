@@ -4,11 +4,10 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTheme } from '@mui/material/styles'
 import { useDispatch, useSelector } from 'react-redux'
 
-// Import MUI Icons thay thế cho lucide-react
 import EmailOutlined from '@mui/icons-material/EmailOutlined'
 import LockOutlined from '@mui/icons-material/LockOutlined'
 import PersonOutline from '@mui/icons-material/PersonOutline'
-import LoginIcon from '@mui/icons-material/Login' // Đổi tên để tránh trùng với thẻ <Login> nếu có
+import LoginIcon from '@mui/icons-material/Login'
 
 import register from '~/assets/register.webp'
 import { registerUser } from '~/redux/slices/authSlice'
@@ -61,7 +60,8 @@ const Register = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password: ''
+    password: '',
+    confirmPassword: ''
   })
 
   const handleChange = (e) => {
@@ -70,7 +70,17 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    dispatch(registerUser(formData))
+
+    // Kiểm tra khớp mật khẩu trước khi Dispatch
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('Mật khẩu nhập lại không khớp!', {
+        position: 'top-right'
+      })
+      return
+    }
+
+    const { name, email, password } = formData
+    dispatch(registerUser({ name, email, password }))
   }
 
   // ------------------------------------------------------------------------
@@ -90,15 +100,14 @@ const Register = () => {
         {/* ======================== LOGIC HIỂN THỊ THÔNG BÁO THÀNH CÔNG (SUCCESS) ======================== */}
         {success ? (
           <div
-            className='w-full max-w-md p-8 rounded-xl border-2 animate-fadeIn' // Thêm bo góc lớn hơn, border dày hơn, animation
+            className='w-full max-w-md p-8 rounded-xl border-2 animate-fadeIn'
             style={{
               backgroundColor: theme.palette.background.paper,
-              borderColor: theme.palette.success.main + '40', // Màu border nhạt của success
-              boxShadow: `0 10px 20px -5px ${theme.palette.success.main}30` // Thêm box shadow
+              borderColor: theme.palette.success.main + '40',
+              boxShadow: `0 10px 20px -5px ${theme.palette.success.main}30`
             }}
           >
             <div className='flex justify-center mb-6'>
-              {/* Sử dụng icon CheckCircleOutline từ MUI nếu bạn muốn thay thế SVG */}
               <svg className="w-16 h-16" style={{ color: theme.palette.success.main }} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
@@ -129,7 +138,7 @@ const Register = () => {
           /* ======================== FORM ĐĂNG KÝ (HIỂN THỊ KHI CHƯA THÀNH CÔNG) ======================== */
           <form
             onSubmit={handleSubmit}
-            className='w-full max-w-md p-8 rounded-xl border shadow-2xl animate-fadeIn' // shadow-2xl, bo góc đẹp hơn
+            className='w-full max-w-md p-8 rounded-xl border shadow-2xl animate-fadeIn'
             style={{
               backgroundColor: theme.palette.background.paper,
               borderColor: theme.palette.divider,
@@ -162,7 +171,7 @@ const Register = () => {
               value={formData.name}
               onChange={handleChange}
               placeholder="Nhập tên đầy đủ"
-              Icon={PersonOutline} // Đã thay thế
+              Icon={PersonOutline}
               theme={theme}
             />
 
@@ -175,7 +184,7 @@ const Register = () => {
               value={formData.email}
               onChange={handleChange}
               placeholder="user@example.com"
-              Icon={EmailOutlined} // Đã thay thế
+              Icon={EmailOutlined}
               theme={theme}
             />
 
@@ -188,7 +197,20 @@ const Register = () => {
               value={formData.password}
               onChange={handleChange}
               placeholder="Tối thiểu 6 ký tự"
-              Icon={LockOutlined} // Đã thay thế
+              Icon={LockOutlined}
+              theme={theme}
+            />
+
+            {/* Confirm Password Input */}
+            <InputField
+              id="confirmPassword"
+              label="Nhập lại mật khẩu"
+              type="password"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              placeholder="Xác nhận mật khẩu của bạn"
+              Icon={LockOutlined}
               theme={theme}
             />
 
@@ -224,7 +246,7 @@ const Register = () => {
                 className='font-bold hover:underline transition duration-200'
                 style={{ color: theme.palette.secondary.main }}
               >
-                Đăng nhập ngay
+                Đăng nhập
               </Link>
             </p>
           </form>
@@ -235,24 +257,18 @@ const Register = () => {
       <div
         className='hidden md:block w-1/2 overflow-hidden relative'
         style={{
-          backgroundColor: theme.palette.background.neutral // Màu nền trung tính cho cột ảnh
+          backgroundColor: theme.palette.background.neutral
         }}
       >
-        {/* Overlay mờ để ảnh đẹp hơn */}
         <div className="absolute inset-0 bg-black opacity-10"></div>
         <img
           src={register}
           alt='register illustration'
           className='h-full w-full object-cover object-center transform transition duration-500 hover:scale-105'
-          // Đảm bảo hình ảnh chất lượng và chiếm hết chiều cao
         />
-        <div className='absolute bottom-0 left-0 p-8'>
-          <h3 className='text-3xl font-extrabold text-white mb-2 tracking-wide'>
-            Khám phá Thế giới của TheAurora
-          </h3>
-          <p className='text-lg font-medium text-gray-200'>
-            Đăng ký để nhận những ưu đãi độc quyền và trải nghiệm mua sắm tuyệt vời.
-          </p>
+        <div className='absolute bottom-10 left-10 right-10'>
+          <h3 className='text-2xl font-bold text-white mb-2'>TheAurora</h3>
+          <p className='text-sm text-gray-200'>Khám phá trải nghiệm mua sắm tuyệt vời.</p>
         </div>
       </div>
     </div>
@@ -265,7 +281,6 @@ export default Register
 // Helper Component for Input Field
 // =============================================================================================
 
-// Sử dụng <Icon component /> từ MUI
 const InputField = ({ id, label, type, name, value, onChange, placeholder, Icon, theme }) => {
   return (
     <div className='mb-5'>
@@ -285,7 +300,7 @@ const InputField = ({ id, label, type, name, value, onChange, placeholder, Icon,
             backgroundColor: theme.palette.background.default,
             borderColor: theme.palette.divider,
             color: theme.palette.text.primary,
-            borderOpacity: 0.5 // Làm border mờ đi khi không focus
+            borderOpacity: 0.5
           }}
           onFocus={(e) => {
             e.target.style.borderColor = theme.palette.primary.main

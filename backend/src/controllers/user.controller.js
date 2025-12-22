@@ -228,7 +228,6 @@ export const forgotPassword = async (req, res) => {
 // ======================= THÊM RESET PASSWORD =======================
 // @desc   Reset user password
 // @route  PATCH /api/users/resetPassword/:token
-// @access Public
 export const resetPassword = async (req, res) => {
   if (!req.body.password) {
     return res.status(400).json({ message: 'Vui lòng cung cấp mật khẩu mới.' })
@@ -286,7 +285,6 @@ export const resetPassword = async (req, res) => {
 
 // @desc   Get profile
 // @route  GET /api/users/profile
-// @access Private
 export const getUserProfile = async (req, res) => {
   try {
     const user = req.user

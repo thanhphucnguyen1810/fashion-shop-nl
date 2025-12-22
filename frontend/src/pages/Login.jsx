@@ -81,7 +81,7 @@ const Login = () => {
       <div className='w-full md:w-1/2 flex flex-col justify-center items-center p-4 md:p-12'>
         <form
           onSubmit={handleSubmit}
-          className='w-full max-w-md p-6 md:p-8 rounded-xl border shadow-lg' // Tăng padding, bo góc (rounded-xl) và shadow
+          className='w-full max-w-md p-6 md:p-8 rounded-xl border shadow-lg'
           style={{
             backgroundColor: theme.palette.background.paper,
             borderColor: theme.palette.divider
@@ -125,7 +125,7 @@ const Login = () => {
                 backgroundColor: theme.palette.background.default,
                 borderColor: theme.palette.divider,
                 color: theme.palette.text.primary,
-                '--tw-ring-color': theme.palette.primary.main // Tinh chỉnh màu ring focus
+                '--tw-ring-color': theme.palette.primary.main
               }}
               required
             />
@@ -255,14 +255,16 @@ const Login = () => {
 
       {/* Right side: Hình ảnh minh hoạ */}
       <div
-        className='hidden md:block w-1/2 p-6' // Thêm padding cho ảnh
-        style={{ backgroundColor: theme.palette.background.neutral }}
+        className='hidden md:block w-1/2 overflow-hidden relative'
+        style={{
+          backgroundColor: theme.palette.background.neutral
+        }}
       >
         <div className='h-full flex flex-col justify-center items-center'>
           <img
             src={login}
             alt='Đăng nhập tài khoản'
-            className='h-full max-h-[85vh] w-full object-cover rounded-2xl shadow-xl' // Tăng bo góc, shadow và giới hạn chiều cao
+            className='h-full w-full object-cover object-center transform transition duration-500 hover:scale-105'
           />
         </div>
       </div>

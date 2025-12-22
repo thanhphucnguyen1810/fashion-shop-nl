@@ -43,6 +43,7 @@ const AdminSidebar = () => {
   const theme = useTheme()
   const navigate = useNavigate()
   const dispatch = useDispatch()
+  const isDark = theme.palette.mode === 'dark'
 
   const handleLogout = () => {
     dispatch(logout())
@@ -52,104 +53,118 @@ const AdminSidebar = () => {
 
   return (
     <aside
-      className="p-6"
+      className="p-6 flex flex-col" // Sử dụng flex-col để chia không gian
       style={{
         backgroundColor: theme.palette.background.paper,
         color: theme.palette.text.primary,
-        minHeight: '100vh',
-        borderRight: `1px solid ${theme.palette.divider}`
+        height: '100vh', // Cố định chiều cao bằng màn hình
+        position: 'sticky', // Giữ sidebar đứng yên khi scroll trang chính
+        top: 0,
+        borderRight: `1px solid ${theme.palette.divider}`,
+        width: '260px' // Đảm bảo độ rộng cố định
       }}
     >
-      {/* Logo */}
-      <div className="mb-6">
-        <Link to="/admin" className="text-2xl font-medium" style={{ color: theme.palette.primary.main }}>
+      {/* Phần Logo: Không cuộn */}
+      <div className="mb-6 flex-shrink-0">
+        <Link to="/admin" className="text-2xl font-bold tracking-tighter" style={{ color: theme.palette.primary.main }}>
           TheAurora
         </Link>
+        <h2 className="text-xs uppercase tracking-widest mt-2 opacity-50 font-bold">
+          Admin Panel
+        </h2>
       </div>
 
-      {/* Title */}
-      <h2 className="text-xl font-medium mb-6 text-center" style={{ color: theme.palette.text.primary }}>
-        Quản trị
-      </h2>
-
-      {/* Navigation */}
-      <nav className="flex flex-col space-y-2">
-        {menuItems.map(({ to, label, icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) => {
-              const baseStyle = {
+      {/* Phần Navigation: CÓ THANH CUỘN RIÊNG */}
+      <nav
+        className="flex-grow overflow-y-auto pr-2 custom-scrollbar"
+        style={{
+          /* Tùy chỉnh thanh cuộn cho Chrome/Safari */
+          scrollbarWidth: 'thin',
+          msOverflowStyle: 'none'
+        }}
+      >
+        <div className="flex flex-col space-y-1">
+          {menuItems.map(({ to, label, icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              style={({ isActive }) => ({
                 padding: '0.75rem 1rem',
-                borderRadius: '0.375rem',
+                borderRadius: '12px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.5rem',
+                gap: '12px',
                 color: isActive
                   ? theme.palette.primary.contrastText
                   : theme.palette.text.secondary,
                 backgroundColor: isActive
                   ? theme.palette.primary.main
                   : 'transparent',
-                textDecoration: 'none'
-              }
-
-              const hoverStyle = {
-                backgroundColor: !isActive
-                  ? alpha(theme.palette.action.hover, 0.1)
-                  : baseStyle.backgroundColor,
-                color: !isActive ? theme.palette.text.primary : baseStyle.color
-              }
-
-              return {
-                ...baseStyle,
-                ':hover': hoverStyle
-              }
-            }}
-            style={({ isActive }) => ({
-              padding: '0.75rem 1rem',
-              borderRadius: '0.375rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              color: isActive
-                ? theme.palette.primary.contrastText
-                : theme.palette.text.secondary,
-              backgroundColor: isActive
-                ? theme.palette.primary.main
-                : 'transparent',
-              textDecoration: 'none',
-              transition: 'background-color 0.2s ease',
-              fontWeight: isActive ? 500 : 400
-            })}
-          >
-            {icon}
-            <span>{label}</span>
-          </NavLink>
-        ))}
+                textDecoration: 'none',
+                transition: 'all 0.2s ease',
+                fontWeight: isActive ? 600 : 400,
+                fontSize: '0.95rem'
+              })}
+              // Hiệu ứng hover cho NavLink
+              onMouseEnter={(e) => {
+                if (!e.currentTarget.classList.contains('active')) {
+                  e.currentTarget.style.backgroundColor = alpha(theme.palette.primary.main, 0.08)
+                  e.currentTarget.style.color = theme.palette.primary.main
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!e.currentTarget.classList.contains('active')) {
+                  e.currentTarget.style.backgroundColor = 'transparent'
+                  e.currentTarget.style.color = theme.palette.text.secondary
+                }
+              }}
+            >
+              <span className="text-lg">{icon}</span>
+              <span>{label}</span>
+            </NavLink>
+          ))}
+        </div>
       </nav>
 
-      {/* Logout */}
-      <div className="mt-6">
+      {/* Phần Logout: Không cuộn, luôn nằm dưới cùng */}
+      <div className="mt-6 pt-4 flex-shrink-0 border-t border-dashed border-gray-500/20">
         <button
           onClick={handleLogout}
-          className="w-full py-2 px-4 rounded flex items-center justify-center gap-2"
+          className="w-full py-3 px-4 rounded-xl flex items-center justify-center gap-2 font-bold transition-all"
           style={{
-            backgroundColor: theme.palette.error.main,
-            color: theme.palette.error.contrastText,
-            transition: 'background-color 0.2s ease'
+            backgroundColor: alpha(theme.palette.error.main, 0.1),
+            color: theme.palette.error.main
           }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.backgroundColor = theme.palette.error.dark)
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.backgroundColor = theme.palette.error.main)
-          }
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = theme.palette.error.main
+            e.currentTarget.style.color = '#fff'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = alpha(theme.palette.error.main, 0.1)
+            e.currentTarget.style.color = theme.palette.error.main
+          }}
         >
           <FaSignOutAlt />
           <span>Đăng xuất</span>
         </button>
       </div>
+
+      {/* CSS Injection cho scrollbar đẹp hơn */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: ${isDark ? '#374151' : '#e5e7eb'};
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: ${theme.palette.primary.main};
+        }
+      ` }} />
     </aside>
   )
 }

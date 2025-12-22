@@ -33,7 +33,7 @@ export const getOrderById = async (req, res) => {
 
 // @desc Create a temporary order for Buy Now action
 // @route POST /api/orders/buy-now
-export const createCheckoutOrder = async (req, res) => { // Đổi tên hàm
+export const createCheckoutOrder = async (req, res) => {
   try {
     const { orderItems, userId, guestId, shippingAddress, couponInfo, paymentMethod } = req.body
 
@@ -75,11 +75,10 @@ export const createCheckoutOrder = async (req, res) => { // Đổi tên hàm
     const finalTotalPrice = calculatedTotalPrice - discountAmount
 
     // 3. XÁC ĐỊNH TRẠNG THÁI VÀ PHƯƠNG THỨC THANH TOÁN
-    let initialStatus = 'PendingCheckout' // Mặc định là chờ thanh toán (MoMo)
+    let initialStatus = 'PendingCheckout'
     let isPaid = false
 
     if (paymentMethod === 'COD') {
-      // Nếu là COD, đơn hàng được tạo xong và chờ Admin duyệt
       initialStatus = 'AwaitingConfirmation'
       isPaid = false
     }
@@ -87,7 +86,7 @@ export const createCheckoutOrder = async (req, res) => { // Đổi tên hàm
     const newOrderData = {
       user: userId ? userId : null,
       guestId: userId ? null : guestId,
-      orderItems: finalOrderItems, // Sử dụng list đã được điền
+      orderItems: finalOrderItems,
 
       shippingAddress: shippingAddress || {},
 
@@ -98,15 +97,15 @@ export const createCheckoutOrder = async (req, res) => { // Đổi tên hàm
       },
 
       // LƯU PHƯƠNG THỨC VÀ TRẠNG THÁI PHÙ HỢP
-      paymentMethod: paymentMethod, // LƯU 'COD' HOẶC 'MOMO'
+      paymentMethod: paymentMethod,
       totalPrice: finalTotalPrice > 0 ? finalTotalPrice : 0,
 
       isPaid: isPaid, // Trạng thái thanh toán
-      paymentStatus: isPaid ? 'completed' : 'pending', // Tốt hơn nên dùng status chi tiết hơn
+      paymentStatus: isPaid ? 'completed' : 'pending',
 
       // SỬ DỤNG TRẠNG THÁI ĐÃ TÍNH TOÁN Ở BƯỚC 3
       status: initialStatus,
-      orderType: 'Cart' // Giả định là từ giỏ hàng, bạn có thể chỉnh thành BuyNow nếu cần
+      orderType: 'Cart'
     }
 
     // 5. LƯU ĐƠN HÀNG VÀO DB
@@ -115,7 +114,7 @@ export const createCheckoutOrder = async (req, res) => { // Đổi tên hàm
     // 6. TRẢ VỀ
     res.status(201).json({
       message: 'Đơn hàng được tạo thành công.',
-      checkout: createdOrder // Trả về object order đầy đủ
+      checkout: createdOrder
     })
 
   } catch (error) {
