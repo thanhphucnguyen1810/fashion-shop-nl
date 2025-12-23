@@ -33,6 +33,7 @@ import adminReviewRoutes from './routes/admin/admin.review.routes'
 import adminCouponRoutes from './routes/admin/admin.coupon.routes'
 import reviewRoutes from './routes/review.routes'
 import addressRoutes from './routes/address.routes'
+import adminSystemRoutes from './routes/admin/admin.system.routes'
 
 // Load environment variables
 dotenv.config()
@@ -100,7 +101,7 @@ app.use('/api/admin/orders', adminOrderRoutes)
 app.use('/api/admin/stock-in', adminStockInRoutes)
 app.use('/api/admin/reviews', adminReviewRoutes)
 app.use('/api/admin/coupons', adminCouponRoutes)
-
+app.use('/api/admin/system', adminSystemRoutes)
 // app.use('/api/admin/invoice', adminInvoice)
 
 // Middleware xử lý lỗi tập trung

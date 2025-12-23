@@ -12,7 +12,8 @@ import {
   FaChartBar,
   FaPenNib,
   FaEdit,
-  FaTruck
+  FaTruck,
+  FaShieldAlt,
 } from 'react-icons/fa'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useTheme, alpha } from '@mui/material/styles'
@@ -23,6 +24,7 @@ import { clearCart } from '~/redux/slices/cartSlices'
 // Menu items definition
 const menuItems = [
   { to: '/admin', label: 'Dashboard', icon: <FaChartBar /> },
+  { to: '/admin/security', label: 'Bảo mật', icon: <FaShieldAlt /> },
   { to: '/admin/users', label: 'Người dùng', icon: <FaUser /> },
   { to: '/admin/products', label: 'Sản phẩm', icon: <FaBoxOpen /> },
   { to: '/admin/categories', label: 'Danh mục', icon: <FaTags /> },

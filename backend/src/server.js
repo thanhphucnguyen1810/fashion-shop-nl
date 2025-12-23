@@ -31,6 +31,7 @@ const START_SERVER = async () => {
   })
 }
 
+
 (async () => {
   try {
     console.log('1. Connecting to MongoDB...')

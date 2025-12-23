@@ -3,7 +3,6 @@ import {
   registerUser,
   loginUser,
   getUserProfile,
-  socialLogin,
   forgotPassword,
   resetPassword,
   verifyEmail,
@@ -13,16 +12,18 @@ import {
 } from '~/controllers/user.controller'
 import { protect } from '~/middlewares/auth.middleware'
 
+import { logSecurity } from '~/middlewares/logger.middleware'
+
 import multer from 'multer'
 
 const router = express.Router()
 const storage = multer.memoryStorage()
 const upload = multer({ storage })
 
-router.post('/register', registerUser)
-router.post('/login', loginUser)
-router.post('/forgotPassword', forgotPassword)
-router.patch('/resetPassword/:token', resetPassword)
+router.post('/register', logSecurity('REGISTER'), registerUser)
+router.post('/login', logSecurity('LOGIN'), loginUser)
+router.post('/forgotPassword', logSecurity('RESET_PASSWORD'), forgotPassword)
+router.patch('/resetPassword/:token', logSecurity('RESET_PASSWORD'), resetPassword)
 router.get('/verify-email/:token', verifyEmail)
 
 router.get('/profile', protect, getUserProfile)
@@ -30,6 +31,7 @@ router.put(
   '/profile',
   protect,
   upload.single('avatar'),
+  logSecurity('UPDATE_PROFILE'),
   updateUserProfile
 )
 

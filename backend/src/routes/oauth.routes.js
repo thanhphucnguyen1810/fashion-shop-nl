@@ -2,6 +2,7 @@
 import express from 'express'
 import passport from 'passport'
 import { socialLogin } from '~/controllers/user.controller.js'
+import { logSecurity } from '~/middlewares/logger.middleware'
 
 const router = express.Router()
 
@@ -13,7 +14,11 @@ router.get(
 
 router.get(
   '/google/callback',
-  passport.authenticate('google', { failureRedirect: '/login', session: false }),
+  logSecurity('LOGIN_GOOGLE'),
+  passport.authenticate(
+    'google',
+    { failureRedirect: '/login', session: false }
+  ),
   socialLogin
 )
 
@@ -25,7 +30,11 @@ router.get(
 
 router.get(
   '/facebook/callback',
-  passport.authenticate('facebook', { failureRedirect: '/login', session: false }),
+  logSecurity('LOGIN_FACEBOOK'),
+  passport.authenticate(
+    'facebook',
+    { failureRedirect: '/login', session: false }
+  ),
   socialLogin
 )
 

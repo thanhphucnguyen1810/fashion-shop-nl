@@ -9,16 +9,18 @@ import {
   finalizeOrder
 } from '~/controllers/checkout.controller.js'
 
+import { logSecurity } from '~/middlewares/logger.middleware'
+
 const router = express.Router()
 
-router.post('/create', protect, createCheckout)
+router.post('/create', protect, logSecurity('CHECKOUT_CREATE'), createCheckout)
 router.get('/:id', protect, getCheckoutDetail)
-router.post('/finalize/:checkoutId', protect, finalizeOrder)
+router.post('/finalize/:checkoutId', protect, logSecurity('CHECKOUT_FINALIZE'), finalizeOrder)
 
 router.get('/sepay-qr/:id', protect, getSepayQrInfo) // Lấy ảnh QR
 router.get('/sepay-status/:id', protect, checkPaymentStatus) // Check trạng thái
 
-router.post('/sepay/ipn', sepayIpn) // Webhook
+router.post('/sepay/ipn', logSecurity('PAYMENT_WEBHOOK'), sepayIpn) // Webhook
 
 
 export default router
