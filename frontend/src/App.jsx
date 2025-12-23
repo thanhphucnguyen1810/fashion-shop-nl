@@ -33,6 +33,7 @@ import ProtectedRoute from './components/Common/ProtectedRoute'
 import UserOrderHistory from './components/Admin/UserOrderHistory'
 import CategoryManagement from './components/Admin/CategoryManagement'
 import OrdersStatusTabs from './components/OrdersStatusTabs'
+import AdminLogPage from './components/Admin/AdminLogPage'
 
 
 function App() {
@@ -77,6 +78,7 @@ function App() {
             }
           >
             <Route index element={<AdminHomePage />} />
+            <Route path='security' element={<AdminLogPage />} />
             <Route path='users' element={<UserManagement />} />
             <Route path="users/:userId/orders" element={<UserOrderHistory />} />
             <Route path='products' element={<ProductManagement />} />

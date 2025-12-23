@@ -38,7 +38,8 @@ export const registerUser = async (req, res) => {
 
     // 3. Lưu user (token xác minh và mật khẩu mới/cũ đã hash)
     await user.save()
-
+    // ghi log
+    res.locals.userId = user._id
     try {
       console.log('>>> SENDING EMAIL TO:', email)
       await sendVerificationEmail({
@@ -92,9 +93,14 @@ export const verifyEmail = async (req, res) => {
     user.isVerified = true
     user.emailVerificationToken = undefined
     user.emailVerificationExpires = undefined
+    // lưu log
+    res.locals.userId = user._id
 
     // 6. Lưu user
     await user.save({ validateBeforeSave: false })
+
+    // liên quan lưu log
+    res.locals.userId = user._id
 
     // 7. Tạo token JWT và redirect về trang thành công (Tùy chọn: Tự động đăng nhập)
     const newToken = generateToken(user)
@@ -113,7 +119,6 @@ export const verifyEmail = async (req, res) => {
 
 export const loginUser = async (req, res) => {
   const { email, password } = req.body
-  // console.log('Login body:', req.body)
   try {
     // Find the user by email
     const user = await User.findOne({ email }).populate({
@@ -128,9 +133,12 @@ export const loginUser = async (req, res) => {
     if (!user.isVerified) {
       return res.status(401).json({
         message: 'Tài khoản chưa được xác minh. Vui lòng kiểm tra email của bạn để kích hoạt tài khoản.',
-        isVerified: false // Thêm flag để FE dễ dàng xử lý
+        isVerified: false // Thêm flag để FE xử lý
       })
     }
+
+    res.locals.userId = user._id
+
     const token = generateToken(user)
 
     // Send the user and token in response
@@ -161,6 +169,9 @@ export const socialLogin = async (req, res) => {
     select: 'name price images slug'
   })
   if (!populatedUser) return res.redirect(`${env.FRONTEND_URL}/login`)
+
+  // ghi log
+  res.locals.userId = populatedUser._id
 
   const token = generateToken(populatedUser)
 
@@ -193,6 +204,9 @@ export const forgotPassword = async (req, res) => {
         message: 'Nếu email tồn tại, một liên kết đặt lại mật khẩu đã được gửi.'
       })
     }
+
+    // ghi log
+    res.locals.userId = user._id
 
     // Tạo token đặt lại
     const resetToken = user.createPasswordResetToken()
@@ -258,6 +272,9 @@ export const resetPassword = async (req, res) => {
     // 6. Xóa token và thời gian hết hạn sau khi đặt lại thành công
     user.passwordResetToken = undefined
     user.passwordResetExpires = undefined
+
+    // ghi log
+    res.locals.userId = user._id
 
     // 7. Lưu user (middleware pre('save') sẽ chạy để hash mật khẩu mới)
     await user.save()
@@ -350,6 +367,10 @@ export const updateUserProfile = async (req, res) => {
       }
       user.avatarCloudId = uploadResult.public_id
     }
+
+    // ghi log
+    res.locals.userId = user._id
+
     await user.save()
 
     res.status(200).json({

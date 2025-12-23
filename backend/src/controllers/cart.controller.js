@@ -156,15 +156,13 @@ export const mergeGuestCart = async (req, res) => {
   const { guestId } = req.body
   try {
     const guestCart = await Cart.findOne({ guestId })
-    const userCart = await Cart.findOne({ user: req.user._id })
+    let userCart = await Cart.findOne({ user: req.user._id })
 
-    if (!guestCart) {
-      if (userCart) return res.status(200).json(userCart)
-      return res.status(404).json({ message: 'Guest cart not found!' })
-    }
-
-    if (guestCart.products.length === 0) {
-      return res.status(400).json({ message: 'Guest cart is empty!' })
+    if (!guestCart || guestCart.products.length === 0) {
+      if (userCart) {
+        return res.status(200).json(userCart)
+      }
+      return res.status(200).json({ products: [], totalPrice: 0 })
     }
 
     if (userCart) {

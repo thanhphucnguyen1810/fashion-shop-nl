@@ -7,12 +7,13 @@ import {
   updateProduct,
   deleteProduct
 } from '~/controllers/admin/admin.product.controller'
+import { logSecurity } from '~/middlewares/logger.middleware'
 
 const router = express.Router()
 
 router.get('/', protect, admin, getAllProducts)
-router.post('/', protect, admin, upload.array('images', 10), createProduct)
-router.put('/:id', protect, admin, upload.array('images', 10), updateProduct)
-router.delete('/:id', protect, admin, deleteProduct)
+router.post('/', protect, admin, upload.array('images', 10), logSecurity('CREATE_PRODUCT'), createProduct)
+router.put('/:id', protect, admin, upload.array('images', 10), logSecurity('UPDATE_PRODUCT'), updateProduct)
+router.delete('/:id', protect, admin, logSecurity('DELETE_PRODUCT'), deleteProduct)
 
 export default router

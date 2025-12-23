@@ -9,6 +9,8 @@ import {
   getOrdersByUser
 } from '~/controllers/admin/admin.order.controller'
 
+import { logSecurity } from '~/middlewares/logger.middleware'
+
 const router = express.Router()
 
 // Lấy đơn hàng theo user
@@ -24,10 +26,10 @@ router.get('/stats', protect, admin, getOrderStats)
 router.get('/:id', protect, admin, getOrderById)
 
 // Cập nhật trạng thái đơn hàng
-router.put('/:id', protect, admin, updateOrderStatus)
+router.put('/:id', protect, admin, logSecurity('UPDATE_ORDER_STATUS'), updateOrderStatus)
 
 // Xóa đơn hàng
-router.delete('/:id', protect, admin, deleteOrder)
+router.delete('/:id', protect, admin, logSecurity('DELETE_ORDER'), deleteOrder)
 
 export default router
 
