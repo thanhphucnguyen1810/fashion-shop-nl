@@ -187,7 +187,7 @@ export const forgotPassword = async (req, res) => {
   try {
     const user = await User.findOne({ email })
 
-    // Nếu không tìm thấy user, vẫn trả về thông báo chung để tránh lộ thông tin
+    // Nếu không tìm thấy user
     if (!user) {
       return res.status(200).json({
         message: 'Nếu email tồn tại, một liên kết đặt lại mật khẩu đã được gửi.'
@@ -196,7 +196,7 @@ export const forgotPassword = async (req, res) => {
 
     // Tạo token đặt lại
     const resetToken = user.createPasswordResetToken()
-    await user.save({ validateBeforeSave: false }) // Tắt validation khi chỉ cập nhật token
+    await user.save({ validateBeforeSave: false })
 
     // Tạo URL đặt lại mật khẩu cho Frontend
     const resetURL = `${env.FRONTEND_URL}/reset-password/${resetToken}`

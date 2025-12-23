@@ -97,7 +97,7 @@ const Register = () => {
       {/* CỘT FORM - Hiển thị 100% trên mobile, 50% trên desktop */}
       <div className='w-full md:w-1/2 flex flex-col justify-center items-center p-4 sm:p-8 md:p-12'>
 
-        {/* ======================== LOGIC HIỂN THỊ THÔNG BÁO THÀNH CÔNG (SUCCESS) ======================== */}
+        {/* ======================== LOGIC HIỂN THỊ THÔNG BÁO THÀNH CÔNG  ======================== */}
         {success ? (
           <div
             className='w-full max-w-md p-8 rounded-xl border-2 animate-fadeIn'

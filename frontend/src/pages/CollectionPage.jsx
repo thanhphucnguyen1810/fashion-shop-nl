@@ -11,7 +11,7 @@ import Loading from '~/components/Common/Loading'
 const CollectionPage = () => {
   const [searchParams] = useSearchParams()
   const dispatch = useDispatch()
-  const { products, loading, error, filters, isFetching } = useSelector((state) => state.products)
+  const { products, loading, error, isFetching } = useSelector((state) => state.products)
   const sidebarRef = useRef(null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
@@ -23,7 +23,6 @@ const CollectionPage = () => {
     }
     // Dispatch action để cập nhật Redux filters state
     dispatch(setFilters(allFilters))
-    // Gọi API fetchProducts với tất cả các bộ lọc đã được đồng bộ
     dispatch(fetchProducts(allFilters))
 
   }, [dispatch, searchParams])
@@ -68,11 +67,6 @@ const CollectionPage = () => {
 
       {/* Nội dung chính */}
       <div className="flex-1 p-4 space-y-4">
-        {/* {filters.search && (
-          <p className="text-sm text-gray-500">
-                  Đang tìm kiếm theo từ khóa: "{filters.search}"
-          </p>
-        )} */}
 
         <SortOptions />
 

@@ -74,7 +74,7 @@ export const createCheckoutOrder = async (req, res) => {
     const discountAmount = couponInfo?.discountAmount || 0
     const finalTotalPrice = calculatedTotalPrice - discountAmount
 
-    // 3. XÁC ĐỊNH TRẠNG THÁI VÀ PHƯƠNG THỨC THANH TOÁN
+    // XÁC ĐỊNH TRẠNG THÁI VÀ PHƯƠNG THỨC THANH TOÁN
     let initialStatus = 'PendingCheckout'
     let isPaid = false
 
@@ -100,18 +100,16 @@ export const createCheckoutOrder = async (req, res) => {
       paymentMethod: paymentMethod,
       totalPrice: finalTotalPrice > 0 ? finalTotalPrice : 0,
 
-      isPaid: isPaid, // Trạng thái thanh toán
+      isPaid: isPaid,
       paymentStatus: isPaid ? 'completed' : 'pending',
 
-      // SỬ DỤNG TRẠNG THÁI ĐÃ TÍNH TOÁN Ở BƯỚC 3
       status: initialStatus,
       orderType: 'Cart'
     }
 
-    // 5. LƯU ĐƠN HÀNG VÀO DB
+    //LƯU ĐƠN HÀNG VÀO DB
     const createdOrder = await orderModel.create(newOrderData)
 
-    // 6. TRẢ VỀ
     res.status(201).json({
       message: 'Đơn hàng được tạo thành công.',
       checkout: createdOrder

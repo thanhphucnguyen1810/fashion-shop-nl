@@ -61,7 +61,7 @@ export const getProducts = async (req, res) => {
     }
 
     // --- Phân trang ---
-    const pageSize = Number(limit) || 20
+    const pageSize = Number(limit) || 60
     const currentPage = Number(page) || 1
     const skip = pageSize * (currentPage - 1)
 
