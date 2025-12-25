@@ -113,7 +113,6 @@ export const getOrdersByUser = async (req, res) => {
   }
 }
 
-// @desc Get order statistics
 // @route GET /api/admin/orders/stats
 //dùng để hiển thị: tổng doanh thu, tổng đơn hàng, biểu đồ…
 export const getOrderStats = async (req, res) => {

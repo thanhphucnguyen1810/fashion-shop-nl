@@ -11,17 +11,35 @@ import { upload } from '~/middlewares/upload.middleware'
 
 const router = express.Router()
 
-// Lấy danh sách
+import { logSecurity } from '~/middlewares/logger.middleware'
+
 router.get('/', getCategories)
 
-// Thêm danh mục (Admin)
-router.post('/', protect, admin, upload.single('image'), createCategory)
+router.post(
+  '/',
+  protect,
+  admin,
+  upload.single('image'),
+  logSecurity('ADMIN_CREATE_CATEGORY'),
+  createCategory
+)
 
-// Cập nhật danh mục (Admin)
-router.patch('/:id', protect, admin, upload.single('image'), updateCategory)
+router.patch(
+  '/:id',
+  protect,
+  admin,
+  upload.single('image'),
+  logSecurity('ADMIN_UPDATE_CATEGORY'),
+  updateCategory
+)
 
-// Xóa danh mục (Admin)
-router.delete('/:id', protect, admin, deleteCategory)
+router.delete(
+  '/:id',
+  protect,
+  admin,
+  logSecurity('ADMIN_DELETE_CATEGORY'),
+  deleteCategory
+)
 
 export default router
 

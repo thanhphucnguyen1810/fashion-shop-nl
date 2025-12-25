@@ -23,7 +23,6 @@ const Home = () => {
   const { error } = useSelector((state) => state.products)
 
   const { user } = useSelector((state) => state.auth)
-  const { cart } = useSelector((state) => state.cart)
 
   const [bestSellerProduct, setBestSellerProduct] = useState(null)
 

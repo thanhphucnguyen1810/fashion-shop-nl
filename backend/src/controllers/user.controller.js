@@ -3,7 +3,6 @@ import User from '~/models/user.model'
 import { env } from '~/config/environment'
 import crypto from 'crypto'
 import { sendPasswordResetEmail, sendVerificationEmail } from '~/utils/sendEmail'
-import resetFormPassword from '~/Templates/verifyEmail'
 import streamifier from 'streamifier'
 import cloudinary from '~/config/cloudinary.config'
 
@@ -15,6 +14,7 @@ const generateToken = (user) => {
   return jwt.sign(payload, env.JWT_SECRET, { expiresIn: '40h' })
 }
 
+// ======================= REGISTER =======================
 export const registerUser = async (req, res) => {
   const { name, email, password } = req.body
 
@@ -117,6 +117,7 @@ export const verifyEmail = async (req, res) => {
   }
 }
 
+// ======================= LOGIN USER =======================
 export const loginUser = async (req, res) => {
   const { email, password } = req.body
   try {
@@ -190,7 +191,7 @@ export const socialLogin = async (req, res) => {
   return res.redirect(redirectURL)
 }
 
-// ======================= THÊM FORGOT PASSWORD =======================
+// ======================= FORGOT PASSWORD =======================
 export const forgotPassword = async (req, res) => {
   const { email } = req.body
   if (!email) return res.status(400).json({ message: 'Vui lòng cung cấp email' })
@@ -239,9 +240,7 @@ export const forgotPassword = async (req, res) => {
   }
 }
 
-// ======================= THÊM RESET PASSWORD =======================
-// @desc   Reset user password
-// @route  PATCH /api/users/resetPassword/:token
+// ======================= RESET PASSWORD =======================
 export const resetPassword = async (req, res) => {
   if (!req.body.password) {
     return res.status(400).json({ message: 'Vui lòng cung cấp mật khẩu mới.' })
@@ -258,7 +257,7 @@ export const resetPassword = async (req, res) => {
     // 3. Tìm user bằng token đã hash VÀ đảm bảo token chưa hết hạn
     const user = await User.findOne({
       passwordResetToken: hashedToken,
-      passwordResetExpires: { $gt: Date.now() } // $gt: greater than (lớn hơn thời gian hiện tại)
+      passwordResetExpires: { $gt: Date.now() }
     })
 
     // 4. Xử lý lỗi
@@ -299,9 +298,30 @@ export const resetPassword = async (req, res) => {
   }
 }
 
+// ======================= CHANGE PASSWORD =======================
+export const changePassword = async (req, res) => {
+  const { oldPassword, newPassword } = req.body
 
-// @desc   Get profile
-// @route  GET /api/users/profile
+  try {
+    const user = await User.findById(req.user._id).select('+password')
+
+    // 1. Kiểm tra mật khẩu cũ có đúng không
+    const isMatch = await user.matchPassword(oldPassword)
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Mật khẩu hiện tại không chính xác.' })
+    }
+
+    // 2. Gán mật khẩu mới (Mongoose sẽ tự hash nhờ pre-save)
+    user.password = newPassword
+    await user.save()
+
+    res.status(200).json({ message: 'Đổi mật khẩu thành công!' })
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi server.' })
+  }
+}
+
+// ======================= GET PROFILE =======================
 export const getUserProfile = async (req, res) => {
   try {
     const user = req.user
@@ -332,7 +352,7 @@ export const getUserProfile = async (req, res) => {
   }
 }
 
-// PUT /api/users/profile
+// ======================= UPDATE PROFILE =======================
 export const updateUserProfile = async (req, res) => {
   const user = req.user
   const { name, gender } = req.body
@@ -389,7 +409,7 @@ export const updateUserProfile = async (req, res) => {
   }
 }
 
-// POST /api/users/favorites/:productId
+// =======================ADD FAVORITE =======================
 export const addFavorite = async (req, res) => {
   const user = req.user
   const productId = req.params.productId
@@ -409,7 +429,7 @@ export const addFavorite = async (req, res) => {
   res.status(200).json(populatedUser.favorites)
 }
 
-// DELETE /api/users/favorites/:productId
+// =======================REMOVE FAVORITE =======================
 export const removeFavorite = async (req, res) => {
   const user = req.user
   const productId = req.params.productId

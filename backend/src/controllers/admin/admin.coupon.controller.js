@@ -34,8 +34,8 @@ const createCoupon = async (req, res, next) => {
     // 3. Tạo mới
     const newCoupon = await CouponModel.create({
       ...req.body,
-      code: code.toUpperCase(), // Đảm bảo mã luôn là UPPERCASE
-      expiresAt: new Date(expiresAt) // Chuyển chuỗi thành Date
+      code: code.toUpperCase(),
+      expiresAt: new Date(expiresAt)
     })
 
     res.status(StatusCodes.CREATED).json({

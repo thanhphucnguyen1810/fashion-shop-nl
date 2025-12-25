@@ -84,10 +84,10 @@ const EnhancedQRCodePayment = ({ qrData, isPaidSuccess }) => {
         {qrData && (
           <div className="mt-8 bg-blue-50 p-4 rounded-lg border border-blue-200 text-left text-base text-gray-700">
             <Typography variant="h6" fontWeight="bold" className="text-blue-800 mb-2">
-              LƯU Ý CỰC KỲ QUAN TRỌNG
+              LƯU Ý QUAN TRỌNG
             </Typography>
             <p>
-              Nội dung chuyển khoản bắt buộc phải là:
+              Nội dung chuyển khoản phải là:
               <div className="mt-2 text-center bg-white p-2 border border-blue-400 rounded-md shadow-inner">
                 <strong className="font-mono text-xl text-blue-900 select-all">
                   {qrData?.transferContent || '...'}

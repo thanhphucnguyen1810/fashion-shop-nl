@@ -2,7 +2,6 @@ import { useState, useRef } from 'react'
 import { useTheme } from '@mui/material/styles'
 import { Link } from 'react-router-dom'
 import { FaChevronDown } from 'react-icons/fa'
-import CategoryMenu from '../CategoryMenu'
 
 const NavItem = ({ nav, isOpen, onMouseEnter, onMouseLeave, onClose, primaryColor, secondaryColor }) => {
   const hasSubmenu = Array.isArray(nav.submenu)

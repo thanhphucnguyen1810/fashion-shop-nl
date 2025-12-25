@@ -1,4 +1,3 @@
-// controllers/reviews/review.admin.controller.js
 import Review from '~/models/review.model.js'
 
 export const getAllReviewsAdmin = async (req, res) => {

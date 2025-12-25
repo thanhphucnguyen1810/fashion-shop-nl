@@ -2,9 +2,7 @@ import productModel from '~/models/product.model.js'
 import cloudinary from '~/config/cloudinary.config'
 
 // ================= GET ALL PRODUCTS =================
-// @desc Get all products (Admin only)
 // @route GET /api/admin/products
-// @access Private/Admin
 export const getAllProducts = async (req, res) => {
   try {
     const keyword = req.query.search
@@ -47,7 +45,7 @@ export const createProduct = async (req, res) => {
       for (let file of req.files) {
         const uploadedResult = await cloudinary.uploader.upload(`data:${file.mimetype};base64,${file.buffer.toString('base64')}`, { folder: 'products' })
 
-        // Sửa Lỗi: Lưu public_id và url vào đối tượng
+        // Lưu public_id và url vào đối tượng
         imageUrls.push({
           public_id: uploadedResult.public_id,
           url: uploadedResult.secure_url
@@ -58,9 +56,9 @@ export const createProduct = async (req, res) => {
     const cleanData = (data) => {
       if (!data || !Array.isArray(data)) return []
       return data.map(item =>
-        String(item) // Đảm bảo là chuỗi
-          .trim() // Loại bỏ khoảng trắng thừa (ví dụ: " L" -> "L")
-          .replace(/^["']|["']$/g, '') // Loại bỏ dấu ngoặc kép hoặc dấu nháy đơn ở đầu/cuối
+        String(item)
+          .trim()
+          .replace(/^["']|["']$/g, '')
       )
     }
 
@@ -112,7 +110,7 @@ export const updateProduct = async (req, res) => {
       for (const file of req.files) {
         const uploadedResult = await cloudinary.uploader.upload(`data:${file.mimetype};base64,${file.buffer.toString('base64')}`, { folder: 'products' })
 
-        // Sửa Lỗi: Lưu public_id và url vào đối tượng
+        // Lưu public_id và url vào đối tượng
         imageUrls.push({
           public_id: uploadedResult.public_id,
           url: uploadedResult.secure_url

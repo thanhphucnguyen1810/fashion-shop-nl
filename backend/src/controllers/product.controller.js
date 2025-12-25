@@ -23,11 +23,24 @@ export const getProducts = async (req, res) => {
 
     const query = {}
 
-    if (category) {
-      query.category = category
-    } else if (collection && collection.toLowerCase() !== 'all') {
-      query.category = collection
+    const slugify = (text) => {
+      return text
+        .toLowerCase()
+        .normalize('NFD') // tách dấu
+        .replace(/[\u0300-\u036f]/g, '') // xóa dấu
+        .replace(/\s+/g, '-') // space -> -
+        .replace(/[^a-z0-9-]/g, '') // ký tự lạ
     }
+
+    if (category) {
+      const categorySlug = slugify(category)
+
+      query.category = {
+        $regex: categorySlug,
+        $options: 'i'
+      }
+    }
+
 
     if (gender) {
       query.gender = gender
@@ -100,7 +113,6 @@ export const getProducts = async (req, res) => {
     res.status(500).send('Server Error!')
   }
 }
-
 
 // @desc Get best seller product
 // @route GET /api/products/best-seller

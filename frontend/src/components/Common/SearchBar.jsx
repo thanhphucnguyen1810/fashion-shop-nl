@@ -4,7 +4,7 @@ import { HiMagnifyingGlass, HiMiniXMark } from 'react-icons/hi2'
 import { useTheme } from '@mui/material/styles'
 import { useDispatch } from 'react-redux'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { fetchProducts, setFilters } from '~/redux/slices/productSlice'
+import { setFilters } from '~/redux/slices/productSlice'
 
 const SearchBar = () => {
   const theme = useTheme()

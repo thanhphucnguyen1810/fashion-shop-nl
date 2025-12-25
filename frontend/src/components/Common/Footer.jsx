@@ -2,8 +2,6 @@ import { useTheme } from '@mui/material/styles'
 import { FiPhoneCall } from 'react-icons/fi'
 import { FaFacebookF, FaInstagram, FaTwitter } from 'react-icons/fa'
 import { Link } from 'react-router-dom'
-// Import thêm các icon cho phần Value Proposition (nếu cần)
-import { FiTruck, FiRefreshCw, FiLock } from 'react-icons/fi'
 
 const Footer = () => {
   const theme = useTheme()
@@ -23,21 +21,17 @@ const Footer = () => {
     transition: 'color 0.3s ease'
   }
 
-  // Màu Xanh Lá Trầm cho điểm nhấn liên kết (nếu cần)
-  const oliveGreen = '#38761D' // Xanh Olive đậm, có thể dùng cho hover
-
   return (
     <footer
-      // GIẢM padding tổng thể
       className='pt-10 pb-6 md:pt-14 md:pb-8'
       style={{ backgroundColor: theme.palette.background.default }}
     >
 
 
-      {/* === MAIN CONTENT: 3 CỘT GỌN HƠN === */}
+      {/* === MAIN CONTENT*/}
       <div className='container mx-auto grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-16 lg:gap-20 px-4 lg:px-0'>
 
-        {/* === 1. Mua sắm & Hỗ trợ (Gộp 2 khối vào 1 cột lớn) === */}
+        {/* Mua sắm & Hỗ trợ */}
         <div className='col-span-2 md:col-span-1 grid grid-cols-2 gap-8'>
           {/* Shop links */}
           <div>
@@ -48,7 +42,6 @@ const Footer = () => {
                   <Link
                     to='#'
                     style={linkStyle}
-                    // Màu xanh dương (Blue) cho hover link
                     className='hover:text-blue-600 dark:hover:text-blue-400'
                   >
                     {text}
@@ -100,7 +93,6 @@ const Footer = () => {
                 href={href}
                 target='_blank'
                 rel='noopener noreferrer'
-                // Hover màu Vàng (Mustard)
                 style={{ color: theme.palette.text.secondary }}
                 className='hover:text-yellow-600 transition-colors duration-300'
               >
@@ -110,7 +102,7 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* === 3. Bản tin (Newsletter) - Điểm nhấn === */}
+        {/* === 3. Bản tin (Newsletter) === */}
         <div className='col-span-2 md:col-span-1 mt-4 md:mt-0'>
           <h3 style={headingStyle} className='uppercase'>
             Nhận ưu đãi 10%
@@ -135,7 +127,6 @@ const Footer = () => {
             <button
               type='submit'
               className='px-5 py-3 text-sm font-bold tracking-wider uppercase hover:opacity-90'
-              // Màu vàng ấm (warning.main) làm điểm nhấn
               style={{
                 backgroundColor: theme.palette.warning.main,
                 color: theme.palette.warning.contrastText,
@@ -150,7 +141,6 @@ const Footer = () => {
 
       {/* === Bottom bar (Thông tin bản quyền) === */}
       <div
-        // GIẢM khoảng cách mt
         className='container mx-auto mt-10 px-4 lg:px-0 pt-4'
         style={{ borderTop: `1px solid ${theme.palette.divider}` }}
       >

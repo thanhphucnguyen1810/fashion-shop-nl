@@ -1,10 +1,7 @@
 import React from 'react'
 import { useParams, Link } from 'react-router-dom'
-// Tùy chọn: import { useDispatch, useSelector } from 'react-redux'
-// Tùy chọn: import { getOrderDetail } from '~/redux/slices/orderSlice'
 
 const OrderSuccess = () => {
-  // Lấy ID Order CHÍNH THỨC đã được finalize từ OrderConfirm/Momo Callback
   const { id: orderId } = useParams()
 
   // Tùy chọn: Dùng orderId để gọi API lấy chi tiết Order chính thức (nếu cần hiển thị tổng tiền thực tế)
@@ -12,7 +9,6 @@ const OrderSuccess = () => {
   // useEffect(() => {
   // 	 if (orderId) dispatch(getOrderDetail(orderId))
   // }, [orderId, dispatch])
-
 
   return (
     <div className="bg-gray-50 min-h-screen flex items-center justify-center py-12">

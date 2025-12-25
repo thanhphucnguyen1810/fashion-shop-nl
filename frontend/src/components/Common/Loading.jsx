@@ -7,11 +7,9 @@ const Loading = () => {
 
       {/* Loading Spinner */}
       <div className='relative flex items-center justify-center'>
-
-        {/* Vòng tròn bên ngoài (Animation) */}
         <div className='w-16 h-16 border-4 border-gray-200 rounded-full animate-spin border-t-yellow-600'></div>
 
-        {/* Logo/Text ở giữa (hoặc có thể thay bằng logo SVG) */}
+        {/* Logo/Text */}
         <div className='absolute text-lg font-bold text-gray-800 opacity-70'>
           <span className='text-sm font-serif text-yellow-600'>A</span>
         </div>
@@ -24,7 +22,7 @@ const Loading = () => {
 
       {/* Thương hiệu */}
       <p className='mt-2 text-xs text-gray-500 font-light'>
-        THEAURORA
+        TheAurora
       </p>
     </div>
   )

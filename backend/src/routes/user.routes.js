@@ -5,6 +5,7 @@ import {
   getUserProfile,
   forgotPassword,
   resetPassword,
+  changePassword,
   verifyEmail,
   updateUserProfile,
   addFavorite,
@@ -24,6 +25,7 @@ router.post('/register', logSecurity('REGISTER'), registerUser)
 router.post('/login', logSecurity('LOGIN'), loginUser)
 router.post('/forgotPassword', logSecurity('RESET_PASSWORD'), forgotPassword)
 router.patch('/resetPassword/:token', logSecurity('RESET_PASSWORD'), resetPassword)
+router.put('/change-password', protect, logSecurity('CHANGE_PASSWORD'), changePassword)
 router.get('/verify-email/:token', verifyEmail)
 
 router.get('/profile', protect, getUserProfile)

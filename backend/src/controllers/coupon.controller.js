@@ -88,9 +88,9 @@ export const getAllActiveCoupons = async (req, res) => {
       // $where là toán tử Mongoose/MongoDB cho phép kiểm tra bằng JavaScript
       $expr: { $lt: ['$usedCount', '$usageLimit'] }
     })
-      .select('code discountType discountValue minimumOrderAmount usageLimit usedCount expiresAt description') // Chỉ lấy các trường cần thiết
-      .sort({ expiresAt: 1 }) // Sắp xếp theo ngày hết hạn sớm nhất lên trước
-      .lean() // Dùng .lean() để tăng tốc độ truy vấn (trả về JSON thuần)
+      .select('code discountType discountValue minimumOrderAmount usageLimit usedCount expiresAt description')
+      .sort({ expiresAt: 1 })
+      .lean()
 
     // 3. Phản hồi thành công
     return res.status(200).json({

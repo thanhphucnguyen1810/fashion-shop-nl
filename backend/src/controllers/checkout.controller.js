@@ -81,7 +81,7 @@ export const sepayIpn = async (req, res) => {
 
     const checkout = await checkoutModel.findById(checkoutId)
 
-    if (!checkout) return res.status(200).json({ error: 'Order not found' }) // Trả 200 để Sepay không gửi lại
+    if (!checkout) return res.status(200).json({ error: 'Order not found' })
     if (checkout.isPaid) return res.status(200).json({ message: 'Already paid' })
 
     // Xác nhận thanh toán

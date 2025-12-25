@@ -6,7 +6,6 @@ import { Link } from 'react-router-dom'
 
 import CarouselMid from '~/components/Common/CarouselMid'
 
-// MÀU TỪ PALETTE CỦA BẠN
 const BACKGROUND_COLOR = '#0A3D62'
 const TEXT_COLOR = '#FFCBA4'
 const HOVER_TEXT_COLOR = '#FFFFFF'

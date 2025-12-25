@@ -57,7 +57,6 @@ const getColorCode = (colorName) => {
   case 'xanh rêu':
     return '#556b2f'
   default:
-    // Dùng màu trắng với border cho các màu phức tạp (như hoa văn, phối màu)
     return 'transparent'
   }
 }
@@ -84,22 +83,13 @@ const FilterSidebar = () => {
 
   // Dữ liệu bộ lọc
   const categories = [
-    'Áo Len Nữ',
-    'Áo Polo Nam',
-    'Áo Sơ Mi Nam',
-    'Quần Jeans Nữ',
-    'Túi Xách Nữ',
-    'Áo Thun Nữ',
-    'Áo Kiểu Nữ',
+    'Thời trang nam',
+    'Thời trang nữ',
     'Thời Trang Trẻ Em',
-    'Áo Khoác Nữ',
-    'Áo Khoác Nam',
-    'Quần Jeans Trẻ Em',
-    'Đầm Maxi Nữ',
-    'Giày Lười Nam',
-    'Mũ Bucket',
-    'Túi Đeo Chéo',
-    'Phụ Kiện'
+    'Giày dép',
+    'Phụ Kiện',
+    'Sắc đẹp',
+    'Khác'
   ]
 
   const colors = [

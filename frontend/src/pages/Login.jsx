@@ -1,12 +1,19 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
+
 import { useTheme } from '@mui/material/styles'
 import { FaGoogle, FaFacebook } from 'react-icons/fa'
-import { FaEye, FaEyeSlash } from 'react-icons/fa'
-import login from '~/assets/login.webp'
 import { useDispatch, useSelector } from 'react-redux'
-import { loginUser, socialLogin, setUser } from '~/redux/slices/authSlice'
+import EmailOutlined from '@mui/icons-material/EmailOutlined'
+import LockOutlined from '@mui/icons-material/LockOutlined'
+
+import InputField from '~/components/InputField'
+import AuthLayout from '~/components/Layouts/AuthLayout'
+import AuthHeader from '~/components/Common/AuthHeader'
+
 import { mergeCart } from '~/redux/slices/cartSlices'
+import { loginUser, socialLogin, setUser } from '~/redux/slices/authSlice'
+import login from '~/assets/login.webp'
 
 const Login = () => {
   const theme = useTheme()
@@ -19,7 +26,6 @@ const Login = () => {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
 
   // Get redirect parameter and check if it's checkout or something
   const redirect = new URLSearchParams(location.search).get('redirect') || '/'
@@ -64,212 +70,126 @@ const Login = () => {
   // FACEBOOK LOGIN
   const handleFacebookLogin = () => dispatch(socialLogin('facebook'))
 
-  // Toggle hiển thị mật khẩu
-  const togglePasswordVisibility = () => {
-    setShowPassword((prev) => !prev)
-  }
-
   return (
-    <div
-      className='flex min-h-screen'
-      style={{
-        backgroundColor: theme.palette.background.default,
-        color: theme.palette.text.primary
-      }}
-    >
-      {/* Left side: Form đăng nhập */}
-      <div className='w-full md:w-1/2 flex flex-col justify-center items-center p-4 md:p-12'>
-        <form
-          onSubmit={handleSubmit}
-          className='w-full max-w-md p-6 md:p-8 rounded-xl border shadow-lg'
+    <AuthLayout image={login} imageAlt="Đăng nhập tài khoản">
+      <form
+        onSubmit={handleSubmit}
+      >
+        {/* Logo */}
+        <AuthHeader title="Chào mừng bạn quay lại" />
+
+        {/* Error Alert */}
+        {error && (
+          <div className='bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded-lg mb-4 text-sm'>
+            <p className='font-medium'>{error}</p>
+          </div>
+        )}
+
+        {/* Email Input */}
+        <InputField
+          id="email"
+          label="Địa chỉ Email"
+          type="email"
+          name="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Nhập địa chỉ email của bạn"
+          Icon={EmailOutlined}
+          theme={theme}
+        />
+
+        <div className='mb-2'>
+          {/* Password Input */}
+          <InputField
+            id="password"
+            label="Mật khẩu"
+            type="password"
+            name="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Nhập mật khẩu của bạn"
+            Icon={LockOutlined}
+            theme={theme}
+          />
+
+          <div className='flex justify-end mt-2'>
+            <Link
+              to='/forgot-password'
+              className='text-xs font-medium hover:underline'
+              style={{ color: theme.palette.secondary.main }}
+            >
+          Quên mật khẩu?
+            </Link>
+          </div>
+        </div>
+
+        {/* Nút đăng nhập */}
+        <button
+          type='submit'
+          disabled={loading}
+          className='w-full mt-4 p-3 rounded-lg font-bold text-base transition duration-200 transform hover:scale-[1.01] disabled:opacity-50 flex items-center justify-center gap-2 shadow-md'
           style={{
-            backgroundColor: theme.palette.background.paper,
-            borderColor: theme.palette.divider
+            backgroundColor: theme.palette.primary.main,
+            color: theme.palette.primary.contrastText
           }}
         >
-          {/* Logo / Tiêu đề */}
-          <div className='flex justify-center mb-6'>
-            <h2
-              className='text-3xl font-extrabold tracking-wider'
-              style={{ color: theme.palette.primary.main }}
-            >
-              TheAurora
-            </h2>
-          </div>
+          {loading ? 'Đang xử lý...' : 'Đăng nhập'}
+        </button>
 
-          <h2 className='text-2xl font-bold text-center mb-5'>Chào mừng bạn quay lại!</h2>
+        {/* Divider */}
+        <div className='flex items-center justify-center my-6'>
+          <span className='w-full border-t border-gray-200 dark:border-gray-700'></span>
+          <span className='px-4 text-xs text-gray-400 whitespace-nowrap uppercase'>Hoặc</span>
+          <span className='w-full border-t border-gray-200 dark:border-gray-700'></span>
+        </div>
 
-          {/* Error Alert */}
-          {error && (
-            <div className='bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg relative mb-4 text-sm'>
-              <p className='font-medium'>{error}</p>
-              {error.includes('xác minh') && (
-                <p className='mt-2 text-xs'>
-                  Tài khoản chưa được kích hoạt. Vui lòng kiểm tra hộp thư của bạn để xác minh.
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Email */}
-          <div className='mb-4'>
-            <label htmlFor='email' className='block text-sm font-medium mb-1'>Email</label>
-            <input
-              id='email'
-              type='email'
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className='w-full p-3 border rounded-lg focus:ring-2 focus:ring-opacity-50 focus:outline-none transition duration-150'
-              placeholder='Nhập địa chỉ email của bạn'
-              style={{
-                backgroundColor: theme.palette.background.default,
-                borderColor: theme.palette.divider,
-                color: theme.palette.text.primary,
-                '--tw-ring-color': theme.palette.primary.main
-              }}
-              required
-            />
-          </div>
-
-          {/* Mật khẩu */}
-          <div className='mb-2'>
-            <label htmlFor='password' className='block text-sm font-medium mb-1'>Mật khẩu</label>
-            <div className='relative'>
-              <input
-                id='password'
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className='w-full p-3 border rounded-lg focus:ring-2 focus:ring-opacity-50 focus:outline-none transition duration-150 pr-10' // Thêm padding bên phải cho icon
-                placeholder='Nhập mật khẩu của bạn'
-                style={{
-                  backgroundColor: theme.palette.background.default,
-                  borderColor: theme.palette.divider,
-                  color: theme.palette.text.primary,
-                  '--tw-ring-color': theme.palette.primary.main
-                }}
-                required
-              />
-
-              <button
-                type='button'
-                onClick={togglePasswordVisibility}
-                className='absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition'
-              >
-                {showPassword ? (
-                  <FaEyeSlash className='h-5 w-5' />
-                ) : (
-                  <FaEye className='h-5 w-5' />
-                )}
-              </button>
-            </div>
-
-            {/* Quên mật khẩu */}
-            <div className='flex justify-end mt-2'>
-              <Link
-                to='/forgot-password'
-                className='text-sm font-medium hover:underline transition'
-                style={{ color: theme.palette.secondary.main }}
-              >
-                Quên mật khẩu?
-              </Link>
-            </div>
-          </div>
-
-
-          {/* Nút đăng nhập */}
+        {/* Social Login  */}
+        <div className='flex gap-3'>
           <button
-            type='submit'
-            disabled={loading}
-            className='w-full mt-6 p-3 rounded-lg font-bold text-lg transition duration-200 ease-in-out transform hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2'
+            type='button'
+            onClick={handleFacebookLogin}
+            className='flex-1 flex items-center justify-center gap-2 border rounded-lg p-2.5 text-sm font-semibold hover:bg-gray-50 transition duration-150'
             style={{
-              backgroundColor: theme.palette.primary.main,
-              color: theme.palette.primary.contrastText
+              borderColor: theme.palette.divider,
+              backgroundColor: theme.palette.background.default,
+              color: theme.palette.text.primary
             }}
           >
-            {loading ? (
-              <>
-                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span>Đang xử lý...</span>
-              </>
-            ) : (
-              'Đăng nhập'
-            )}
+            <FaFacebook className='text-blue-600 text-lg' />
+            <span>Facebook</span>
           </button>
 
-          {/* --- OR divider --- */}
-          <div className='flex items-center justify-center my-6'>
-            <span className='w-full border-t border-gray-300 dark:border-gray-700'></span>
-            <span className='px-4 text-sm opacity-70 whitespace-nowrap' style={{ color: theme.palette.text.secondary }}>hoặc đăng nhập bằng</span>
-            <span className='w-full border-t border-gray-300 dark:border-gray-700'></span>
-          </div>
-
-          <div className='flex flex-col gap-3'>
-            {/* Google Login */}
-            <button
-              type='button'
-              onClick={handleGoogleLogin}
-              className='flex items-center justify-center gap-2 border rounded-lg p-3 font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition duration-150'
-              style={{
-                borderColor: theme.palette.divider,
-                backgroundColor: theme.palette.background.default,
-                color: theme.palette.text.primary
-              }}
-            >
-              <FaGoogle className='text-red-500 text-xl' />
-              <span>Google</span>
-            </button>
-
-            {/* Facebook Login */}
-            <button
-              type='button'
-              onClick={handleFacebookLogin}
-              className='flex items-center justify-center gap-2 border rounded-lg p-3 font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition duration-150'
-              style={{
-                borderColor: theme.palette.divider,
-                backgroundColor: theme.palette.background.default,
-                color: theme.palette.text.primary
-              }}
-            >
-              <FaFacebook className='text-blue-600 text-xl' />
-              <span>Facebook</span>
-            </button>
-          </div>
-
-          {/* Link đăng ký */}
-          <p className='mt-8 text-center text-sm'>
-            Chưa có tài khoản?{' '}
-            <Link
-              to={`/register?redirect=${encodeURIComponent(redirect)}`}
-              style={{ color: theme.palette.secondary.main, fontWeight: 'bold' }}
-              className='hover:underline transition'
-            >
-              Đăng ký ngay
-            </Link>
-          </p>
-        </form>
-      </div>
-
-      {/* Right side: Hình ảnh minh hoạ */}
-      <div
-        className='hidden md:block w-1/2 overflow-hidden relative'
-        style={{
-          backgroundColor: theme.palette.background.neutral
-        }}
-      >
-        <div className='h-full flex flex-col justify-center items-center'>
-          <img
-            src={login}
-            alt='Đăng nhập tài khoản'
-            className='h-full w-full object-cover object-center transform transition duration-500 hover:scale-105'
-          />
+          <button
+            type='button'
+            onClick={handleGoogleLogin}
+            className='flex-1 flex items-center justify-center gap-2 border rounded-lg p-2.5 text-sm font-semibold hover:bg-gray-50 transition duration-150'
+            style={{
+              borderColor: theme.palette.divider,
+              backgroundColor: theme.palette.background.default,
+              color: theme.palette.text.primary
+            }}
+          >
+            <FaGoogle className='text-red-500 text-lg' />
+            <span>Google</span>
+          </button>
         </div>
-      </div>
-    </div>
+
+        {/* Link đăng ký */}
+        <p className='mt-8 text-center text-sm text-gray-500'>
+      Bạn mới biết đến TheAurora?{' '}
+          <Link
+            to={`/register?redirect=${encodeURIComponent(redirect)}`}
+            style={{ color: theme.palette.secondary.main, fontWeight: 'bold' }}
+            className='hover:underline transition'
+          >
+        Đăng ký ngay
+          </Link>
+        </p>
+      </form>
+    </AuthLayout>
+
   )
 }
 
 export default Login
+

@@ -170,68 +170,76 @@ const AddressManager = () => {
       </div>
 
       {openForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-white/30 backdrop-blur-md">
           <form
             onSubmit={handleSubmit}
-            className="bg-white p-6 rounded-lg w-[400px] space-y-3"
+            className="bg-white p-8 rounded-2xl w-[450px] space-y-4 shadow-2xl border border-white/50"
           >
-            <h3 className="text-lg font-semibold mb-2">
-              {editing ? 'Chỉnh sửa địa chỉ' : 'Thêm địa chỉ mới'}
-            </h3>
+            <div className="border-b pb-3 mb-4">
+              <h3 className="text-xl font-bold text-gray-800">
+                {editing ? 'Chỉnh sửa địa chỉ' : 'Thêm địa chỉ mới'}
+              </h3>
+              <p className="text-xs text-gray-500 mt-1">Vui lòng nhập chính xác thông tin để nhận hàng nhanh nhất.</p>
+            </div>
 
-            <input
-              className="w-full p-3 border rounded"
-              placeholder="Tên người nhận"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
-            <input
-              className="w-full p-3 border rounded"
-              placeholder="Số điện thoại"
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-            />
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                placeholder="Tên người nhận"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+              />
+              <input
+                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                placeholder="Số điện thoại"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              />
+            </div>
 
-            <input
-              className="w-full p-3 border rounded"
-              placeholder="Tỉnh/Thành phố"
-              value={form.province}
-              onChange={(e) => setForm({ ...form, province: e.target.value })}
-            />
+            <div className="space-y-3">
+              <input
+                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                placeholder="Tỉnh/Thành phố"
+                value={form.province}
+                onChange={(e) => setForm({ ...form, province: e.target.value })}
+              />
 
-            <input
-              className="w-full p-3 border rounded"
-              placeholder="Quận/Huyện"
-              value={form.district}
-              onChange={(e) => setForm({ ...form, district: e.target.value })}
-            />
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  placeholder="Quận/Huyện"
+                  value={form.district}
+                  onChange={(e) => setForm({ ...form, district: e.target.value })}
+                />
+                <input
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  placeholder="Xã/Phường"
+                  value={form.ward}
+                  onChange={(e) => setForm({ ...form, ward: e.target.value })}
+                />
+              </div>
 
-            <input
-              className="w-full p-3 border rounded"
-              placeholder="Xã/Phường"
-              value={form.ward}
-              onChange={(e) => setForm({ ...form, ward: e.target.value })}
-            />
+              <input
+                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                placeholder="Số nhà, tên đường"
+                value={form.street}
+                onChange={(e) => setForm({ ...form, street: e.target.value })}
+              />
+            </div>
 
-            <input
-              className="w-full p-3 border rounded"
-              placeholder="Số nhà, tên đường"
-              value={form.street}
-              onChange={(e) => setForm({ ...form, street: e.target.value })}
-            />
-
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end gap-3 pt-4">
               <button
                 type="button"
-                className="px-4 py-2 bg-gray-300 rounded"
+                className="px-6 py-2.5 bg-gray-100 text-gray-600 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
                 onClick={() => setOpenForm(false)}
               >
-                Hủy
+        Hủy
               </button>
 
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded"
+                className="px-6 py-2.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 shadow-lg shadow-blue-200 disabled:bg-blue-300 transition-all"
                 disabled={loading}
               >
                 {loading ? 'Đang lưu...' : (editing ? 'Lưu thay đổi' : 'Thêm mới')}

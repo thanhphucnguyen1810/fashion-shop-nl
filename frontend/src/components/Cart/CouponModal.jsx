@@ -83,7 +83,7 @@ const CouponModal = ({ open, handleClose, currentCouponCode, authId, isGuest }) 
       <Box sx={style}>
         <div className='flex justify-between items-center border-b pb-3 mb-4'>
           <Typography variant="h6" component="h2" fontWeight="bold">
-            Chọn Mã Giảm Giá
+            Chọn Mã Giảm Giá
           </Typography>
           <IconButton onClick={handleClose}>
             <CloseIcon />
@@ -97,7 +97,7 @@ const CouponModal = ({ open, handleClose, currentCouponCode, authId, isGuest }) 
         ) : coupons.length === 0 ? (
           <Paper className='p-8 text-center'>
             <Typography variant="h6" color="textSecondary">
-              Hiện tại không có mã giảm giá nào.
+             Hiện tại không có mã giảm giá nào.
             </Typography>
           </Paper>
         ) : (
