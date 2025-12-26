@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTheme } from '@mui/material/styles'
 import { Typography } from '@mui/material'
 
-import AddressManager from '~/components/AddressManager'
+import AddressManager from '~/components/Profile/AddressManager'
 import OrdersStatusTabs from '~/components/OrdersStatusTabs'
 import TabPanel from '~/components/Profile/TabPanel'
 import UpdateProfile from '~/components/Profile/UpdateProfile'
@@ -19,7 +19,7 @@ const Profile = () => {
   const [tabValue, setTabValue] = useState(0)
 
   useEffect(() => {
-    if (!user) navigate('/login')
+    if (user === null) navigate('/login')
   }, [user, navigate])
 
   if (!user) return null
@@ -49,7 +49,7 @@ const Profile = () => {
               {/* Avatar */}
               <div className='relative group'>
                 <img
-                  src={user?.avatar?.url}
+                  src={`${user?.avatar?.url}?v=${Date.now()}`}
                   alt="Avatar"
                   className="rounded-full w-20 h-20 object-cover border-4"
                   style={{ borderColor: theme.palette.primary.light }}

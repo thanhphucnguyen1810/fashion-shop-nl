@@ -24,7 +24,6 @@ function TabPanel(props) {
   )
 }
 
-// Map các trạng thái từ tên hiển thị sang giá trị filter thực tế
 const ORDERS_STATUS_TABS = [
   { label: 'Tất cả', icon: <FaLayerGroup />, status: 'all' },
   { label: 'Chờ xác nhận', icon: <FaWallet />, status: 'awaiting_confirmation' },
@@ -51,16 +50,15 @@ const OrdersStatusTabs = ({ theme }) => {
           className="font-bold"
           sx={{ color: theme.palette.text.primary }}
         >
-                    Đơn Hàng Của Tôi
+            Đơn Hàng Của Tôi
         </Typography>
-        {/* Nút Xem lịch sử mua hàng, dùng Link điều hướng đến chính trang này (hoặc trang account nếu cần) */}
         <Link to="/my-orders" className='text-sm font-semibold' style={{ color: theme.palette.primary.main }}>
                     Xem lịch sử mua hàng <i className="fa-solid fa-chevron-right ml-1"></i>
         </Link>
       </div>
 
 
-      {/* Thanh Tabs - Bắt chước giao diện Shopee */}
+      {/* Thanh Tabs */}
       <Box sx={{
         borderBottom: 1,
         borderColor: 'divider',
@@ -71,13 +69,12 @@ const OrdersStatusTabs = ({ theme }) => {
         <Tabs
           value={tabValue}
           onChange={handleChange}
-          variant="scrollable" // Cho phép cuộn nếu nhiều tab
+          variant="scrollable"
           scrollButtons="auto"
           aria-label="order status tabs"
           sx={{
-            // Custom style để giống Shopee
             '& .MuiTab-root': {
-              minWidth: 100, // Chiều rộng tối thiểu cho mỗi tab
+              minWidth: 100,
               padding: '12px 8px',
               textTransform: 'none',
               fontWeight: 600

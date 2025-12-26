@@ -28,6 +28,7 @@ const AddressManager = () => {
     street: ''
   })
 
+
   useEffect(() => {
     dispatch(fetchAddresses())
   }, [dispatch])

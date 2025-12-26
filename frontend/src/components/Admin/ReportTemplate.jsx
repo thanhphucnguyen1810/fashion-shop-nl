@@ -1,12 +1,11 @@
 import React from 'react'
 
 export const ReportTemplate = React.forwardRef(({ data, timeFrame, totalSales }, ref) => {
-  // Lọc lấy các đơn đã giao thành công để tính doanh thu thực tế
   const deliveredOrders = data.filter(o => o.status === 'Delivered')
 
   return (
     <div ref={ref} className="p-16 bg-white text-black font-sans print:p-10" style={{ minHeight: '297mm' }}>
-      {/* Header chuẩn hành chính */}
+      {/* Header */}
       <div className="flex justify-between items-start border-b-2 border-black pb-4">
         <div>
           <h1 className="text-xl font-bold uppercase">The Aurora Fashion Shop</h1>
@@ -28,7 +27,7 @@ export const ReportTemplate = React.forwardRef(({ data, timeFrame, totalSales },
         </p>
       </div>
 
-      {/* Chỉ số tổng hợp - Rất quan trọng trong thống kê */}
+      {/* Chỉ số tổng hợp */}
       <div className="grid grid-cols-2 gap-0 border border-black mb-8">
         <div className="border-r border-b border-black p-3">
           <p className="text-[10px] uppercase font-bold">Tổng số đơn hàng:</p>

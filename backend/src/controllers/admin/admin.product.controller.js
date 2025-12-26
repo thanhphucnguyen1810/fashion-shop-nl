@@ -134,12 +134,34 @@ export const updateProduct = async (req, res) => {
 // ================= DELETE PRODUCT =================
 export const deleteProduct = async (req, res) => {
   try {
-    await productModel.findByIdAndDelete(req.params.id)
-    res.json({ message: 'Đã xóa sản phẩm' })
+    const { id } = req.params
+
+    // 1. Tìm sản phẩm trong DB trước
+    const product = await productModel.findById(id)
+
+    if (!product) {
+      return res.status(404).json({ message: 'Sản phẩm không tồn tại' })
+    }
+
+    // 2. Xóa các ảnh trên Cloudinary dựa trên public_id đã lưu lúc Create
+    if (product.images && product.images.length > 0) {
+      // Tạo một danh sách các lời hứa (Promise) xóa ảnh
+      const deleteImagePromises = product.images.map((img) => {
+        if (img.public_id) {
+          return cloudinary.uploader.destroy(img.public_id)
+        }
+      })
+
+      // Chạy song song tất cả các yêu cầu xóa ảnh để tiết kiệm thời gian
+      await Promise.all(deleteImagePromises)
+    }
+
+    // 3. Cuối cùng mới xóa sản phẩm trong Database
+    await product.deleteOne()
+
+    res.json({ message: 'Đã xóa sản phẩm và tất cả ảnh liên quan thành công' })
   } catch (error) {
-    console.error(error)
-    res.status(500).json({ message: 'Server Error' })
+    console.error('Lỗi khi xóa sản phẩm:', error)
+    res.status(500).json({ message: 'Server Error: Không thể xóa sản phẩm' })
   }
 }
-
-

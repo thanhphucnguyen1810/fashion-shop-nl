@@ -4,14 +4,16 @@ import {
   removeCoupon,
   getAllActiveCoupons
 } from '~/controllers/coupon.controller'
+import { validateRequest } from '~/middlewares/validation.middleware'
+import { couponValidation } from '~/validations/coupon.validation'
 
 const router = express.Router()
 
 // --- Customer apply coupon ---
-router.post('/apply', applyCoupon)
+router.post('/apply', validateRequest(couponValidation.applyCoupon), applyCoupon)
 
 // --- Customer remove coupon ---
-router.post('/remove', removeCoupon)
+router.post('/remove', validateRequest(couponValidation.removeCoupon), removeCoupon)
 
 router.get('/active', getAllActiveCoupons)
 

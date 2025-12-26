@@ -32,16 +32,26 @@ const Login = () => {
   const isCheckoutRedirect = redirect.includes('checkout')
 
   useEffect(() => {
-    if (user) {
-      if (cart?.products.length > 0 && guestId) {
-        dispatch(mergeCart({ guestId, user })).then(() => {
-          navigate(isCheckoutRedirect ? '/checkout' : '/')
-        })
-      } else {
-        navigate(isCheckoutRedirect ? '/checkout' : '/')
-      }
+    if (!user) return
+
+    // ADMIN / STAFF → ADMIN DASHBOARD
+    if (user.role === 'admin' || user.role === 'staff') {
+      navigate('/admin')
+      return
+    }
+
+    // USER THƯỜNG
+    const target = isCheckoutRedirect ? '/checkout' : '/'
+
+    if (cart?.products.length > 0 && guestId) {
+      dispatch(mergeCart({ guestId, user })).then(() => {
+        navigate(target)
+      })
+    } else {
+      navigate(target)
     }
   }, [user, guestId, cart, navigate, isCheckoutRedirect, dispatch])
+
 
   // ===== Parse token từ OAuth redirect =====
   useEffect(() => {

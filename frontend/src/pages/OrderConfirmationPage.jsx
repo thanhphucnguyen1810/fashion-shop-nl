@@ -6,13 +6,12 @@ import { toast } from 'sonner'
 import {
   getCheckoutDetail,
   finalizeOrder,
-  getSepayQrInfo, // Import mới: Lấy QR
-  checkPaymentStatus // Import mới: Check thanh toán
+  getSepayQrInfo,
+  checkPaymentStatus
 } from '~/redux/slices/checkoutSlice'
 import { Divider, CircularProgress } from '@mui/material'
 import EnhancedQRCodePayment from '~/components/Checkout/EnhancedQRCodePayment'
 
-// --- HÀM HỖ TRỢ FORMAT TIỀN ---
 const formatCurrency = (amount) => amount?.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })
 
 const OrderConfirm = () => {
@@ -20,14 +19,11 @@ const OrderConfirm = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
 
-  // Ref để quản lý việc gọi API kiểm tra thanh toán liên tục (Polling)
   const pollingInterval = useRef(null)
 
-  // State để disable nút khi đang bấm xác nhận
   const [isFinalizing, setIsFinalizing] = useState(false)
 
-  // Lấy dữ liệu từ Redux
-  const { checkout, loading, error, qrData, isPaidSuccess, finalOrderId } = useSelector((state) => state.checkout)
+  const { checkout, error, qrData, isPaidSuccess, finalOrderId } = useSelector((state) => state.checkout)
 
   // Biến kiểm tra xem đây là đơn COD hay Online
   const isCOD = checkout?.paymentMethod === 'COD'
@@ -71,7 +67,7 @@ const OrderConfirm = () => {
   }, [isPaidSuccess, finalOrderId, navigate])
 
 
-  // 4. LOGIC XỬ LÝ NÚT BẤM CHO COD (Giữ nguyên của bạn)
+  // 4. LOGIC XỬ LÝ NÚT BẤM CHO COD
   const handleFinalizeCOD = async () => {
     if (!checkout || isFinalizing || checkout.isPaid) return
     setIsFinalizing(true)
@@ -98,7 +94,7 @@ const OrderConfirm = () => {
   // Xử lý loading/lỗi
   if (error || !checkout) return <div className="p-10 text-center text-red-500 font-bold">Không tìm thấy đơn hàng hoặc có lỗi xảy ra.</div>
 
-  // Màn hình chờ khi Sepay đã ting ting
+  // Màn hình chờ khi Sepay
   if (isPaidSuccess) {
     return (
       <div className="h-[60vh] flex flex-col items-center justify-center bg-green-50">
@@ -118,10 +114,10 @@ const OrderConfirm = () => {
         {/* CỘT TRÁI: NỘI DUNG CHÍNH */}
         <div className="lg:col-span-8 space-y-6">
 
-          {/* CARD THANH TOÁN (QUAN TRỌNG: CHIA 2 TRƯỜNG HỢP) */}
+          {/* CARD THANH TOÁN ( 2 TRƯỜNG HỢP) */}
           <div className={`bg-white rounded-xl p-8 shadow-md border-t-4 ${isCOD ? 'border-blue-500' : 'border-green-500'}`}>
 
-            {/* ================= TRƯỜNG HỢP 1: COD (CỦA BẠN ĐÂY) ================= */}
+            {/* ================= TRƯỜNG HỢP 1: COD  ================= */}
             {isCOD ? (
               <div className="flex flex-col md:flex-row items-center gap-6">
                 <div className="w-16 h-16 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-3xl">
@@ -133,19 +129,33 @@ const OrderConfirm = () => {
                       Bạn đã chọn thanh toán khi nhận hàng. Vui lòng kiểm tra kỹ thông tin và bấm xác nhận để hoàn tất.
                   </p>
 
-                  {/* NÚT BẤM XÁC NHẬN CỦA BẠN */}
+                  {/* NÚT BẤM XÁC NHẬN*/}
                   <button
                     onClick={handleFinalizeCOD}
                     disabled={isFinalizing}
                     className="w-full md:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md flex items-center justify-center gap-2 transition-all"
                   >
-                    {isFinalizing ? <CircularProgress size={20} color="inherit" /> : <i className="fa-solid fa-check"></i>}
-                    {isFinalizing ? 'ĐANG XỬ LÝ...' : 'XÁC NHẬN ĐẶT HÀNG'}
+                    <span className="w-5 h-5 flex items-center justify-center">
+                      <CircularProgress
+                        size={20}
+                        color="inherit"
+                        style={{ display: isFinalizing ? 'block' : 'none' }}
+                      />
+                      <i
+                        className="fa-solid fa-check"
+                        style={{ display: isFinalizing ? 'none' : 'block' }}
+                      ></i>
+                    </span>
+
+                    <span>
+                      {isFinalizing ? 'ĐANG XỬ LÝ...' : 'XÁC NHẬN ĐẶT HÀNG'}
+                    </span>
                   </button>
+
                 </div>
               </div>
             ) : (
-            /* ================= TRƯỜNG HỢP 2: SEPAY (MỚI THÊM) ================= */
+            /* ================= TRƯỜNG HỢP 2: SEPAY ================= */
               <EnhancedQRCodePayment
                 qrData={qrData}
                 isPaidSuccess={isPaidSuccess}
@@ -153,7 +163,7 @@ const OrderConfirm = () => {
             )}
           </div>
 
-          {/* THÔNG TIN NGƯỜI NHẬN (GIỮ NGUYÊN) */}
+          {/* THÔNG TIN NGƯỜI NHẬN */}
           <div className="bg-white rounded-xl p-6 shadow-sm border">
             <h3 className="font-bold text-lg mb-4 text-gray-800 border-b pb-2">Thông tin nhận hàng</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
@@ -177,7 +187,7 @@ const OrderConfirm = () => {
 
         </div>
 
-        {/* CỘT PHẢI: TÓM TẮT ĐƠN HÀNG (GIỮ NGUYÊN) */}
+        {/* CỘT PHẢI: TÓM TẮT ĐƠN HÀNG */}
         <div className="lg:col-span-4">
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 sticky top-4 overflow-hidden">
             <div className="p-4 bg-gray-50 border-b">

@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState, useRef } from 'react'
 import { fetchAdminProducts } from '~/redux/slices/admin/adminProductSlice'
 import { fetchAllOrders } from '~/redux/slices/admin/adminOrderSlice'
 import {
-  XAxis, YAxis, CartesianGrid, Tooltip,
+  XAxis, YAxis, Tooltip,
   ResponsiveContainer, AreaChart, Area,
   BarChart, Bar, Cell
 } from 'recharts'
@@ -23,7 +23,6 @@ const AdminHomePage = () => {
   const dispatch = useDispatch()
   const [timeFrame, setTimeFrame] = useState('day')
 
-  // 1. Khai báo Refs và Hooks ở cấp cao nhất
   const reportRef = useRef(null)
   const handlePrint = useReactToPrint({
     contentRef: reportRef,
@@ -38,12 +37,11 @@ const AdminHomePage = () => {
     dispatch(fetchAllOrders())
   }, [dispatch])
 
-  // 2. Logic xuất Excel (Đã thêm SĐT, Thanh Toán, Số lượng)
+
   const exportToExcel = async () => {
     const workbook = new ExcelJS.Workbook()
     const worksheet = workbook.addWorksheet('Báo cáo doanh thu')
 
-    // 1. Định nghĩa các cột (Thêm Phone, Payment, Items)
     worksheet.columns = [
       { header: 'MÃ ĐƠN HÀNG', key: 'id', width: 20 },
       { header: 'NGÀY ĐẶT', key: 'date', width: 15 },
@@ -55,20 +53,18 @@ const AdminHomePage = () => {
       { header: 'TRẠNG THÁI', key: 'status', width: 20 }
     ]
 
-    // 2. Định dạng dòng Header
     const headerRow = worksheet.getRow(1)
     headerRow.font = { bold: true, color: { argb: 'FFFFFF' }, size: 11 }
     headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '2563EB' } }
     headerRow.alignment = { vertical: 'middle', horizontal: 'center' }
 
-    // 3. Thêm dữ liệu
     orders.forEach(o => {
       const row = worksheet.addRow({
         id: o._id.toUpperCase(),
         date: new Date(o.createdAt).toLocaleDateString('vi-VN'),
         user: o.user?.name || 'Khách vãng lai',
-        phone: o.shippingAddress?.phone || o.user?.phone || 'N/A', // Lấy từ địa chỉ giao hàng hoặc profile
-        items: o.orderItems?.reduce((acc, item) => acc + item.quantity, 0) || 0, // Tính tổng SP
+        phone: o.shippingAddress?.phone || o.user?.phone || 'N/A',
+        items: o.orderItems?.reduce((acc, item) => acc + item.quantity, 0) || 0,
         payment: o.paymentMethod || 'Thẻ/Tiền mặt',
         total: o.totalPrice,
         status: o.status === 'Delivered' ? 'Đã giao hàng' :
@@ -76,31 +72,27 @@ const AdminHomePage = () => {
             o.status === 'InTransit' ? 'Đang giao' : 'Chờ xác nhận'
       })
 
-      // Căn chỉnh cho đẹp
       row.getCell('date').alignment = { horizontal: 'center' }
       row.getCell('items').alignment = { horizontal: 'center' }
       row.getCell('status').alignment = { horizontal: 'center' }
       row.getCell('total').numFmt = '#,##0"đ"'
     })
 
-    // 4. Thêm dòng tổng cộng
     const totalRowNumber = worksheet.rowCount + 1
     const totalRow = worksheet.getRow(totalRowNumber)
     totalRow.getCell('id').value = 'TỔNG CỘNG DOANH THU'
     totalRow.getCell('total').value = totalSales
     totalRow.font = { bold: true, size: 12 }
 
-    // Gộp ô từ cột A đến F cho dòng tổng cộng
     worksheet.mergeCells(`A${totalRowNumber}:F${totalRowNumber}`)
     totalRow.getCell('id').alignment = { horizontal: 'right' }
 
-    // 5. Xuất file
     const buffer = await workbook.xlsx.writeBuffer()
     const data = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     saveAs(data, `TheAurora_Revenue_${timeFrame}.xlsx`)
   }
 
-  // 3. Xử lý dữ liệu biểu đồ
+  // Xử lý dữ liệu biểu đồ
   const processedData = useMemo(() => {
     if (!orders || orders.length === 0) return { revenueData: [], statusData: [] }
 
@@ -132,6 +124,41 @@ const AdminHomePage = () => {
       ]
     }
   }, [orders, timeFrame])
+
+  const revenueDataSorted = useMemo(() => {
+    const data = [...processedData.revenueData]
+
+    if (timeFrame === 'day') {
+      return data.sort((a, b) => {
+        const [dayA, monthA] = a.name.split('/').map(Number)
+        const [dayB, monthB] = b.name.split('/').map(Number)
+        return new Date(2024, monthA - 1, dayA) - new Date(2024, monthB - 1, dayB)
+      })
+    }
+
+    if (timeFrame === 'month') {
+      return data.sort((a, b) => {
+        const monthA = Number(a.name.replace('Tháng ', ''))
+        const monthB = Number(b.name.replace('Tháng ', ''))
+        return monthA - monthB
+      })
+    }
+
+    if (timeFrame === 'quarter') {
+      return data.sort((a, b) => {
+        const [qA, yA] = a.name.replace('Quý ', '').split('/').map(Number)
+        const [qB, yB] = b.name.replace('Quý ', '').split('/').map(Number)
+        return yA !== yB ? yA - yB : qA - qB
+      })
+    }
+
+    if (timeFrame === 'year') {
+      return data.sort((a, b) => Number(a.name) - Number(b.name))
+    }
+
+    return data
+  }, [processedData.revenueData, timeFrame])
+
 
   if (loading) return <div className="p-10 text-center font-bold">Đang tải dữ liệu...</div>
 
@@ -191,7 +218,7 @@ const AdminHomePage = () => {
         <div className={`lg:col-span-2 p-6 rounded-2xl border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
           <h2 className="text-lg font-bold mb-6 text-blue-500">Biểu đồ doanh thu</h2>
           <ResponsiveContainer width="100%" height={320}>
-            <AreaChart data={processedData.revenueData}>
+            <AreaChart data={revenueDataSorted}>
               <XAxis dataKey="name" tick={{ fontSize: 12 }} />
               <YAxis tickFormatter={(v) => `${v/1000000}M`} />
               <Tooltip formatter={(v) => formatCurrency(v)} />

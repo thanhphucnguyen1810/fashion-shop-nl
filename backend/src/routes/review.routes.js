@@ -8,12 +8,27 @@ import {
 
 import { protect } from '~/middlewares/auth.middleware'
 import { logSecurity } from '~/middlewares/logger.middleware'
+import { validateRequest } from '~/middlewares/validation.middleware'
+import { reviewValidation } from '~/validations/review.validation'
 
 const router = express.Router()
 
-router.post('/', protect, upload.array('images', 5), createReview)
-router.get('/product/:productId', getProductReviews)
-router.delete('/:id', protect, logSecurity('DELETE_REVIEW'), deleteReview)
+router.post('/',
+  protect,
+  upload.array('images', 5),
+  validateRequest(reviewValidation.createReview),
+  createReview
+)
 
+router.get('/product/:productId',
+  validateRequest(reviewValidation.productIdParam, 'params'),
+  getProductReviews
+)
+
+router.delete('/:id',
+  protect,
+  validateRequest(reviewValidation.reviewIdParam, 'params'),
+  logSecurity('DELETE_REVIEW'),
+  deleteReview
+)
 export default router
-

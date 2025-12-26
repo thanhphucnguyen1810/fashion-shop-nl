@@ -1,7 +1,7 @@
 import express from 'express'
 import { adminCouponController } from '~/controllers/admin/admin.coupon.controller'
 import { protect, admin } from '~/middlewares/auth.middleware'
-import { logSecurity } from '~/middlewares/logger.middleware' 
+import { logSecurity } from '~/middlewares/logger.middleware'
 
 const router = express.Router()
 
