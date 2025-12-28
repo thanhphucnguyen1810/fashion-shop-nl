@@ -9,17 +9,12 @@ const renderStars = (rating) => {
 
   return (
     <div className="flex items-center">
-      {/* Sao đầy */}
       {[...Array(fullStars)].map((_, i) => (
         <FaStar key={`full-${i}`} className="mr-1" color="#ffc300" />
       ))}
-
-      {/* Sao nửa */}
       {hasHalfStar && (
         <FaStarHalfAlt className="mr-1" color="#ffc300" />
       )}
-
-      {/* Sao rỗng */}
       {[...Array(emptyStars)].map((_, i) => (
         <FaStar key={`empty-${i}`} className="mr-1" color="#ddd" />
       ))}

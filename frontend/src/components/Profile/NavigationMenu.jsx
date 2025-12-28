@@ -31,7 +31,6 @@ const NavigationMenu = ({ theme, tabValue, setTabValue }) => {
     toast.success('Đăng xuất thành công!', { duration: 1000 })
   }
 
-  // Cấu hình Menu
   const profileMenu = [
     { index: 0, label: 'Thông tin cá nhân', icon: <PersonOutlineIcon /> },
     { index: 1, label: 'Đơn hàng của tôi', icon: <ShoppingBagOutlinedIcon /> },

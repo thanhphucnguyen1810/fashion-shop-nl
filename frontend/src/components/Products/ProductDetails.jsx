@@ -14,7 +14,6 @@ import ProductReviews from '../ProductReviews'
 
 const formatCurrency = (amount) => {
   if (amount === undefined || amount === null) return '0đ'
-  // Sử dụng 'vi-VN' để định dạng dấu chấm và thêm 'đ'
   return new Intl.NumberFormat('vi-VN').format(amount) + 'đ'
 }
 
@@ -131,12 +130,10 @@ const ProductDetails = ({ productId }) => {
     )
       .unwrap()
       .then((response) => {
-        // Giả định response.orderId là ID của đơn hàng tạm thời
         const tempOrderId = response.orderId
 
         toast.success('Đang chuyển đến trang thanh toán...', { duration: 500 })
 
-        // Điều hướng sang trang thanh toán, truyền Order ID tạm thời
         navigate('/checkout', {
           state: {
             orderId: tempOrderId,
@@ -165,16 +162,16 @@ const ProductDetails = ({ productId }) => {
     <div className='p-6'>
       { selectedProduct && (
         <div className='max-w-6xl mx-auto'>
-          {/* --------------------------- PHẦN TRÊN (HÌNH ẢNH & CHI TIẾT) --------------------------- */}
+          {/* --------------------------- (HÌNH ẢNH & CHI TIẾT) --------------------------- */}
           <div
             className='p-6 md:p-8 rounded-lg shadow-md flex flex-col md:flex-row gap-8 md:gap-12 items-start'
             style={{ backgroundColor: theme.palette.background.paper }}
           >
 
-            {/* --- CỘT TRÁI: HÌNH ẢNH (Chiếm 50%) --- */}
+            {/* --- CỘT TRÁI: HÌNH ẢNH  --- */}
             <div className='w-full md:w-1/2 flex h-[450px] md:h-[500px] gap-4'>
 
-              {/* List hình nhỏ (Scroll dọc) */}
+              {/* List hình nhỏ */}
               <div className='hidden md:flex flex-col space-y-4 w-24 overflow-y-auto pr-1 custom-scrollbar'>
                 {selectedProduct.images.map((image, index) => (
                   <img
@@ -202,7 +199,7 @@ const ProductDetails = ({ productId }) => {
             </div>
 
 
-            {/* --- CỘT PHẢI: THÔNG TIN (Chiếm 50%) --- */}
+            {/* --- CỘT PHẢI: THÔNG TIN --- */}
             <div className='w-full md:w-1/2 flex flex-col'>
 
               <h1
@@ -252,10 +249,9 @@ const ProductDetails = ({ productId }) => {
                       onClick={() => setSelectedColor(color)}
                       className={`px-6 py-2 rounded border text-sm font-medium transition-all ${selectedColor === color ? 'shadow-sm ring-1 ring-offset-1' : 'hover:border-gray-400'}`}
                       style={{
-                        backgroundColor: selectedColor === color ? theme.palette.background.paper : 'transparent', // Giữ nền trắng cho dễ đọc
+                        backgroundColor: selectedColor === color ? theme.palette.background.paper : 'transparent',
                         color: selectedColor === color ? theme.palette.primary.main : theme.palette.text.primary,
                         borderColor: selectedColor === color ? theme.palette.primary.main : theme.palette.divider
-                        // outlineColor: theme.palette.primary.main // Cho ring màu
                       }}
                     >
                       {color}
@@ -287,8 +283,8 @@ const ProductDetails = ({ productId }) => {
                 </div>
               </div>
 
-              {/* Số lượng & Nút Mua (Gộp chung 1 hàng cho gọn) */}
-              <div className='mt-auto'> {/* mt-auto đẩy phần này xuống đáy nếu cột bên phải ngắn hơn ảnh */}
+              {/* Số lượng & Nút Mua */}
+              <div className='mt-auto'>
                 <div className='flex flex-col sm:flex-row gap-4 items-stretch sm:items-end'>
 
                   {/* Input Số lượng */}
@@ -319,13 +315,13 @@ const ProductDetails = ({ productId }) => {
                       disabled={isButtonDisabled}
                       className='h-12 px-4 rounded flex-1 uppercase font-bold border transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md'
                       style={{
-                        backgroundColor: theme.palette.action.hover, // Màu nhạt
+                        backgroundColor: theme.palette.action.hover,
                         color: theme.palette.primary.main,
                         borderColor: theme.palette.primary.main,
                         opacity: isButtonDisabled ? 0.6 : 1
                       }}
                     >
-                      <i className="fa-solid fa-cart-plus"></i> {/* Ví dụ icon */}
+                      <i className="fa-solid fa-cart-plus"></i>
              Thêm vào giỏ
                     </button>
                     <button
@@ -346,7 +342,7 @@ const ProductDetails = ({ productId }) => {
             </div>
           </div>
 
-          {/* --------------------------- PHẦN DƯỚI (TABS: CHI TIẾT & ĐÁNH GIÁ) --------------------------- */}
+          {/* --------------------------- (TABS: CHI TIẾT & ĐÁNH GIÁ) --------------------------- */}
           <div className='mt-10 p-8 rounded-lg shadow-md' style={{ backgroundColor: theme.palette.background.paper }}>
             {/* Nav Tab */}
             <div className='flex border-b mb-4' style={{ borderColor: theme.palette.divider }}>

@@ -80,28 +80,23 @@ const Navbar = () => {
               <Link
                 to="/profile"
                 className="flex items-center p-2 rounded-full hover:bg-gray-200 dark:hover:bg-slate-600 transition"
-                title={`${user?.name || 'Người dùng'}`} // Hiển thị tên trong tooltip
+                title={`${user?.name || 'Người dùng'}`}
               >
-                {/* 1. Hiển thị Ảnh đại diện/Avatar */}
                 {user?.avatar?.url ? (
-                // Nếu có ảnh đại diện, hiển thị ảnh tròn
                   <img
                     src={user.avatar?.url}
                     alt={user.name || 'Avatar'}
                     className="w-7 h-7 md:w-8 md:h-8 rounded-full object-cover border border-gray-300 dark:border-gray-500"
                   />
                 ) : (
-                // Nếu không có ảnh, hiển thị icon người dùng/chữ cái đầu
                   <div
                     className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center text-sm font-semibold text-white"
-                    style={{ backgroundColor: primaryColor }} // Dùng màu Accent/Primary làm nền
+                    style={{ backgroundColor: primaryColor }}
                   >
-                    {/* Hiển thị chữ cái đầu tiên của tên */}
                     {user?.name ? user.name[0].toUpperCase() : <HiOutlineUser className="w-4 h-4" />}
                   </div>
                 )}
 
-                {/* 2. Hiển thị Tên người dùng */}
                 <span
                   className="hidden lg:inline ml-2 text-sm font-medium"
                   style={{ color: theme.palette.text.primary }}

@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom'
 import MyOrdersList from '~/pages/MyOrdersPage'
 import { FaWallet, FaBox, FaTruckFast, FaStar, FaLayerGroup, FaBan, FaArrowRotateLeft } from 'react-icons/fa6'
 
-// Component con hỗ trợ TabPanel (Optional)
 function TabPanel(props) {
   const { children, value, index, ...other } = props
   return (

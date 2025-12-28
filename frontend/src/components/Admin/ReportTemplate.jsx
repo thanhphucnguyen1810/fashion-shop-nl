@@ -19,7 +19,7 @@ export const ReportTemplate = React.forwardRef(({ data, timeFrame, totalSales },
         </div>
       </div>
 
-      {/* Tiêu đề báo cáo */}
+      {/* Tiêu đề */}
       <div className="text-center my-10">
         <h2 className="text-2xl font-bold uppercase tracking-widest">Báo Cáo Thống Kê Doanh Thu</h2>
         <p className="text-sm italic mt-1">
@@ -82,7 +82,7 @@ export const ReportTemplate = React.forwardRef(({ data, timeFrame, totalSales },
         </table>
       </div>
 
-      {/* Phần xác nhận ký tên */}
+      {/*  ký tên */}
       <div className="mt-12 grid grid-cols-2 gap-10 text-center">
         <div></div>
         <div className="flex flex-col items-center">

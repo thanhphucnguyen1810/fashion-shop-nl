@@ -83,7 +83,6 @@ const WriteReviewButton = ({ productId }) => {
             value={comment}
             onChange={(e) => setComment(e.target.value)}
           />
-          {/* Bạn có thể thêm input cho media ở đây */}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} color="secondary">

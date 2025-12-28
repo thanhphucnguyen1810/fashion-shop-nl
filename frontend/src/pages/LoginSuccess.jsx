@@ -9,9 +9,9 @@ const LoginSuccess = () => {
     const token = params.get('token')
     if (token) {
       localStorage.setItem('token', token)
-      navigate('/') // redirect đến trang dashboard/home
+      navigate('/')
     } else {
-      navigate('/login') // nếu không có token
+      navigate('/login')
     }
   }, [navigate])
 

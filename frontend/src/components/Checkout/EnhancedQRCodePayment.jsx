@@ -49,7 +49,7 @@ const EnhancedQRCodePayment = ({ qrData, isPaidSuccess }) => {
               </Box>
             )}
 
-            {/* TRẠNG THÁI THANH TOÁN OVERLAY */}
+            {/* TRẠNG THÁI THANH TOÁN */}
             {qrData && (
               <div
                 className={`absolute inset-0 flex flex-col items-center justify-center rounded-xl transition-opacity duration-700 
@@ -80,7 +80,7 @@ const EnhancedQRCodePayment = ({ qrData, isPaidSuccess }) => {
           </div>
         )}
 
-        {/* KHU VỰC LƯU Ý QUAN TRỌNG */}
+        {/* KHU VỰC LƯU Ý*/}
         {qrData && (
           <div className="mt-8 bg-blue-50 p-4 rounded-lg border border-blue-200 text-left text-base text-gray-700">
             <Typography variant="body1">

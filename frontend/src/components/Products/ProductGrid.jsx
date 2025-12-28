@@ -60,25 +60,16 @@ const ProductGrid = ({ products, loading, error, columnCount, isFetching }) => {
     }
   }
 
-  //  HÀM HANDLE CHÍNH XÁC (Optimistic Update)
   const handleToggleFavorite = (e, productId) => {
     e.preventDefault()
     e.stopPropagation()
-
-    // ... (Check isLoggedIn)
-
-    // Lấy trạng thái yêu thích HIỆN TẠI (trước khi click)
     const isCurrentlyFavorite = favoriteProductIds.includes(productId)
 
-    // 1. CẬP NHẬT GIAO DIỆN TỨC THÌ (Optimistic Update)
     dispatch(toggleFavoriteLocal(productId))
 
-    // 2. GỌI API để đồng bộ với Backend (dựa trên trạng thái CŨ)
     if (isCurrentlyFavorite) {
-      // Nếu trạng thái CŨ là ĐANG yêu thích -> gọi API XÓA
       dispatch(removeFavorite(productId))
     } else {
-      // Nếu trạng thái CŨ là KHÔNG yêu thích -> gọi API THÊM
       dispatch(addFavorite(productId))
     }
   }

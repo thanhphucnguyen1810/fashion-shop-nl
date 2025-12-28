@@ -24,23 +24,18 @@ const SearchBar = () => {
   const handleSearch = (e) => {
     e.preventDefault()
 
-    // 1. Lấy tất cả params hiện tại từ URL (để giữ lại sortBy, filters,...)
     const currentSearchParams = new URLSearchParams(location.search)
 
-    // 2. Thiết lập tham số search mới
     if (searchTerm) {
       currentSearchParams.set('search', searchTerm)
     } else {
-      currentSearchParams.delete('search') // Xóa nếu ô tìm kiếm rỗng
+      currentSearchParams.delete('search')
     }
 
     const queryString = currentSearchParams.toString()
 
-    // 3. Cập nhật Redux (Tùy chọn, nhưng tốt cho đồng bộ)
     dispatch(setFilters({ search: searchTerm }))
 
-    // 4. Điều hướng đến trang collections với tất cả params
-    // KHÔNG CẦN dispatch(fetchProducts) ở đây, vì CollectionPage sẽ tự động fetch khi URL thay đổi.
     navigate(`/collections?${queryString}`)
     setIsOpen(false)
   }
@@ -64,7 +59,6 @@ const SearchBar = () => {
           onSubmit={handleSearch}
           className="relative w-full max-w-3xl mx-auto flex items-center"
         >
-          {/* Ô nhập tìm kiếm */}
           <input
             type="text"
             placeholder="Tìm kiếm sản phẩm..."
@@ -77,7 +71,6 @@ const SearchBar = () => {
             }`}
           />
 
-          {/* Biểu tượng tìm kiếm */}
           <button
             type="submit"
             className="absolute right-12 top-1/2 transform -translate-y-1/2 transition"
@@ -89,7 +82,6 @@ const SearchBar = () => {
             <HiMagnifyingGlass className="w-6 h-6" />
           </button>
 
-          {/* Biểu tượng đóng */}
           <button
             type="button"
             onClick={handleSearchToggle}

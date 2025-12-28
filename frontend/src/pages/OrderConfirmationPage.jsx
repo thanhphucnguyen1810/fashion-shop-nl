@@ -25,7 +25,6 @@ const OrderConfirm = () => {
 
   const { checkout, error, qrData, isPaidSuccess, finalOrderId } = useSelector((state) => state.checkout)
 
-  // Biến kiểm tra xem đây là đơn COD hay Online
   const isCOD = checkout?.paymentMethod === 'COD'
 
   // 1. Lấy chi tiết Checkout khi vào trang
@@ -89,7 +88,6 @@ const OrderConfirm = () => {
     }
   }
 
-  // --- RENDER GIAO DIỆN ---
 
   // Xử lý loading/lỗi
   if (error || !checkout) return <div className="p-10 text-center text-red-500 font-bold">Không tìm thấy đơn hàng hoặc có lỗi xảy ra.</div>

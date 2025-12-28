@@ -54,18 +54,18 @@ const AdminSidebar = () => {
 
   return (
     <aside
-      className="p-6 flex flex-col" // Sử dụng flex-col để chia không gian
+      className="p-6 flex flex-col"
       style={{
         backgroundColor: theme.palette.background.paper,
         color: theme.palette.text.primary,
-        height: '100vh', // Cố định chiều cao bằng màn hình
-        position: 'sticky', // Giữ sidebar đứng yên khi scroll trang chính
+        height: '100vh',
+        position: 'sticky',
         top: 0,
         borderRight: `1px solid ${theme.palette.divider}`,
-        width: '260px' // Đảm bảo độ rộng cố định
+        width: '260px'
       }}
     >
-      {/* Phần Logo: Không cuộn */}
+      {/* Phần Logo */}
       <div className="mb-6 flex-shrink-0">
         <Link to="/admin" className="text-2xl font-bold tracking-tighter" style={{ color: theme.palette.primary.main }}>
           TheAurora
@@ -75,11 +75,10 @@ const AdminSidebar = () => {
         </h2>
       </div>
 
-      {/* Phần Navigation: CÓ THANH CUỘN RIÊNG */}
+      {/* Phần Navigation */}
       <nav
         className="flex-grow overflow-y-auto pr-2 custom-scrollbar"
         style={{
-          /* Tùy chỉnh thanh cuộn cho Chrome/Safari */
           scrollbarWidth: 'thin',
           msOverflowStyle: 'none'
         }}
@@ -106,7 +105,6 @@ const AdminSidebar = () => {
                 fontWeight: isActive ? 600 : 400,
                 fontSize: '0.95rem'
               })}
-              // Hiệu ứng hover cho NavLink
               onMouseEnter={(e) => {
                 if (!e.currentTarget.classList.contains('active')) {
                   e.currentTarget.style.backgroundColor = alpha(theme.palette.primary.main, 0.08)
@@ -127,7 +125,7 @@ const AdminSidebar = () => {
         </div>
       </nav>
 
-      {/* Phần Logout: Không cuộn, luôn nằm dưới cùng */}
+      {/* Phần Logout */}
       <div className="mt-6 pt-4 flex-shrink-0 border-t border-dashed border-gray-500/20">
         <button
           onClick={handleLogout}
@@ -150,7 +148,6 @@ const AdminSidebar = () => {
         </button>
       </div>
 
-      {/* CSS Injection cho scrollbar đẹp hơn */}
       <style dangerouslySetInnerHTML={{ __html: `
         .custom-scrollbar::-webkit-scrollbar {
           width: 4px;

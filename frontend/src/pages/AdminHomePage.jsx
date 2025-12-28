@@ -106,16 +106,37 @@ const AdminHomePage = () => {
 
       const date = new Date(order.createdAt)
       let label = ''
-      if (timeFrame === 'day') label = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })
-      else if (timeFrame === 'month' && date.getFullYear() === now.getFullYear()) label = `Tháng ${date.getMonth() + 1}`
-      else if (timeFrame === 'quarter') label = `Quý ${Math.floor(date.getMonth() / 3) + 1}/${date.getFullYear()}`
-      else if (timeFrame === 'year') label = `${date.getFullYear()}`
+      let sortValue = 0 // Dùng để sắp xếp chính xác
 
-      if (label) revenueMap[label] = (revenueMap[label] || 0) + order.totalPrice
+      if (timeFrame === 'day') {
+        label = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })
+        // sortValue là YYYYMMDD (ví dụ 20241225)
+        sortValue = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate()
+      }
+      else if (timeFrame === 'month' && date.getFullYear() === now.getFullYear()) {
+        label = `Tháng ${date.getMonth() + 1}`
+        sortValue = date.getMonth() // 0 - 11
+      }
+      else if (timeFrame === 'quarter') {
+        const quarter = Math.floor(date.getMonth() / 3) + 1
+        label = `Quý ${quarter}/${date.getFullYear()}`
+        sortValue = date.getFullYear() * 10 + quarter // ví dụ 20241, 20242
+      }
+      else if (timeFrame === 'year') {
+        label = `${date.getFullYear()}`
+        sortValue = date.getFullYear()
+      }
+
+      if (label) {
+        if (!revenueMap[label]) {
+          revenueMap[label] = { name: label, revenue: 0, sortValue: sortValue }
+        }
+        revenueMap[label].revenue += order.totalPrice
+      }
     })
 
     return {
-      revenueData: Object.keys(revenueMap).map(key => ({ name: key, revenue: revenueMap[key] })),
+      revenueData: Object.values(revenueMap),
       statusData: [
         { name: 'Chờ xác nhận', value: statusMap['AwaitingConfirmation'], color: '#f59e0b' },
         { name: 'Đang giao', value: statusMap['InTransit'], color: '#3b82f6' },
@@ -129,12 +150,9 @@ const AdminHomePage = () => {
     const data = [...processedData.revenueData]
 
     if (timeFrame === 'day') {
-      return data.sort((a, b) => {
-        const [dayA, monthA] = a.name.split('/').map(Number)
-        const [dayB, monthB] = b.name.split('/').map(Number)
-        return new Date(2024, monthA - 1, dayA) - new Date(2024, monthB - 1, dayB)
-      })
+      return data.sort((a, b) => a.sortValue - b.sortValue)
     }
+
 
     if (timeFrame === 'month') {
       return data.sort((a, b) => {
@@ -156,7 +174,7 @@ const AdminHomePage = () => {
       return data.sort((a, b) => Number(a.name) - Number(b.name))
     }
 
-    return data
+    return data.sort((a, b) => a.sortValue - b.sortValue)
   }, [processedData.revenueData, timeFrame])
 
 

@@ -70,7 +70,7 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* === 2. Thông tin liên hệ & Socials (Tập trung) === */}
+        {/* === 2. Thông tin liên hệ & Socials=== */}
         <div className='md:col-span-1'>
           <h3 style={headingStyle} className='uppercase'>Liên hệ & Theo dõi</h3>
 

@@ -17,7 +17,6 @@ import {
 } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 
-// --- Color Mapping Utility ---
 const getColorCode = (colorName) => {
   const lowerCaseName = colorName.toLowerCase()
   switch (lowerCaseName) {
@@ -81,7 +80,6 @@ const FilterSidebar = () => {
 
   const [priceRange, setPriceRange] = useState([0, 500])
 
-  // Dữ liệu bộ lọc
   const categories = [
     'Thời trang nam',
     'Thời trang nữ',
@@ -180,16 +178,11 @@ const FilterSidebar = () => {
   // --- Event Handlers ---
   const updateURLParams = (newFilters) => {
     const params = new URLSearchParams(searchParams)
-
-    // 1. Xóa các filters cũ mà component này quản lý
     const filterKeys = Object.keys(filters)
     filterKeys.forEach((key) => params.delete(key))
 
-    // 2. Thêm các filters mới
     filterKeys.forEach((key) => {
       const value = newFilters[key]
-
-      // BỎ QUA 'collection' vì nó là route param
       if (key === 'collection') return
 
       if (Array.isArray(value) && value.length > 0) {
@@ -213,13 +206,8 @@ const FilterSidebar = () => {
     const currentPath = location.pathname
 
     if (newCategory) {
-      // Ví dụ: Nếu URL ban đầu là /collections/thoi-trang-nam
-      // Và người dùng chọn Category, ta sẽ chuyển hướng đến /collections
-      // hoặc giữ nguyên path nhưng chỉ dùng query params.
-
       const basePath = '/collections'
       const newUrl = `${basePath}?${params.toString()}`
-
       if (currentPath !== basePath) {
         window.history.replaceState({}, '', newUrl)
       }
@@ -251,7 +239,6 @@ const FilterSidebar = () => {
   }
 
   const handlePriceChange = (event, newValue) => {
-    // newValue là một số (từ 0 đến MAX_PRICE_VALUE)
     const newFilters = { ...filters, minPrice: 0, maxPrice: newValue }
     setPriceRange([0, newValue])
     setFilters(newFilters)
@@ -272,7 +259,6 @@ const FilterSidebar = () => {
     setFilters(reset)
     setPriceRange([0, 500])
 
-    // Xóa các params liên quan đến filter, giữ lại search và sortBy
     const currentSearchParams = new URLSearchParams(searchParams)
     const search = currentSearchParams.get('search')
     const sortBy = currentSearchParams.get('sortBy')
@@ -284,7 +270,6 @@ const FilterSidebar = () => {
     setSearchParams(finalParams)
   }
 
-  // Component chung cho Radio/Checkbox Group
   const FilterGroup = ({ title, items, name, type }) => {
     const isChecked = (value) => {
       if (type === 'radio') {
@@ -362,7 +347,6 @@ const FilterSidebar = () => {
     )
   }
 
-  // Component riêng cho Màu sắc
   const ColorFilterGroup = () => (
     <Accordion
       defaultExpanded
@@ -437,7 +421,6 @@ const FilterSidebar = () => {
     </Accordion>
   )
 
-  // Component riêng cho Khoảng giá
   const PriceFilterGroup = () => (
     <Accordion
       defaultExpanded

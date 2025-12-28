@@ -7,9 +7,8 @@ const SortOptions = () => {
 
   const handleSortChange = (e) => {
     const sortBy = e.target.value
-    // searchParams chứa TẤT CẢ params hiện tại (bao gồm search và filters)
     searchParams.set('sortBy', sortBy)
-    setSearchParams(searchParams) // Đặt lại params, kích hoạt CollectionPage fetch data
+    setSearchParams(searchParams)
   }
   return (
     <div

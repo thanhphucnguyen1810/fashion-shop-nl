@@ -163,7 +163,7 @@ const Register = () => {
             name="password"
             value={formData.password}
             onChange={handleChange}
-            placeholder="Tối thiểu 6 ký tự"
+            placeholder="Tối thiểu 8 ký tự"
             Icon={LockOutlined}
             theme={theme}
           />

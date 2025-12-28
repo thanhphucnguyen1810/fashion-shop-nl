@@ -1,4 +1,3 @@
-// src/pages/StockInDetail.jsx
 import { FaTimes } from 'react-icons/fa'
 
 const StockInDetail = ({ stockIn, onClose }) => {

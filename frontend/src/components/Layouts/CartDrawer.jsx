@@ -85,7 +85,6 @@ const CartDrawer = ({ drawerOpen, toggleCartDrawer }) => {
           </button>
         </div>
 
-        {/* 2. Nội dung giỏ hàng */}
         <div className={`grow overflow-y-auto ${bgSection} p-4`}>
           {cart && cart?.products?.length > 0 ? (
             <CartContents cart={cart} userId={userId} guestId={user ? null : cart.guestId} />
@@ -94,11 +93,10 @@ const CartDrawer = ({ drawerOpen, toggleCartDrawer }) => {
           )}
         </div>
 
-        {/* 3. FOOTER (Khu vực thanh toán) */}
+        {/* 3. FOOTER */}
         <div className={`p-4 border-t ${borderColor} ${bgMain} sticky bottom-0`}>
           {cart && cart?.products?.length > 0 && (
             <>
-              {/* TÍCH HỢP COMPONENT MÃ GIẢM GIÁ MỚI */}
               <CartCouponSection />
 
               <div className="space-y-1 mb-3 text-sm">

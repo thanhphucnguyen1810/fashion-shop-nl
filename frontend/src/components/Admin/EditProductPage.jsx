@@ -7,7 +7,6 @@ import { fetchProductDetails } from '~/redux/slices/productSlice'
 import axios from 'axios'
 import { updateProduct } from '~/redux/slices/admin/adminProductSlice'
 
-// Input Field Component - Tinh chỉnh Padding và Font size
 const InputField = ({ label, name, type = 'text', value, onChange, required, inputStyle }) => (
   <div className="flex flex-col gap-1">
     <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">{label}</label>
@@ -22,7 +21,6 @@ const InputField = ({ label, name, type = 'text', value, onChange, required, inp
   </div>
 )
 
-// TextArea Field Component
 const TextAreaField = ({ label, name, value, onChange, required, inputStyle }) => (
   <div className="flex flex-col gap-1">
     <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">{label}</label>
@@ -210,7 +208,7 @@ const EditProductPage = () => {
           </div>
         </div>
 
-        {/* Image Upload Section - Sắp xếp lại theo hàng ngang gọn hơn */}
+        {/* Image Upload Section */}
         <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-dashed border-gray-300">
           <label className="block font-semibold mb-3 text-sm">Hình ảnh sản phẩm</label>
           <div className="flex flex-wrap gap-4 items-center">

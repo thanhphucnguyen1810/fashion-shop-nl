@@ -36,7 +36,6 @@ const CouponModal = ({ open, handleClose, currentCouponCode, authId, isGuest }) 
   const [loading, setLoading] = useState(true)
   const [applyingCode, setApplyingCode] = useState(null)
 
-  // --- 1. Fetch Coupons ---
   const fetchCoupons = useCallback(async () => {
     setLoading(true)
     try {
@@ -58,7 +57,6 @@ const CouponModal = ({ open, handleClose, currentCouponCode, authId, isGuest }) 
     }
   }, [open, fetchCoupons])
 
-  // --- 2. Xử lý Áp dụng Mã (Bằng nút "Chọn") ---
   const handleApplyCoupon = async (code) => {
     setApplyingCode(code)
     try {
