@@ -26,3 +26,4 @@ const securityLogSchema = new mongoose.Schema(
 )
 
 export default mongoose.model('SecurityLog', securityLogSchema)
+

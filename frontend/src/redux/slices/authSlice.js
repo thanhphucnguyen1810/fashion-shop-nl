@@ -298,7 +298,7 @@ const authSlice = createSlice({
         state.error = action.payload.message
       })
 
-      // ===== ADD FAVORITE (Chuyên nghiệp hơn) =====
+      // ===== ADD FAVORITE =====
       .addCase(addFavorite.pending, (state) => {
         // Bật cờ loading khi bắt đầu gọi API
         state.favoriteLoading = true
@@ -310,20 +310,16 @@ const authSlice = createSlice({
           // Đồng bộ state Redux với dữ liệu favorites mới nhất từ Backend
           state.user = { ...state.user, favorites: action.payload }
         }
-        // Lưu vào LocalStorage (Đã được thực hiện trong toggleFavoriteLocal,
-        // nhưng giữ lại ở đây để đảm bảo tính đồng bộ cuối cùng)
+        // Lưu vào LocalStorage
         localStorage.setItem('userInfo', JSON.stringify(state.user))
       })
       .addCase(addFavorite.rejected, (state, action) => {
         // Tắt loading và lưu thông báo lỗi
         state.favoriteLoading = false
         state.favoriteError = action.payload.message
-        // **QUAN TRỌNG: Xử lý hoàn tác Optimistic Update ở đây (nếu cần)**
-        // Nếu API lỗi, bạn cần hoàn tác thay đổi favorites đã làm trong `toggleFavoriteLocal`.
-        // Việc này thường được xử lý bằng cách truyền thêm thông tin vào payload.
       })
 
-    // ===== REMOVE FAVORITE (Chuyên nghiệp hơn) =====
+    // ===== REMOVE FAVORITE =====
       .addCase(removeFavorite.pending, (state) => {
         state.favoriteLoading = true
         state.favoriteError = null
@@ -338,7 +334,6 @@ const authSlice = createSlice({
       .addCase(removeFavorite.rejected, (state, action) => {
         state.favoriteLoading = false
         state.favoriteError = action.payload.message
-        // **QUAN TRỌNG: Xử lý hoàn tác Optimistic Update ở đây (nếu cần)**
       })
   }
 })

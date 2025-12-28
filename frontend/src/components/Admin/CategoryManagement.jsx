@@ -6,8 +6,7 @@ import {
   createCategory,
   updateCategory,
   deleteCategory,
-  clearCategoryError,
-  clearOperationLoading // Import action mới
+  clearCategoryError
 } from '~/redux/slices/categorySlice'
 import { FaEdit, FaTrash, FaPlus, FaSave, FaTimes, FaSpinner, FaExclamationTriangle, FaCheckCircle, FaSearch } from 'react-icons/fa'
 import { HiOutlineInformationCircle } from 'react-icons/hi'
@@ -28,8 +27,7 @@ const CustomModal = ({ isOpen, title, message, onConfirm, onCancel, confirmText 
             <button
               onClick={onCancel}
               className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition duration-200"
-            >
-              Hủy
+            > Hủy
             </button>
           )}
           {onConfirm && (
@@ -79,7 +77,7 @@ const AdminCategoryManager = () => {
   // Xử lý khi có lỗi từ thao tác CRUD
   useEffect(() => {
     if (operationError) {
-      setConfirmModal({ // Sử dụng modal để hiển thị lỗi CRUD
+      setConfirmModal({
         isOpen: true,
         title: 'Lỗi Thao Tác',
         message: operationError,
@@ -135,7 +133,6 @@ const AdminCategoryManager = () => {
       })
   }
 
-
   // Xử lý Bắt đầu chỉnh sửa (khi click nút edit trên bảng)
   const handleEditStart = (category) => {
     setEditingId(category._id)
@@ -145,26 +142,16 @@ const AdminCategoryManager = () => {
 
   // Xử lý Cập nhật danh mục (khi click "Lưu" sau chỉnh sửa)
   const handleUpdate = () => {
-    if (!editingName.trim()) {
-      setConfirmModal({
-        isOpen: true,
-        title: 'Lỗi Nhập Liệu',
-        message: 'Tên danh mục không được để trống!',
-        onConfirm: () => setConfirmModal({ isOpen: false }),
-        onCancel: null,
-        confirmText: 'OK'
-      })
-      return
-    }
+    const formData = new FormData()
+    formData.append('name', editingName)
+    // Nếu bạn có state lưu ảnh đang edit, hãy append vào đây:
+    // if (editingImage) formData.append('image', editingImage)
 
-    dispatch(updateCategory({ id: editingId, name: editingName }))
+    dispatch(updateCategory({ id: editingId, formData }))
       .unwrap()
       .then(() => {
         setEditingId(null)
-        setStatusMessage({ type: 'success', text: 'Đã cập nhật danh mục thành công!' })
-      })
-      .catch(() => {
-        // Lỗi đã được xử lý trong useEffect operationError
+        setStatusMessage({ type: 'success', text: 'Cập nhật thành công!' })
       })
   }
 
@@ -199,17 +186,17 @@ const AdminCategoryManager = () => {
           text: 'Xóa danh mục thất bại! Vui lòng kiểm tra lại Backend.'
         })
       })
-  }, [dispatch]) // Xóa confirmModal.data khỏi dependency array
+  }, [dispatch])
 
 
   // Hàm tạo slug tự động
   const generateSlug = (name) => {
     if (!name) return ''
     return name.toLowerCase()
-      .normalize('NFD') // Chuẩn hóa Unicode
-      .replace(/[\u0300-\u036f]/g, '') // Loại bỏ dấu
-      .replace(/[^a-z0-9]+/g, '-') // Thay thế ký tự không phải chữ/số bằng dấu gạch ngang
-      .replace(/^-+|-+$/g, '') // Loại bỏ gạch ngang ở đầu và cuối
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
   }
 
 

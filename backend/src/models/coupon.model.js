@@ -1,13 +1,12 @@
 import mongoose from 'mongoose'
 
 const COUPON_TYPE = {
-  PERCENTAGE: 'percentage', // Giảm theo phần trăm (ví dụ: 10%)
-  FIXED: 'fixed' // Giảm theo số tiền cố định (ví dụ: 50.000 VNĐ)
+  PERCENTAGE: 'percentage', // Giảm theo phần trăm
+  FIXED: 'fixed' // Giảm theo số tiền cố định
 }
 
 const couponSchema = new mongoose.Schema(
   {
-    // Mã giảm giá (ví dụ: SUMMER20, FREE50K)
     code: {
       type: String,
       required: true,
@@ -21,7 +20,7 @@ const couponSchema = new mongoose.Schema(
       enum: Object.values(COUPON_TYPE),
       required: true
     },
-    // Giá trị giảm giá (ví dụ: 10 cho 10%, hoặc 50000 cho 50.000 VNĐ)
+    // Giá trị giảm giá
     discountValue: {
       type: Number,
       required: true,

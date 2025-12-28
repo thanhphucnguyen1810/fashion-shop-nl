@@ -9,6 +9,8 @@ import {
   getUserById,
   toggleUserStatus
 } from '~/controllers/admin/admin.user.controller.js'
+import { validateRequest } from '~/middlewares/validation.middleware'
+import { adminUserValidation } from '~/validations/admin.user.validation'
 
 const router = express.Router()
 const upload = multer({ storage: multer.memoryStorage() })
@@ -16,16 +18,43 @@ const upload = multer({ storage: multer.memoryStorage() })
 // Base Route: /api/admin/users
 router.route('/')
   .get(protect, admin, getAllUsers)
-  .post(protect, admin, upload.single('avatar'), createUser)
+  .post(
+    protect,
+    admin,
+    upload.single('avatar'),
+    validateRequest(adminUserValidation.createUser),
+    createUser
+  )
 
-// ID Route: /api/admin/users/:id
 router.route('/:id')
-  .get(protect, admin, getUserById)
-  .put(protect, admin, updateUser)
-  .delete(protect, admin, deleteUser)
+  .get(
+    protect,
+    admin,
+    validateRequest(adminUserValidation.paramsId, 'params'),
+    getUserById
+  )
+  .put(
+    protect,
+    admin,
+    upload.single('avatar'),
+    validateRequest(adminUserValidation.paramsId, 'params'),
+    validateRequest(adminUserValidation.updateUser),
+    updateUser
+  )
+  .delete(
+    protect,
+    admin,
+    validateRequest(adminUserValidation.paramsId, 'params'),
+    deleteUser
+  )
 
-// Status Route: /api/admin/users/:id/status
 router.route('/:id/status')
-  .patch(protect, admin, toggleUserStatus)
+  .patch(
+    protect,
+    admin,
+    validateRequest(adminUserValidation.paramsId, 'params'),
+    validateRequest(adminUserValidation.toggleStatus),
+    toggleUserStatus
+  )
 
 export default router

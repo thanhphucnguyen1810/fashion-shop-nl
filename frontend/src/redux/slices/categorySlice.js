@@ -42,18 +42,21 @@ export const createCategory = createAsyncThunk(
   }
 )
 
-
 export const updateCategory = createAsyncThunk(
   'categories/updateCategory',
-  async ({ id, name }, { rejectWithValue, getState }) => {
+  async ({ id, formData }, { rejectWithValue, getState }) => {
     try {
       const token = getState().auth.token
-      const config = { headers: { Authorization: `Bearer ${token}` } }
-      // Chỉ gửi trường name vì backend chỉ update name
-      const response = await axios.patch(`${API_URL}/api/categories/${id}`, { name }, config)
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      }
+      const response = await axios.patch(`${API_URL}/api/categories/${id}`, formData, config)
       return response.data
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || 'Không thể cập nhật danh mục')
+      return rejectWithValue(err.response?.data?.message || 'Không thể cập nhật')
     }
   }
 )

@@ -8,3 +8,4 @@ const router = express.Router()
 router.get('/security-logs', protect, getSecurityLogs)
 
 export default router
+

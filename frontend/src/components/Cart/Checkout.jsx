@@ -101,12 +101,21 @@ const Checkout = () => {
       return
     }
 
+    const shippingAddressForApi = {
+      name: `${shippingAddress.firstName} ${shippingAddress.lastName}`.trim(),
+      phone: shippingAddress.phone,
+      street: shippingAddress.address,
+      province: shippingAddress.city,
+      district: 'Chưa cập nhật',
+      ward: 'Chưa cập nhật'
+    }
+
     try {
       // BƯỚC 1: GỌI API TẠO BẢN GHI CHECKOUT TẠM THỜI (Status: Pending)
       const res = await dispatch(
         createCheckout({
           checkoutItems: cart.products,
-          shippingAddress,
+          shippingAddress: shippingAddressForApi,
           paymentMethod,
           totalPrice: finalTotal,
           coupon: cart.coupon || null

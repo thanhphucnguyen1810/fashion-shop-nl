@@ -118,12 +118,9 @@ export const updateCategory = async (req, res) => {
  ----------------------------------------------------*/
 export const deleteCategory = async (req, res) => {
   try {
-    const { id } = req.params
-    const category = await Category.findById(id)
+    const category = await Category.findById(req.params.id)
 
-    if (!category) {
-      return res.status(404).json({ message: 'Không tìm thấy danh mục' })
-    }
+    if (!category) return res.status(404).json({ message: 'Không tìm thấy danh mục' })
 
     // Xóa ảnh Cloudinary
     if (

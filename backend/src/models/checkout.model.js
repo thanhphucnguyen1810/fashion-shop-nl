@@ -41,13 +41,30 @@ const checkoutScheme = new mongoose.Schema({
   },
   checkoutItems: [checkoutItemScheme],
   shippingAddress: {
-    firstName: { type: String, required: false },
-    lastName: { type: String, required: false },
-    phone: { type: String, required: false },
-    address: { type: String, required: true },
-    city: { type: String, required: true },
-    postalCode: { type: String, required: false, default: '00000' },
-    country: { type: String, required: true }
+    name: {
+      type: String,
+      required: true
+    },
+    phone: {
+      type: String,
+      required: true
+    },
+    street: {
+      type: String,
+      required: true
+    },
+    ward: {
+      type: String,
+      required: true
+    },
+    district: {
+      type: String,
+      required: true
+    },
+    province: {
+      type: String,
+      required: true
+    }
   },
   coupon: {
     code: { type: String, default: null },

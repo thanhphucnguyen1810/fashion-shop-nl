@@ -1,20 +1,32 @@
 import { useEffect, useState } from 'react'
-import { FaStar } from 'react-icons/fa'
+import { FaStar, FaStarHalfAlt } from 'react-icons/fa'
 import { useSelector } from 'react-redux'
 
 const renderStars = (rating) => {
+  const fullStars = Math.floor(rating)
+  const hasHalfStar = rating - fullStars >= 0.5
+  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0)
+
   return (
     <div className="flex items-center">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <FaStar
-          key={i}
-          className="mr-1"
-          color={i <= rating ? '#ffc300' : '#ddd'}
-        />
+      {/* Sao đầy */}
+      {[...Array(fullStars)].map((_, i) => (
+        <FaStar key={`full-${i}`} className="mr-1" color="#ffc300" />
+      ))}
+
+      {/* Sao nửa */}
+      {hasHalfStar && (
+        <FaStarHalfAlt className="mr-1" color="#ffc300" />
+      )}
+
+      {/* Sao rỗng */}
+      {[...Array(emptyStars)].map((_, i) => (
+        <FaStar key={`empty-${i}`} className="mr-1" color="#ddd" />
       ))}
     </div>
   )
 }
+
 
 const ProductReviews = ({ productId }) => {
   const { reviews, loading } = useSelector((state) => state.reviews)
@@ -30,11 +42,11 @@ const ProductReviews = ({ productId }) => {
   const totalReviews = reviews.length
 
   const average =
-    totalReviews > 0
-      ? (reviews.reduce((a, b) => a + b.rating, 0) / totalReviews).toFixed(1)
-      : 0
+  totalReviews > 0
+    ? reviews.reduce((a, b) => a + Number(b.rating || 0), 0) / totalReviews
+    : 0
 
-  const avgRounded = totalReviews > 0 ? Math.round(average) : 0
+  const avgRounded = Math.round(average * 10) / 10
 
   const countStars = (num) => reviews.filter((r) => r.rating === num).length
 
@@ -67,7 +79,9 @@ const ProductReviews = ({ productId }) => {
       <div className="flex items-center gap-6">
 
         <div className="text-center">
-          <p className="text-4xl font-bold text-orange-500">{average}</p>
+          <p className="text-4xl font-bold text-orange-500">
+            {avgRounded}
+          </p>
           {renderStars(avgRounded)}
           <p className="text-xs text-gray-500 mt-1">
             {totalReviews} đánh giá
@@ -78,7 +92,10 @@ const ProductReviews = ({ productId }) => {
         <div className="flex flex-col gap-1">
           {[5, 4, 3, 2, 1].map((s) => (
             <div key={s} className="flex items-center gap-2">
-              <span className="w-6 text-sm">{s}★</span>
+              <span className="w-10 flex items-center gap-1 text-sm whitespace-nowrap">
+                {s}
+                <FaStar className="text-orange-400" />
+              </span>
               <div className="flex-1 bg-gray-200 h-2 rounded">
                 <div
                   className="bg-orange-400 h-2 rounded"
@@ -135,7 +152,7 @@ const ProductReviews = ({ productId }) => {
               }))
             }
           >
-            {s} <FaStar />
+            {s} <FaStar className="text-orange-400" />
           </button>
         ))}
       </div>

@@ -13,7 +13,7 @@ import {
   FaPenNib,
   FaEdit,
   FaTruck,
-  FaShieldAlt,
+  FaShieldAlt
 } from 'react-icons/fa'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useTheme, alpha } from '@mui/material/styles'
@@ -25,16 +25,15 @@ import { clearCart } from '~/redux/slices/cartSlices'
 const menuItems = [
   { to: '/admin', label: 'Dashboard', icon: <FaChartBar /> },
   { to: '/admin/security', label: 'Bảo mật', icon: <FaShieldAlt /> },
-  { to: '/admin/users', label: 'Người dùng', icon: <FaUser /> },
   { to: '/admin/products', label: 'Sản phẩm', icon: <FaBoxOpen /> },
   { to: '/admin/categories', label: 'Danh mục', icon: <FaTags /> },
-
   { to: '/admin/orders', label: 'Đơn hàng', icon: <FaClipboardList /> },
-  { to: '/admin/shipping', label: 'Vận chuyển', icon: <FaTruck /> },
+  { to: '/admin/reviews', label: 'Đánh giá', icon: <FaStar /> },
+  { to: '/admin/users', label: 'Người dùng', icon: <FaUser /> },
 
   { to: '/admin/coupons', label: 'Mã giảm giá', icon: <FaTags /> },
-  { to: '/admin/reviews', label: 'Đánh giá', icon: <FaStar /> },
   { to: '/admin/stock-in', label: 'Nhập hàng', icon: <FaWarehouse /> },
+  { to: '/admin/shipping', label: 'Vận chuyển', icon: <FaTruck /> },
 
   { to: '/admin/blog', label: 'Blog', icon: <FaPenNib /> },
   { to: '/admin/posts', label: 'Bài viết', icon: <FaEdit /> },

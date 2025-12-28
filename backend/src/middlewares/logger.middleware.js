@@ -24,3 +24,10 @@ export const logSecurity = (action) => (req, res, next) => {
   })
   next()
 }
+
+// system hoạt động như một middleware.
+// người dùng gửi request đến server.
+// 2, kích hoạt middleware: hàm logSecurity được chạy, kích hoạt một sự kiện chờ.
+// 3, request đc gửi đến controller. Khi server chuẩn bị gửi kết quả về cho người dùng, sự kiện chờ đc kích hoạt.\
+// 4. Lúc này log mới nhận thông tin và ghi log.
+

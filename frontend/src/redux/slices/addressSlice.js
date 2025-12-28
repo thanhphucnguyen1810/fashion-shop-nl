@@ -21,6 +21,7 @@ const initialState = {
 
 // ================================ API CALLS ===================================
 
+
 // Get all user addresses
 export const fetchAddresses = createAsyncThunk(
   'address/fetchAll',
