@@ -1,3 +1,4 @@
+
 import jwt from 'jsonwebtoken'
 import User from '~/models/user.model'
 import { env } from '~/config/environment'
@@ -437,7 +438,6 @@ export const removeFavorite = async (req, res) => {
   user.favorites = user.favorites.filter(id => id.toString() !== productId)
   await user.save()
 
-  // 💡 SỬA: Lấy lại User object từ DB và POPULATE favorites
   const populatedUser = await User.findById(user._id).populate({
     path: 'favorites',
     // Chỉ chọn các trường cần thiết
@@ -447,3 +447,4 @@ export const removeFavorite = async (req, res) => {
   // Trả về mảng favorites đã được populate
   res.status(200).json(populatedUser.favorites)
 }
+

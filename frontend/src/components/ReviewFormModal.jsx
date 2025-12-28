@@ -27,12 +27,11 @@ const ReviewFormModal = ({ open, handleClose, productId, productName, productIma
   const { submitStatus } = useSelector((state) => state.reviews)
   const [rating, setRating] = useState(5)
   const [comment, setComment] = useState('')
-  const [mediaFiles, setMediaFiles] = useState([]) // Dùng để lưu trữ File objects
-  const [previewImages, setPreviewImages] = useState([]) // Dùng để hiển thị preview
+  const [mediaFiles, setMediaFiles] = useState([])
+  const [previewImages, setPreviewImages] = useState([])
 
   const normalizedProductId = productId?.$oid || productId?._id || productId || null
 
-  // Reset form khi Modal mở
   useEffect(() => {
     if (open) {
       setRating(5)
@@ -43,7 +42,6 @@ const ReviewFormModal = ({ open, handleClose, productId, productName, productIma
     }
   }, [open, dispatch])
 
-  // Xử lý khi Submit Status thay đổi
   useEffect(() => {
     if (submitStatus === 'succeeded') {
       toast.success('Gửi đánh giá thành công! Đánh giá sẽ được hiển thị sau khi được kiểm duyệt.', { duration: 4000 })
@@ -55,7 +53,7 @@ const ReviewFormModal = ({ open, handleClose, productId, productName, productIma
 
   // Xử lý chọn ảnh
   const handleFileChange = (e) => {
-    const files = Array.from(e.target.files).slice(0, 5) // Giới hạn 5 ảnh
+    const files = Array.from(e.target.files).slice(0, 5)
 
     // Cập nhật File objects
     setMediaFiles(files)
@@ -69,7 +67,7 @@ const ReviewFormModal = ({ open, handleClose, productId, productName, productIma
     // Xóa File object
     setMediaFiles(prev => prev.filter((_, index) => index !== indexToRemove))
 
-    // Xóa Preview URL và thu hồi bộ nhớ (quan trọng)
+    // Xóa Preview URL và thu hồi bộ nhớ
     setPreviewImages(prev => {
       URL.revokeObjectURL(prev[indexToRemove])
       return prev.filter((_, index) => index !== indexToRemove)
@@ -136,7 +134,6 @@ const ReviewFormModal = ({ open, handleClose, productId, productName, productIma
             onChange={(e) => setComment(e.target.value)}
             margin="normal"
             required
-            inputProps={{ minLength: 10 }}
           />
 
           {/* Chọn Ảnh */}

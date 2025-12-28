@@ -11,7 +11,7 @@ import {
 } from '~/redux/slices/admin/adminCouponSlice'
 import { toast } from 'sonner'
 
-// Simple Modal (no external lib) using portal
+// Simple Modal
 const Modal = ({ open, title, onClose, children }) => {
   const theme = useTheme()
   if (!open) return null

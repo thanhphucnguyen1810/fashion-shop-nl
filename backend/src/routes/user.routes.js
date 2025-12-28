@@ -29,6 +29,7 @@ const upload = multer({ storage })
 router.post('/register', validateRequest(registerSchema), logSecurity('REGISTER'), registerUser)
 router.post('/login', validateRequest(loginSchema), logSecurity('LOGIN'), loginUser)
 
+
 router.post(
   '/forgotPassword',
   validateRequest(forgotPasswordSchema),

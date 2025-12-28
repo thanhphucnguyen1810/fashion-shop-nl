@@ -32,12 +32,12 @@ const UserManagement = () => {
   const usersPerPage = 5
   const modalRef = useRef()
 
-  const handleToggleStatus = (user) => {
-    const newStatus = !user.isBlocked
-    dispatch(toggleUserStatus({ id: user._id, isBlocked: newStatus }))
-    setMessage(`Đã ${newStatus ? 'khóa' : 'kích hoạt'} người dùng ${user.name}`)
-    setTimeout(() => setMessage(''), 3000)
-  }
+  // const handleToggleStatus = (user) => {
+  //   const newStatus = !user.isBlocked
+  //   dispatch(toggleUserStatus({ id: user._id, isBlocked: newStatus }))
+  //   setMessage(`Đã ${newStatus ? 'khóa' : 'kích hoạt'} người dùng ${user.name}`)
+  //   setTimeout(() => setMessage(''), 3000)
+  // }
 
   // check role
   useEffect(() => {
@@ -53,7 +53,6 @@ const UserManagement = () => {
     }
   }, [dispatch, user])
 
-  // Click ngoài modal thêm để đóng
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
@@ -225,12 +224,9 @@ const UserManagement = () => {
                   avatarFile: e.target.files[0],
                   avatarPreview: URL.createObjectURL(e.target.files[0])
                 }))} />
-                {/* HIỂN THỊ ẢNH TỪ PREVIEW HOẶC TỪ URL CỦA USER */}
                 {formData.avatarPreview ? (
-                // Hiển thị ảnh preview mới (từ file vừa chọn)
                   <img src={formData.avatarPreview} alt="avatar preview" className="w-20 h-20 rounded-full mt-2 object-cover"/>
                 ) : (
-                // Hiển thị ảnh cũ của user (lấy từ user.avatar.url)
                   formData.avatar && formData.avatar.url && (
                     <img src={formData.avatar.url} alt="current avatar" className="w-20 h-20 rounded-full mt-2 object-cover"/>
                   )

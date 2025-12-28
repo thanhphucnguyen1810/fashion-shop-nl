@@ -36,7 +36,7 @@ const CategoryMenu = () => {
               className="group block text-center p-2 rounded-lg transition duration-300 transform hover:scale-[1.03] hover:shadow-md cursor-pointer"
               style={{ backgroundColor: '#FFFFFF', color: TEXT_COLOR }}
             >
-              {/* 1. KHỐI ẢNH ĐẠI DIỆN */}
+              {/* KHỐI ẢNH ĐẠI DIỆN */}
               <div className="flex justify-center items-center h-20 w-full mb-2">
                 <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-linear-to-br from-gray-50 to-gray-200 shadow-sm group hover:shadow-lg transition-all duration-300">
                   <img
@@ -47,13 +47,11 @@ const CategoryMenu = () => {
                       e.currentTarget.src = FALLBACK_ICON_URL
                     }}
                   />
-
-                  {/* Hiệu ứng mờ nhẹ overlay khi hover (nhìn sang hơn) */}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition duration-300"></div>
                 </div>
 
               </div>
-              {/* 2. TÊN DANH MỤC */}
+              {/* TÊN DANH MỤC */}
               <span className="text-sm md:text-base font-Poppins font-semibold transition duration-150 group-hover:text-blue-700" style={{ color: TEXT_COLOR }}>
                 {category.name}
               </span>

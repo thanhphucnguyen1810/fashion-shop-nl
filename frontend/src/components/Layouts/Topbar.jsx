@@ -19,9 +19,8 @@ const Topbar = () => {
     >
       <div className="container mx-auto flex items-center justify-between px-4 py-2">
 
-        {/* Left - Support Links & Social Icons */}
+        {/* Left */}
         <div className="hidden md:flex items-center space-x-4">
-          {/* Trợ giúp & FAQ */}
           <Link
             to="/help-center"
             className={`font-medium transition text-xs flex items-center space-x-1 hover:text-[${HOVER_TEXT_COLOR}]`}
@@ -31,7 +30,6 @@ const Topbar = () => {
             <span>Trợ giúp & FAQ</span>
           </Link>
 
-          {/* Social Icons */}
           <div className="flex items-center space-x-2">
             <a href="#" className={`transition hover:text-[${HOVER_TEXT_COLOR}]`} title="Meta" style={{ color: TEXT_COLOR }}>
               <TbBrandMeta className="w-4 h-4" />
@@ -45,16 +43,14 @@ const Topbar = () => {
           </div>
         </div>
 
-        {/* Center - Announcement */}
         <div className="flex-1 text-center px-2">
           <div className="text-[13px] font-medium tracking-wide">
             <CarouselMid />
           </div>
         </div>
 
-        {/* Right - Globalization Options */}
+        {/* Right */}
         <div className="flex items-center space-x-4">
-          {/* Lựa chọn Tiền tệ */}
           <button
             className={`font-medium transition text-xs flex items-center space-x-1 hover:text-[${HOVER_TEXT_COLOR}]`}
             title="Select Currency"
@@ -62,7 +58,6 @@ const Topbar = () => {
             <span>VND</span>
           </button>
 
-          {/* Lựa chọn Ngôn ngữ */}
           <button
             className={`font-medium transition text-xs flex items-center space-x-1 hover:text-[${HOVER_TEXT_COLOR}]`}
             title="Select Language"

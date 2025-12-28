@@ -7,22 +7,19 @@ import { CircularProgress, Box, Typography, Button, TextField, Select, MenuItem,
 import { format } from 'date-fns'
 import { vi } from 'date-fns/locale'
 
-// --- Hàm chuyển đổi trạng thái (Giả định trạng thái order của bạn) ---
 const getOrderStatusDisplay = (order) => {
-  const status = order.status || 'AwaitingConfirmation' // Giả định default status
+  const status = order.status || 'AwaitingConfirmation'
 
-  // 1. Kiểm tra ưu tiên: Chờ thanh toán Online
   if (!order.isPaid && order.paymentMethod !== 'COD') {
     return { text: 'Chờ thanh toán', color: 'bg-red-100 text-red-700', icon: 'fa-solid fa-credit-card' }
   }
 
-  // Sử dụng .toLowerCase() cho việc so khớp
   switch (status.toLowerCase()) {
-  case 'awaitingconfirmation': // Thay thế 'pending'
+  case 'awaitingconfirmation':
     return { text: 'Chờ xác nhận', color: 'bg-yellow-100 text-yellow-700', icon: 'fa-solid fa-box-open' }
-  case 'awaitingshipment': // Thay thế 'processing'
+  case 'awaitingshipment':
     return { text: 'Chờ lấy hàng', color: 'bg-orange-100 text-orange-700', icon: 'fa-solid fa-box' }
-  case 'intransit': // Thay thế 'shipped'
+  case 'intransit':
     return { text: 'Đang giao hàng', color: 'bg-blue-100 text-blue-700', icon: 'fa-solid fa-truck-fast' }
   case 'delivered':
     return { text: 'Đã giao hàng', color: 'bg-green-100 text-green-700', icon: 'fa-solid fa-circle-check' }
@@ -37,32 +34,28 @@ const getTabDisplayName = (filterStatus) => {
     return 'Tất cả'
   }
 
-  // Chuyển sang chữ thường, viết liền để so khớp (ví dụ: 'awaitingconfirmation')
   const status = String(filterStatus).toLowerCase().replace(/[^a-z0-9]/g, '')
 
   switch (status) {
   case 'pendingcheckout':
-    return 'Chờ thanh toán' // Tab cho các đơn hàng chưa thanh toán online
+    return 'Chờ thanh toán'
 
   case 'awaitingconfirmation':
-    return 'Chờ xác nhận' // Tương đương "Chờ xác nhận" của Shopee
+    return 'Chờ xác nhận'
 
   case 'awaitingshipment':
-  case 'processing': // Giữ lại 'processing' để bắt các lỗi cũ/tên tab cũ
-    return 'Chờ lấy hàng' // Tương đương "Chờ lấy hàng" của Shopee
+  case 'processing':
+    return 'Chờ lấy hàng'
 
   case 'intransit':
-  case 'shipped': // Giữ lại 'shipped' để bắt các lỗi cũ/tên tab cũ
-    return 'Đang giao' // Tương đương "Đang giao" của Shopee
+  case 'shipped':
+    return 'Đang giao'
 
   case 'delivered':
-    return 'Đã giao/Đánh giá' // Tương đương "Đã giao" của Shopee
+    return 'Đã giao/Đánh giá'
 
   case 'cancelled':
-    return 'Đã hủy' // Tương đương "Đã hủy" của Shopee
-
-    // case 'returned': // Nếu bạn không có trạng thái này trong Schema, KHÔNG NÊN HIỂN THỊ
-    //   return 'Trả hàng/Hoàn tiền'
+    return 'Đã hủy'
 
   default:
     return 'Không xác định'
@@ -77,11 +70,9 @@ const MyOrdersList = ({ currentStatusFilter }) => {
   const dispatch = useDispatch()
   const { orders, loading, error } = useSelector((state) => state.orders)
 
-  // Giữ lại searchTerm để người dùng vẫn có thể tìm kiếm trong tab hiện tại
   const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
-    // Vẫn gọi fetchOrders, logic lọc sẽ dùng useMemo bên dưới
     dispatch(fetchUserOrders())
   }, [dispatch])
 
@@ -89,7 +80,6 @@ const MyOrdersList = ({ currentStatusFilter }) => {
     navigate(`/order/${orderId}`)
   }
 
-  // Lọc đơn hàng dựa trên searchTerm VÀ currentStatusFilter (từ component cha truyền vào)
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
       const matchesSearch =
@@ -97,7 +87,6 @@ const MyOrdersList = ({ currentStatusFilter }) => {
                 order.shippingAddress?.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 order.orderItems.some(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()))
 
-      // Logic lọc theo Tab: 'all' hoặc khớp với trạng thái hiện tại
       const dbStatus = (order.status || 'AwaitingConfirmation').toLowerCase()
 
       const matchesStatus = (() => {
@@ -105,24 +94,17 @@ const MyOrdersList = ({ currentStatusFilter }) => {
         case 'all':
           return true
         case 'awaiting_confirmation':
-          // Chờ xác nhận = AwaitingConfirmation trong DB
           return dbStatus === 'awaitingconfirmation'
         case 'processing':
-          // Chờ lấy hàng = AwaitingShipment trong DB (giả định)
           return dbStatus === 'awaitingshipment'
         case 'shipped':
-          // Chờ giao hàng = InTransit trong DB
           return dbStatus === 'intransit'
         case 'delivered':
-          // Đã giao/Đánh giá = Delivered trong DB
           return dbStatus === 'delivered'
         case 'cancelled':
-          // Đã hủy = Cancelled trong DB
           return dbStatus === 'cancelled'
         case 'returned':
-          // Trả hàng/Hoàn tiền (Giả định bạn dùng Delivered và có trường khác để đánh dấu)
-          // **Cần tùy chỉnh thêm nếu có trường 'isReturned' trong DB**
-          return false // Mặc định chưa lọc được vì chưa có trạng thái Returned trong Schema bạn cung cấp
+          return false
         default:
           return false
         }
@@ -143,7 +125,6 @@ const MyOrdersList = ({ currentStatusFilter }) => {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      {/* --- Toolbar: Tìm kiếm (Lọc trạng thái đã được chuyển lên component cha) --- */}
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <TextField
           label="Tìm kiếm theo Mã đơn hàng/Tên sản phẩm"

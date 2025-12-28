@@ -11,7 +11,6 @@ import {
 import { FaEdit, FaTrash, FaPlus, FaSave, FaTimes, FaSpinner, FaExclamationTriangle, FaCheckCircle, FaSearch } from 'react-icons/fa'
 import { HiOutlineInformationCircle } from 'react-icons/hi'
 
-// Component Modal tùy chỉnh để thay thế window.confirm/alert
 const CustomModal = ({ isOpen, title, message, onConfirm, onCancel, confirmText = 'Xác nhận' }) => {
   if (!isOpen) return null
 
@@ -52,11 +51,10 @@ const AdminCategoryManager = () => {
     items: categories,
     loading,
     error,
-    operationLoading, // Loading cho CRUD
-    operationError // Lỗi cho CRUD
+    operationLoading,
+    operationError
   } = useSelector((state) => state.categories)
 
-  // --------------------- Trạng thái UI ---------------------
   const [newCategoryName, setNewCategoryName] = useState('')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
@@ -92,7 +90,7 @@ const AdminCategoryManager = () => {
   }, [operationError, dispatch])
 
 
-  // Xử lý khi Submit form thêm danh mục mới từ modal
+  // Xử lý khi Submit form thêm danh mục mới
   const handleAddCategorySubmit = async (e) => {
     e.preventDefault()
 
@@ -133,14 +131,14 @@ const AdminCategoryManager = () => {
       })
   }
 
-  // Xử lý Bắt đầu chỉnh sửa (khi click nút edit trên bảng)
+  // Xử lý Bắt đầu chỉnh sửa
   const handleEditStart = (category) => {
     setEditingId(category._id)
     setEditingName(category.name)
     setEditingSlug(category.slug)
   }
 
-  // Xử lý Cập nhật danh mục (khi click "Lưu" sau chỉnh sửa)
+  // Xử lý Cập nhật danh mục
   const handleUpdate = () => {
     const formData = new FormData()
     formData.append('name', editingName)
@@ -162,18 +160,14 @@ const AdminCategoryManager = () => {
       title: 'Xác Nhận Xóa',
       message: `Bạn có chắc chắn muốn xóa danh mục "${category.name}" này? Hành động này không thể hoàn tác.`,
       data: category._id,
-      // Thay đổi: Gán hàm xác nhận đã được bao bọc (curried) với ID của danh mục.
-      onConfirm: () => handleConfirmDelete(category._id), // TRUYỀN ID VÀO HÀM XÁC NHẬN
+      onConfirm: () => handleConfirmDelete(category._id),
       onCancel: () => setConfirmModal({ isOpen: false })
     })
   }
 
   // Xử lý Xác nhận Xóa danh mục
-  // TRONG CÁC KHAI BÁO FUNCTION
-  const handleConfirmDelete = useCallback((idToDelete) => { // NHẬN ID TẠI ĐÂY
-    setConfirmModal({ isOpen: false }) // Vẫn đóng modal
-
-    // console.log("ID được xác nhận xóa:", idToDelete); // Dùng để kiểm tra
+  const handleConfirmDelete = useCallback((idToDelete) => {
+    setConfirmModal({ isOpen: false })
 
     dispatch(deleteCategory(idToDelete))
       .unwrap()
@@ -238,7 +232,6 @@ const AdminCategoryManager = () => {
         </button>
       </div>
 
-      {/* Trạng thái Loading/Error chung (Fetch) */}
       {loading && <div className="text-center text-indigo-500 py-4 text-lg flex items-center justify-center"><FaSpinner className="animate-spin mr-2" /> Đang tải dữ liệu...</div>}
       {error && <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded mb-4 text-sm flex items-center"><FaExclamationTriangle className="mr-2" /> Lỗi tải danh mục: {error}</div>}
 

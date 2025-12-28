@@ -114,7 +114,7 @@ const UpdateProfile = ({ theme }) => {
             </button>
           </div>
 
-          {/* Form đổi mật khẩu: Chỉ hiện khi showPasswordForm === true */}
+          {/* Form đổi mật khẩu*/}
           {showPasswordForm && (
             <div className='mt-4 p-6 border rounded-xl bg-gray-50/50 shadow-inner transition-all'
               style={{ borderColor: theme.palette.divider }}>
@@ -238,7 +238,6 @@ const UpdateProfile = ({ theme }) => {
           </select>
         </div>
 
-        {/* Thêm đoạn này vào trên phần Name Input */}
         <div className='mb-6 flex flex-col items-center'>
           <label className='block text-sm font-medium mb-2' style={{ color: theme.palette.text.secondary }}>
     Ảnh đại diện

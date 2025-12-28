@@ -1,12 +1,11 @@
 import { useTheme } from '@mui/material/styles'
 import React, { useEffect, useState } from 'react'
-import { FaTimes, FaPrint, FaSearch } from 'react-icons/fa'
+import { FaTimes, FaSearch } from 'react-icons/fa'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { fetchAdminOrderDetails, fetchAllOrders, updateOrderStatus as updateOrderThunk } from '~/redux/slices/admin/adminOrderSlice'
 import OrderDetailModal from './OrderDetails'
 
-// === CẬP NHẬT TRẠNG THÁI CHO KHỚP VỚI MODEL ===
 const ORDER_STATUSES = [
   { value: 'PendingCheckout', label: 'Tạo đơn tạm', color: 'bg-gray-300 text-gray-700' },
   { value: 'AwaitingConfirmation', label: 'Chờ xác nhận', color: 'bg-yellow-300 text-yellow-900' },
@@ -46,18 +45,14 @@ const OrderManagement = () => {
 
   const theme = useTheme()
 
-  // === SỬA LỖI LỌC DỮ LIỆU ĐỂ XỬ LÝ ĐƠN HÀNG GUEST AN TOÀN ===
   const filteredOrders = orders
     .filter(order => {
-      // Lấy tên khách hàng hoặc Guest ID nếu là đơn hàng Guest
       const customerName = order.user?.name || order.guestId || 'Khách (Guest)'
       const orderIdString = order._id.toString()
       const term = searchTerm.toLowerCase()
 
       return (
-      // Lọc theo Mã đơn hàng hoặc Tên khách hàng (Đã an toàn)
         (orderIdString.includes(term) || customerName.toLowerCase().includes(term)) &&
-            // Lọc theo trạng thái
             (filterStatus ? order.status === filterStatus : true)
       )
     })
@@ -74,10 +69,8 @@ const OrderManagement = () => {
   const paginatedOrders = filteredOrders.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
 
   const handleCancelOrder = (orderId) => {
-    // Thay thế window.confirm/alert
     if (!window.confirm(`Bạn có chắc muốn hủy đơn hàng #${orderId} không?`)) return
 
-    // Gọi thunk update status thành 'Cancelled'
     dispatch(updateOrderThunk({ id: orderId, status: 'Cancelled' }))
       .then(() => setStatusMessage(`Đơn hàng #${orderId} đã được hủy thành công.`))
       .catch(() => setStatusMessage(`Lỗi khi hủy đơn hàng #${orderId}.`))
@@ -98,10 +91,9 @@ const OrderManagement = () => {
   )
 
   const handleViewAndPrint = (orderId) => {
-  // 1. Gọi API lấy chi tiết đã populate (orderItems.product, etc.)
     dispatch(fetchAdminOrderDetails(orderId)).then((result) => {
       if (result.payload) {
-        setSelectedOrder(result.payload) // Lưu đơn hàng đầy đủ vào state
+        setSelectedOrder(result.payload)
         setShowDetailModal(true)
       }
     })
@@ -115,7 +107,6 @@ const OrderManagement = () => {
     <div className="max-w-7xl mx-auto p-6">
       <h2 className="text-3xl font-bold mb-6 text-gray-800">Quản Lý Đơn Hàng</h2>
 
-      {/* Status Message Display */}
       {statusMessage && (
         <div className="mb-4 p-3 bg-indigo-100 text-indigo-700 rounded-lg flex justify-between items-center shadow-md">
           <span>{statusMessage}</span>
@@ -125,7 +116,6 @@ const OrderManagement = () => {
 
       {/* Thanh tìm kiếm & lọc */}
       <div className="flex flex-wrap gap-4 mb-6">
-        {/* Search input + search button */}
         <div className="relative w-full md:w-1/2">
           <input
             type="text"
@@ -133,7 +123,7 @@ const OrderManagement = () => {
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value)
-              setCurrentPage(1) // Reset page khi tìm kiếm
+              setCurrentPage(1)
             }}
             className="w-full py-2.5 pl-11 pr-24 text-sm rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             style={{
@@ -155,16 +145,13 @@ const OrderManagement = () => {
           value={filterStatus}
           onChange={(e) => {
             setFilterStatus(e.target.value)
-            setCurrentPage(1) // Reset page khi lọc
+            setCurrentPage(1)
           }}
           className="px-4 py-2 rounded flex items-center gap-2 border"
         >
           <option value="">-- Tất cả trạng thái --</option>
           {ORDER_STATUSES.map(({ value, label }) => (
-            // Bỏ qua trạng thái tạm thời 'PendingCheckout' trong lọc nếu bạn không muốn thấy nó thường xuyên
-            // {value !== 'PendingCheckout' && (
             <option key={value} value={value}>{label}</option>
-            // )}
           ))}
         </select>
         <select
@@ -201,7 +188,6 @@ const OrderManagement = () => {
               {paginatedOrders.length > 0 ? (
                 paginatedOrders.map((order) => {
                   const statusObj = ORDER_STATUSES.find(s => s.value === order.status) || {}
-                  // Xác định tên khách hàng: Ưu tiên User > Guest ID
                   const customerDisplay = order.user?.name || (order.guestId ? `[GUEST] ${order.guestId.substring(0, 8)}...` : 'Khách vãng lai')
 
                   return (
@@ -213,7 +199,6 @@ const OrderManagement = () => {
                      #{order._id.substring(0, 10)}...
                       </td>
                       <td className="py-4 px-4 text-gray-800">{customerDisplay}</td>
-                      {/* Sửa lỗi định dạng tiền tệ */}
                       <td className="py-4 px-4 font-semibold text-gray-900">
                         {Number(order.totalPrice).toLocaleString('vi-VN')} đ
                       </td>
@@ -223,7 +208,6 @@ const OrderManagement = () => {
                         </span>
                       </td>
                       <td className="py-4 px-4 flex gap-2 flex-wrap">
-                        {/* Ẩn dropdown và nút Hủy nếu đơn hàng đang ở trạng thái TẠM THỜI (PendingCheckout) */}
                         {order.status !== 'PendingCheckout' ? (
                           <>
                             <select

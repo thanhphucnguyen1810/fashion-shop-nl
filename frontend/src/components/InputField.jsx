@@ -30,7 +30,6 @@ const InputField = ({ id, label, type, name, value, onChange, placeholder, Icon,
             e.target.style.boxShadow = 'none'
           }}
         />
-        {/* Sử dụng Icon component của MUI */}
         <Icon sx={{ fontSize: 20 }} className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none" style={{ color: theme.palette.text.secondary }} />
       </div>
     </div>

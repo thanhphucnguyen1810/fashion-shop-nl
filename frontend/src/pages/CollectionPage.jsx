@@ -15,13 +15,11 @@ const CollectionPage = () => {
   const sidebarRef = useRef(null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
-  // Gộp tất cả logic tải dữ liệu và đồng bộ trạng thái vào một useEffect
   useEffect(() => {
     const queryParams = Object.fromEntries([...searchParams])
     const allFilters = {
       ...queryParams
     }
-    // Dispatch action để cập nhật Redux filters state
     dispatch(setFilters(allFilters))
     dispatch(fetchProducts(allFilters))
 
@@ -42,7 +40,6 @@ const CollectionPage = () => {
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen">
-      {/* Nút mở sidebar (mobile) */}
       <div className="p-4 lg:hidden">
         <button
           onClick={toggleSidebar}
@@ -53,7 +50,6 @@ const CollectionPage = () => {
         </button>
       </div>
 
-      {/* Sidebar */}
       <div
         ref={sidebarRef}
         className={`${
@@ -65,7 +61,6 @@ const CollectionPage = () => {
         <FilterSidebar />
       </div>
 
-      {/* Nội dung chính */}
       <div className="flex-1 p-4 space-y-4">
 
         <SortOptions />

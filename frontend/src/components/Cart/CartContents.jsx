@@ -3,7 +3,6 @@ import { useTheme } from '@mui/material/styles'
 import { useDispatch } from 'react-redux'
 import { removeFromCart, updateCartItemQuantity } from '~/redux/slices/cartSlices'
 
-
 const CartContents = ({ cart, userId, guestId }) => {
   const theme = useTheme()
   const dispatch = useDispatch()
@@ -14,8 +13,6 @@ const CartContents = ({ cart, userId, guestId }) => {
   const dividerColor = theme.palette.divider
   const errorColor = theme.palette.error.main
 
-
-  // handle adding or substracting to cart
   const handleAddToCart = (productId, delta, quantity, size, color) => {
     const newQuantity = quantity + delta
     if (newQuantity) {
@@ -58,7 +55,7 @@ const CartContents = ({ cart, userId, guestId }) => {
                 {product.name}
               </h3>
 
-              {/* Nút Xóa (Đặt ở góc trên bên phải) */}
+              {/* Nút Xóa */}
               <button
                 onClick={() => handleRemoveFromCart(
                   product.productId,
@@ -73,7 +70,7 @@ const CartContents = ({ cart, userId, guestId }) => {
               </button>
             </div>
 
-            {/* Thuộc tính (Size, Color) */}
+            {/* Thuộc tính */}
             <p className="text-xs mt-1" style={{ color: textSecondary }}>
               Kích cỡ: <span style={{ color: primaryColor, fontWeight: 500 }}>{product.size}</span>
               {' | '}
@@ -82,7 +79,6 @@ const CartContents = ({ cart, userId, guestId }) => {
 
             {/* Giá & Số lượng */}
             <div className="flex items-center justify-between mt-2">
-              {/* Giá sản phẩm */}
               <p
                 className="text-sm font-bold"
                 style={{ color: primaryColor }}
@@ -90,7 +86,6 @@ const CartContents = ({ cart, userId, guestId }) => {
                 {product.price.toLocaleString('vi-VN')}₫
               </p>
 
-              {/* Bộ đếm số lượng */}
               <div className="flex items-center border rounded" style={{ borderColor: dividerColor }}>
                 {/* Nút giảm */}
                 <button

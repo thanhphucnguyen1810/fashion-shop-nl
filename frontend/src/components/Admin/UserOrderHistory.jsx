@@ -23,7 +23,6 @@ const UserOrderHistory = () => {
     setShowModal(true)
   }
 
-  // Hàm render nhãn trạng thái "sang" hơn
   const renderStatus = (status) => {
     const statusConfig = {
       Delivered: 'bg-emerald-100 text-emerald-700 border-emerald-200',

@@ -1,7 +1,6 @@
 import { FaTimes } from 'react-icons/fa'
 import { useTheme, alpha } from '@mui/material/styles'
 import { useState, useRef, useEffect } from 'react'
-import axios from 'axios'
 
 const EditUserModal = ({ user, onClose, onUpdate }) => {
   const theme = useTheme()
@@ -29,7 +28,6 @@ const EditUserModal = ({ user, onClose, onUpdate }) => {
     }
   }, [user])
 
-  // Click ngoài modal để đóng
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
@@ -49,14 +47,12 @@ const EditUserModal = ({ user, onClose, onUpdate }) => {
     const file = e.target.files[0]
     if (!file) return
 
-    // 1. Tạo URL tạm thời để hiển thị preview
     const previewUrl = URL.createObjectURL(file)
 
-    // 2. Cập nhật state với File object (để gửi lên API) và URL Preview (để hiển thị)
     setFormData(prev => ({
       ...prev,
       avatarFile: file,
-      avatarPreview: previewUrl // <--- THIẾU TRƯỜNG NÀY TRƯỚC ĐÓ
+      avatarPreview: previewUrl
     }))
   }
 
@@ -67,7 +63,6 @@ const EditUserModal = ({ user, onClose, onUpdate }) => {
     // Gửi dữ liệu cập nhật
     onUpdate(user._id, { name, email, role, gender, avatarFile })
 
-    // 💡 THÊM: Dọn dẹp URL tạm thời sau khi gửi và đóng modal
     if (formData.avatarPreview) {
       URL.revokeObjectURL(formData.avatarPreview)
     }
@@ -125,15 +120,15 @@ const EditUserModal = ({ user, onClose, onUpdate }) => {
             <input type="file" onChange={handleFileChange} accept="image/*" />
             {uploading && <p className="text-sm text-gray-500 mt-1">Đang tải lên...</p>}
 
-            {/* 💡 LOGIC HIỂN THỊ ĐÃ SỬA: Luôn hiển thị ảnh nếu có URL */}
+            {/* LOGIC HIỂN THỊ */}
             {/* Ưu tiên: 1. Ảnh preview mới -> 2. Ảnh cũ từ database -> 3. Ảnh mặc định */}
 
             {(() => {
-              const defaultAvatar = 'https://res.cloudinary.com/dgec7q298/image/upload/v1/default_avatar.png' // Thay bằng URL mặc định của bạn
+              const defaultAvatar = 'https://res.cloudinary.com/dgec7q298/image/upload/v1/default_avatar.png'
 
-              // 1. Ảnh Preview (nếu người dùng vừa chọn file)
+              // 1. Ảnh Preview
               const displayUrl = formData.avatarPreview
-              // 2. Ảnh cũ từ Backend (nếu chưa chọn file mới)
+              // 2. Ảnh cũ từ Backend
                 ? formData.avatarPreview
                 : (formData.avatar?.url || defaultAvatar)
 

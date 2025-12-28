@@ -13,14 +13,13 @@ export default function OrderDetailModal({ selectedOrder, showDetailModal, close
 
   if (!selectedOrder || !showDetailModal) return null
 
-  // Helper để lấy ID đơn hàng sạch sẽ
   const orderId = selectedOrder._id?.toString() || ''
 
   return (
     <div className="fixed inset-0 z-50 flex justify-center items-center p-4 bg-black/60 no-print">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col">
 
-        {/* Header Modal - Chỉ hiện trên web */}
+        {/* Header Modal */}
         <div className="p-4 border-b flex justify-between items-center bg-gray-50">
           <h2 className="font-bold text-lg text-gray-700">Chi tiết hóa đơn</h2>
           <div className="flex gap-2">
@@ -123,7 +122,7 @@ export default function OrderDetailModal({ selectedOrder, showDetailModal, close
           {/* Tổng kết tiền */}
           <div className="flex justify-end pr-2 mt-4">
             <div className="w-1/2 space-y-2">
-              {/* Tạm tính = Tổng sản phẩm trước giảm giá */}
+              {/* Tổng sản phẩm trước giảm giá */}
               <div className="flex justify-between text-[11px]">
                 <span className="text-gray-600">Tạm tính (Tiền hàng):</span>
                 <span className="font-medium">
@@ -131,7 +130,7 @@ export default function OrderDetailModal({ selectedOrder, showDetailModal, close
                 </span>
               </div>
 
-              {/* Phí ship - Nếu model có shippingPrice thì lấy, không thì mặc định 0 */}
+              {/* Phí ship*/}
               <div className="flex justify-between text-[11px]">
                 <span className="text-gray-600">Phí vận chuyển:</span>
                 <span>{selectedOrder.shippingPrice?.toLocaleString() || '0'}đ</span>
@@ -154,7 +153,7 @@ export default function OrderDetailModal({ selectedOrder, showDetailModal, close
                 <span className="text-blue-700">{selectedOrder.totalPrice?.toLocaleString()}đ</span>
               </div>
 
-              {/* Logic hiển thị phương thức thanh toán */}
+              {/* hiển thị phương thức thanh toán */}
               <div className="text-right text-[10px] mt-2 italic font-bold uppercase">
        Hình thức: {selectedOrder.paymentMethod}
                 {selectedOrder.isPaid ? ' (Đã thanh toán)' : ' (Thu hộ COD)'}

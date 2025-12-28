@@ -21,13 +21,11 @@ const AdminLogPage = () => {
     if (logs.length === 0) return alert('Không có dữ liệu!')
 
     const BOM = '\uFEFF'
-    // Thêm cột Chi tiết để file CSV đầy đủ thông tin nhất
     let csvContent = BOM + 'Thời gian,Người thực hiện,Hành động,IP,Thiết bị đầy đủ,Trạng thái,Chi tiết hệ thống\n'
 
     logs.forEach(log => {
       const time = new Date(log.createdAt).toLocaleString('vi-VN')
       const name = log.userId?.name || 'Ẩn danh'
-      // Để thiết bị nguyên bản trong dấu ngoặc kép để tránh lỗi xuống hàng trong CSV
       const device = log.userAgent || 'N/A'
       const details = log.details || ''
       csvContent += `"${time}","${name}","${log.action}","${log.ip}","${device}","${log.status}","${details}"\n`
@@ -85,7 +83,6 @@ const AdminLogPage = () => {
                   </span>
                 </td>
                 <td className="p-4 text-xs text-gray-600 leading-relaxed max-w-[400px]">
-                  {/* Hiển thị nội dung đầy đủ nhưng giới hạn chiều rộng để bảng không quá dài */}
                   <div className="line-clamp-2 hover:line-clamp-none cursor-help" title={log.userAgent}>
                     {log.userAgent || 'Không có dữ liệu thiết bị'}
                   </div>

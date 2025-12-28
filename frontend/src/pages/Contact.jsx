@@ -15,13 +15,8 @@ import storeImage from '~/assets/storeImage.png'
 
 const Contact = () => {
   return (
-    // 1. Full-Screen Background & Padding
     <div className='min-h-screen bg-gray-900 flex flex-col items-center p-0 sm:p-4'>
-
-      {/* Main Container - Full Width (max-w-full) */}
       <div className='w-full max-w-6xl xl:max-w-7xl bg-white shadow-2xl rounded-none sm:rounded-xl overflow-hidden my-4 sm:my-10'>
-
-        {/* Header Section - Black/Gold Luxury */}
         <div className='p-12 text-center bg-black text-white'>
           <h1 className='text-6xl font-serif font-extrabold tracking-widest'>
             LIÊN HỆ <span className='text-yellow-400 font-Lobster'>TheAurora</span>
@@ -30,11 +25,7 @@ const Contact = () => {
             Kết nối với chúng tôi để nhận sự hỗ trợ về phong cách nhanh nhất.
           </p>
         </div>
-
-        {/* Content Section - 2 Columns */}
         <div className='p-8 md:p-12 grid md:grid-cols-2 gap-12'>
-
-          {/* Contact Info (Left) */}
           <div className='space-y-10'>
             <h2 className='text-3xl font-bold text-gray-900 border-b pb-3 border-yellow-400'>
               Chi Tiết Liên Hệ
@@ -73,8 +64,6 @@ const Contact = () => {
                 <p className='text-gray-600'>sales@theaurorashop.vn (Đặt hàng số lượng lớn)</p>
               </div>
             </div>
-
-            {/* Aesthetic Map/Image Placeholder */}
             <div className='mt-10'>
               <div className='h-60 bg-gray-200 rounded-lg shadow-lg overflow-hidden relative'>
                 <div
@@ -87,8 +76,6 @@ const Contact = () => {
               </div>
             </div>
           </div>
-
-          {/* Contact Form (Right) */}
           <div>
             <h2 className='text-3xl font-bold text-gray-900 border-b pb-3 border-yellow-400'>
               Gửi Tin Nhắn Cho Chúng Tôi

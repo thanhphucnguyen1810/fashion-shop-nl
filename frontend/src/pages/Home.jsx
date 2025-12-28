@@ -30,7 +30,6 @@ const Home = () => {
 
 
   useEffect(() => {
-    //Fetch products for a specific collection
     dispatch(
       fetchProducts({
         gender: 'Women',
@@ -39,7 +38,6 @@ const Home = () => {
       })
     )
 
-    // fetch best seller product
     const fetchBestSeller = async () => {
       try {
         const response = await axios.get(
@@ -62,7 +60,6 @@ const Home = () => {
 
     window.addEventListener('scroll', handleScroll)
 
-    // Cleanup function để gỡ bỏ sự kiện khi component unmount
     return () => window.removeEventListener('scroll', handleScroll)
   }, [dispatch])
 
@@ -74,11 +71,9 @@ const Home = () => {
   }
 
   useEffect(() => {
-    // Lấy guestId từ localStorage, nếu tồn tại
     const currentGuestId = localStorage.getItem('guestId')
     const isUserLoggedIn = !!user?._id
 
-    // Nếu có user đã đăng nhập HOẶC có guestId (khách)
     if (isUserLoggedIn || currentGuestId) {
       dispatch(
         fetchCart({

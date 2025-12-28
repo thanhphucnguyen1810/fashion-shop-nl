@@ -30,7 +30,6 @@ const Checkout = () => {
     phone: ''
   })
 
-  // --- 1. KIỂM TRA GIỎ HÀNG & ĐIỀN SẴN THÔNG TIN USER ---
   useEffect(() => {
     if (!cart?.products?.length) {
       navigate('/')
@@ -78,7 +77,6 @@ const Checkout = () => {
     }
   }, [cart, user, navigate, addresses, dispatch])
 
-  // --- TÍNH TOÁN GIÁ TRỊ ĐƠN HÀNG ---
   const { subTotal, discountAmount, finalTotal } = useMemo(() => {
     if (!cart?.products) return { subTotal: 0, discountAmount: 0, finalTotal: 0 }
 
@@ -92,7 +90,6 @@ const Checkout = () => {
     }
   }, [cart])
 
-  // --- XỬ LÝ TẠO BẢN GHI CHECKOUT TẠM THỜI ---
   const handlePlaceOrder = async (event) => {
     event.preventDefault()
 
@@ -111,7 +108,6 @@ const Checkout = () => {
     }
 
     try {
-      // BƯỚC 1: GỌI API TẠO BẢN GHI CHECKOUT TẠM THỜI (Status: Pending)
       const res = await dispatch(
         createCheckout({
           checkoutItems: cart.products,
@@ -125,7 +121,6 @@ const Checkout = () => {
       const newCheckoutId = res.checkout._id
       toast.success('Đơn hàng tạm thời đã được tạo! Vui lòng xác nhận.')
 
-      // BƯỚC 2: CHUYỂN HƯỚNG SANG TRANG CONFIRM ĐỂ THỰC HIỆN ACTION CUỐI CÙNG
       navigate(`/order-confirm/${newCheckoutId}`)
 
     } catch (err) {
@@ -133,7 +128,6 @@ const Checkout = () => {
     }
   }
 
-  // --- RENDER UI ---
   const borderColor = theme.palette.divider
   const primaryColor = theme.palette.primary.main
   const formatCurrency = (amount) => amount?.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })
@@ -146,7 +140,7 @@ const Checkout = () => {
 
         <form onSubmit={handlePlaceOrder}>
 
-          {/* Thông tin giao hàng... (GIỮ NGUYÊN FORM INPUT) */}
+          {/* Thông tin giao hàng */}
           <h3 style={{ color: theme.palette.text.primary }} className='text-lg font-semibold mb-4 border-b pb-2'>
             1. Thông tin nhận hàng
           </h3>
@@ -264,7 +258,7 @@ const Checkout = () => {
         </form>
       </div>
 
-      {/* === CỘT PHẢI: TÓM TẮT ĐƠN HÀNG (GIỮ NGUYÊN) === */}
+      {/* === CỘT PHẢI: TÓM TẮT ĐƠN HÀNG */}
       <div className='h-fit sticky top-8'>
         <div className='p-6 rounded-xl shadow-lg border' style={{ backgroundColor: theme.palette.background.paper, borderColor }}>
           <h3 style={{ color: theme.palette.text.primary }} className='text-xl font-bold pb-4 mb-4 border-b'>

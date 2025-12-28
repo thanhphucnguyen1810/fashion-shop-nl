@@ -20,11 +20,9 @@ const NewArrivals = () => {
   const mode = theme.palette.mode
   const colors = palette[mode]
 
-  // Lấy màu sắc từ theme (Tập trung vào Primary và Error)
-  const PRIMARY_COLOR = theme.palette.primary.main // Màu chủ đạo (Xanh, dùng cho NEW)
-  const ERROR_COLOR = theme.palette.error.main // Màu đỏ (Dùng cho giá Sale)
+  const PRIMARY_COLOR = theme.palette.primary.main
+  const ERROR_COLOR = theme.palette.error.main
 
-  // Logic giữ nguyên
   const [newArrivals, setNewArrivals] = useState([])
   useEffect(() => {
     const fetchNewArrivals = async () => {
@@ -52,7 +50,6 @@ const NewArrivals = () => {
 
   const handleMouseDown = (e) => {
     setIsDragging(true)
-    // Kiểm tra null trước khi truy cập offsetLeft
     if (scrollRef.current) {
       setStartX(e.pageX - scrollRef.current.offsetLeft)
       setScrollLeft(scrollRef.current.scrollLeft)
@@ -62,7 +59,7 @@ const NewArrivals = () => {
   const handleMouseMove = (e) => {
     if (!isDragging || !scrollRef.current) return
     const x = e.pageX - scrollRef.current.offsetLeft
-    const walk = (x - startX) * 1.5 // Nhân 1.5 để cuộn nhanh hơn
+    const walk = (x - startX) * 1.5
     scrollRef.current.scrollLeft = scrollLeft - walk
   }
 
@@ -71,7 +68,7 @@ const NewArrivals = () => {
   }
 
   const scroll = (direction) => {
-    const scrollAmount = direction === 'left' ? -350 : 350 // Điều chỉnh khoảng cuộn
+    const scrollAmount = direction === 'left' ? -350 : 350
     if (scrollRef.current) {
       scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' })
     }
@@ -81,7 +78,6 @@ const NewArrivals = () => {
     const container = scrollRef.current
     if (container) {
       const leftScroll = container.scrollLeft
-      // Thêm một buffer nhỏ (ví dụ: 1) để đảm bảo nút cuộn bên phải biến mất khi cuộn hết
       const isScrolledToRight = container.scrollWidth - container.clientWidth - leftScroll < 1
 
       setCanScrollLeft(leftScroll > 0)
@@ -93,7 +89,6 @@ const NewArrivals = () => {
     const container = scrollRef.current
     if (container) {
       container.addEventListener('scroll', updateScrollButtons)
-      // Thêm listener cho sự kiện resize để cập nhật button khi kích thước cửa sổ thay đổi
       window.addEventListener('resize', updateScrollButtons)
       updateScrollButtons()
       return () => {
@@ -136,10 +131,8 @@ const NewArrivals = () => {
     const isCurrentlyFavorite = favoriteProductIds.includes(productId)
 
     if (isCurrentlyFavorite) {
-      // Bỏ yêu thích
       dispatch(removeFavorite(productId))
     } else {
-      // Thêm yêu thích
       dispatch(addFavorite(productId))
     }
   }
@@ -154,7 +147,7 @@ const NewArrivals = () => {
         Chất lượng vượt thời gian, thiết kế mới nhất.
         </p>
 
-        {/* Scroll Buttons - Căn chỉnh lại vị trí để dễ nhìn */}
+        {/* Scroll Buttons */}
         <div className='absolute right-0 top-1/2 -mt-6 hidden md:flex space-x-2 z-10'>
           <button
             onClick={() => scroll('left')}
@@ -205,7 +198,6 @@ const NewArrivals = () => {
             return (
               <div
                 key={product._id}
-                // Thiết lập chiều rộng cố định và ngăn co lại
                 className='relative group overflow-hidden transition-all duration-300 shrink-0 w-56 md:w-64 lg:w-72'
                 style={{
                   backgroundColor: theme.palette.background.paper,
@@ -218,23 +210,18 @@ const NewArrivals = () => {
                   <div className='flex flex-col h-full'>
                     {/* 1. Khu vực Hình ảnh & Sale Tag */}
                     <div className='w-full h-96 relative overflow-hidden'>
-                      {/* Ảnh Sản Phẩm */}
                       <img
                         src={product.images && product.images.length > 0 ? product.images[0].url : 'placeholder_image_url'}
                         alt={product.name}
                         className='w-full h-full object-contain transition-transform duration-500 group-hover:scale-105'
                         draggable='false'
                       />
-
-                      {/* TAGS (NEW & SALE) */}
                       <div className='absolute top-3 left-3 flex space-x-2'>
                         <span
                           className='px-3 py-1 text-xs font-bold tracking-widest text-white shadow-md'
                           style={{ backgroundColor: PRIMARY_COLOR }}
                         > NEW
                         </span>
-
-                        {/* Sale Tag (Nếu có giảm giá) */}
                         {product.disCountPrice && product.disCountPrice < product.price && (
                           <span
                             className='px-3 py-1 text-xs font-bold tracking-widest text-white shadow-md'
@@ -269,7 +256,7 @@ const NewArrivals = () => {
 
                   </div>
 
-                  {/* 2. Khu vực Thông tin (p-4) */}
+                  {/* 2. Khu vực Thông tin */}
                   <div
                     className='p-4 text-left transition-all duration-300'
                     style={{
@@ -293,11 +280,9 @@ const NewArrivals = () => {
                     {/* Giá Khuyến Mãi & Giá Gốc */}
                     {product.disCountPrice && product.disCountPrice < product.price ? (
                       <div className='flex items-end space-x-2'>
-                        {/* Giá Khuyến Mãi (Màu Đỏ/Error) */}
                         <p className='text-lg font-bold' style={{ color: ERROR_COLOR }}>
                           {formatCurrency(product.disCountPrice)}
                         </p>
-                        {/* Giá Gốc */}
                         <p className='text-sm line-through' style={{ color: colors.mutedText }}>
                           {formatCurrency(product.price)}
                         </p>

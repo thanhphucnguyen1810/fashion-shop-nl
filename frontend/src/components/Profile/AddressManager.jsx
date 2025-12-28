@@ -60,7 +60,7 @@ const AddressManager = () => {
     setOpenForm(true)
   }
 
-  // --- Submit Form (Thay thế handleSubmit local) ---
+  // --- Submit Form ---
   const handleSubmit = async (e) => {
     e.preventDefault()
 
@@ -91,7 +91,7 @@ const AddressManager = () => {
     }
   }
 
-  // --- Đặt làm địa chỉ mặc định (Thay thế handleSetDefault local) ---
+  // --- Đặt làm địa chỉ mặc định ---
   const handleSetDefault = async (id) => {
     try {
       await dispatch(setDefaultAddress(id)).unwrap()
@@ -123,7 +123,6 @@ const AddressManager = () => {
       {/* Danh sách địa chỉ */}
       <div className="space-y-4">
         {addresses.map((addr) => (
-          // ... (Phần hiển thị list address giữ nguyên)
           <div
             key={addr._id}
             className="border p-4 rounded-lg flex justify-between items-center"

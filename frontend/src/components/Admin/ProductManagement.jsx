@@ -65,9 +65,7 @@ const ProductManagement = () => {
 
     try {
       await dispatch(createProduct(formPayload)).unwrap()
-      // Đóng modal sau khi lưu thành công
       setShowForm(false)
-      // reset form
       setShowForm(false)
       setFormData({
         name:'', description:'', price:'', countInStock:'', sku:'', category:'', sizes: [], colors: [], collections:'', images:[]
@@ -91,7 +89,6 @@ const ProductManagement = () => {
       <h2 className="text-2xl font-bold mb-6">Quản Lý Sản Phẩm</h2>
       {/* Search Bar */}
       <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        {/* Search input + search button */}
         <div className="relative w-full md:w-1/2">
           <input
             type="text"
@@ -109,7 +106,6 @@ const ProductManagement = () => {
           </button>
         </div>
 
-        {/* Thêm sản phẩm button */}
         <button
           onClick={() => setShowForm(true)}
           className="px-4 py-2 rounded flex items-center gap-2"
@@ -134,7 +130,6 @@ const ProductManagement = () => {
             style={{ backgroundColor: theme.palette.background.paper }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Nút đóng */}
             <button
               onClick={() => setShowForm(false)}
               className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"

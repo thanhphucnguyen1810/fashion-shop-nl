@@ -27,7 +27,6 @@ const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  // Get redirect parameter and check if it's checkout or something
   const redirect = new URLSearchParams(location.search).get('redirect') || '/'
   const isCheckoutRedirect = redirect.includes('checkout')
 
@@ -57,12 +56,10 @@ const Login = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search)
     const token = params.get('token')
-    // Đảm bảo parse an toàn cho user data
     const userData = params.get('user') ? JSON.parse(decodeURIComponent(params.get('user'))) : null
 
     if (token && userData) {
       dispatch(setUser({ user: userData, token }))
-      // Giữ lại logic redirect sau khi social login thành công
       navigate(isCheckoutRedirect ? '/checkout' : '/')
     }
   }, [location.search, dispatch, navigate, isCheckoutRedirect])
