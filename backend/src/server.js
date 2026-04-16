@@ -6,8 +6,6 @@ import app from './app'
 import { CONNECT_DB, CLOSE_DB } from './config/mongodb'
 import { env } from './config/environment'
 
-const HOSTNAME = env.APP_HOST || 'localhost'
-const PORT = env.APP_PORT || 8000
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
@@ -17,11 +15,18 @@ process.on('uncaughtException', (err) => {
 
 
 // Start server
-let server = null
+let server
 const START_SERVER = async () => {
-  server = app.listen(PORT, () => {
-    console.log(`Server is running at http://${HOSTNAME}:${PORT}`)
-  })
+  if (env.BUILD_MODE === 'production') { // production
+    server = app.listen(process.env.APP_PORT, () => {
+      console.log(`3. Production: Hi ${env.AUTHOR}, Back-end Server is running successfully at host: ${env.APP_HOST} and at port: ${env.APP_PORT}`)
+    })
+  } else {
+    server = app.listen(env.APP_PORT, env.APP_HOST, () => { // local
+      console.log(`3. Local Dev: Hi ${env.AUTHOR}, Back-end Server is running successfully at host: ${env.APP_HOST} and at port: ${env.APP_PORT}`)
+      console.log(`Hello, running at http://${ env.APP_HOST }:${ env.APP_PORT }/`)
+    })
+  }
 
   exitHook(() => {
     console.log('Closing MongoDB connection...')
@@ -43,13 +48,3 @@ const START_SERVER = async () => {
     process.exit(1)
   }
 })()
-
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-  console.error('Unhandled Rejection:', err)
-  if (server) {
-    server.close(() => process.exit(1))
-  } else {
-    process.exit(1)
-  }
-})

@@ -15,7 +15,7 @@
     "build-babel": "./node_modules/.bin/babel ./src -d ./build/src",
     "build": "npm install && npm run clean && npm run build-babel",
     "start": "node build/src/server.js",
-    "production": "npm run build && cross-env BUILD_MODE=production node ./build/src/server.js",
+    "production": "cross-env BUILD_MODE=production node ./build/src/server.js",
     "dev": "cross-env BUILD_MODE=development nodemon --exec babel-node ./src/server.js",
     "seed": "cross-env BUILD_MODE=development babel-node ./src/seeder.js"
   },
@@ -49,7 +49,6 @@
     "xss-clean": "^0.1.4",
     "@babel/cli": "^7.27.2",
     "@babel/core": "^7.28.5",
-    "@babel/runtime": "7.27.1",
     "@babel/preset-env": "^7.28.5",
     "@babel/plugin-transform-runtime": "^7.27.1"
   },
