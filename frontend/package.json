@@ -24,6 +24,7 @@
     "@reduxjs/toolkit": "^2.10.1",
     "@tailwindcss/vite": "^4.1.7",
     "axios": "^1.13.2",
+    "cross-env": "^10.1.0",
     "date-fns": "^4.1.0",
     "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
