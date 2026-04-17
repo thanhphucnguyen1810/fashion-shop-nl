@@ -1,74 +1,104 @@
 import express from 'express'
+import multer from 'multer'
+
 import {
-  registerUser,
-  loginUser,
-  getUserProfile,
-  forgotPassword,
-  resetPassword,
-  changePassword,
-  verifyEmail,
-  updateUserProfile,
-  addFavorite,
-  removeFavorite
+  userController
 } from '~/controllers/user.controller'
+
 import { protect } from '~/middlewares/auth.middleware'
 import { logSecurity } from '~/middlewares/logger.middleware'
-import { validateRequest } from '~/middlewares/validation.middleware'
+
 import {
-  registerSchema, loginSchema, resetPasswordSchema,
-  updateProfileSchema, productIdSchema,
-  forgotPasswordSchema, changePasswordSchema
+  registerSchema,
+  loginSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  changePasswordSchema,
+  updateProfileSchema,
+  productIdSchema
 } from '~/validations/user.validation'
 
-import multer from 'multer'
-const router = express.Router()
-const storage = multer.memoryStorage()
-const upload = multer({ storage })
+const Router = express.Router()
+const upload = multer({ storage: multer.memoryStorage() })
 
-// AUTH ROUTES
-router.post('/register', validateRequest(registerSchema), logSecurity('REGISTER'), registerUser)
-router.post('/login', validateRequest(loginSchema), logSecurity('LOGIN'), loginUser)
+// ================= AUTH =================
+Router.route('/register')
+  .post(
+    registerSchema,
+    logSecurity('REGISTER'),
+    userController.registerUser
+  )
 
+Router.route('/login')
+  .post(
+    loginSchema,
+    logSecurity('LOGIN'),
+    userController.loginUser
+  )
 
-router.post(
-  '/forgotPassword',
-  validateRequest(forgotPasswordSchema),
-  logSecurity('RESET_PASSWORD'),
-  forgotPassword
-)
+Router.route('/verify-email/:token')
+  .get(
+    logSecurity('VERIFY_EMAIL'),
+    userController.verifyEmail
+  )
 
-router.patch('/resetPassword/:token', validateRequest(resetPasswordSchema), logSecurity('RESET_PASSWORD'), resetPassword)
+Router.route('/auth/social/callback')
+  .get(
+    logSecurity('SOCIAL_LOGIN'),
+    userController.socialLogin
+  )
 
-router.put(
-  '/change-password',
-  protect,
-  validateRequest(changePasswordSchema),
-  logSecurity('CHANGE_PASSWORD'),
-  changePassword
-)
+// ================= PASSWORD =================
+Router.route('/forgot-password')
+  .post(
+    forgotPasswordSchema,
+    logSecurity('FORGOT_PASSWORD'),
+    userController.forgotPassword
+  )
 
-router.get('/verify-email/:token', verifyEmail)
+Router.route('/reset-password/:token')
+  .post(
+    resetPasswordSchema,
+    logSecurity('RESET_PASSWORD'),
+    userController.resetPassword
+  )
 
-router.get('/profile', protect, getUserProfile)
-router.put(
-  '/profile',
-  protect,
-  upload.single('avatar'),
-  validateRequest(updateProfileSchema),
-  logSecurity('UPDATE_PROFILE'),
-  updateUserProfile
-)
+Router.route('/change-password')
+  .put(
+    protect,
+    changePasswordSchema,
+    logSecurity('CHANGE_PASSWORD'),
+    userController.changePassword
+  )
 
-router.post('/favorites/:productId', protect, (req, res, next) => {
-  const { error } = productIdSchema.validate(req.params)
-  if (error) return res.status(400).json({ message: error.details[0].message })
-  next()
-}, addFavorite)
+// ================= PROFILE =================
+Router.route('/profile')
+  .get(
+    protect,
+    logSecurity('GET_PROFILE'),
+    userController.getUserProfile
+  )
+  .put(
+    protect,
+    upload.single('avatar'),
+    updateProfileSchema,
+    logSecurity('UPDATE_PROFILE'),
+    userController.updateUserProfile
+  )
 
-router.delete('/favorites/:productId', protect, (req, res, next) => {
-  const { error } = productIdSchema.validate(req.params)
-  if (error) return res.status(400).json({ message: error.details[0].message })
-  next()
-}, removeFavorite)
+// ================= FAVORITES =================
+Router.route('/favorites/:productId')
+  .post(
+    protect,
+    productIdSchema,
+    logSecurity('ADD_FAVORITE'),
+    userController.addFavorite
+  )
+  .delete(
+    protect,
+    productIdSchema,
+    logSecurity('REMOVE_FAVORITE'),
+    userController.removeFavorite
+  )
 
-export default router
+export default Router

@@ -8,6 +8,7 @@ import rateLimit from 'express-rate-limit'
 import morgan from 'morgan'
 import mongoSanitize from 'express-mongo-sanitize'
 import session from 'express-session'
+import cookieParser from 'cookie-parser'
 
 import passport from './config/passport'
 import { corsOptions } from './config/cors'
@@ -41,6 +42,7 @@ dotenv.config()
 const app = express()
 
 app.use(express.json())
+app.use(cookieParser())
 app.use(express.urlencoded({ extended: true }))
 
 // Enable cors

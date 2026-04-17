@@ -7,13 +7,16 @@ const API_URL = import.meta.env.VITE_API_URL
 // ============================= LOCAL STORAGE ==================================
 
 const userFromStorageRaw = localStorage.getItem('userInfo')
-const userFromStorage =
-  userFromStorageRaw && userFromStorageRaw !== 'undefined'
-    ? JSON.parse(userFromStorageRaw)
-    : null
+let userFromStorage = null
+try {
+  userFromStorage =
+    userFromStorageRaw && userFromStorageRaw !== 'undefined'
+      ? JSON.parse(userFromStorageRaw)
+      : null
+} catch {
+  userFromStorage = null
+}
 
-
-const tokenFromStorage = localStorage.getItem('userToken') || null
 
 // Check for an existing guest ID or generate a new one
 const initialGuestId = localStorage.getItem('guestId') || `guest_${Date.now()}`
@@ -23,7 +26,6 @@ localStorage.setItem('guestId', initialGuestId)
 
 const initialState = {
   user: userFromStorage,
-  token: tokenFromStorage,
   guestId: initialGuestId,
   loading: false,
   error: null,
@@ -62,10 +64,9 @@ export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async (userData, { rejectWithValue, dispatch }) => {
     try {
-      const response = await axios.post(`${API_URL}/api/users/login`, userData)
+      const response = await axios.post(`${API_URL}/api/users/login`, userData, { withCredentials: true })
 
       localStorage.setItem('userInfo', JSON.stringify(response.data.user))
-      localStorage.setItem('userToken', response.data.token)
 
       const guestId = localStorage.getItem('guestId')
       const userId = response.data.user._id
@@ -85,7 +86,6 @@ export const loginUser = createAsyncThunk(
 
       return {
         user: response.data.user,
-        token: response.data.token
       }
     } catch (err) {
       return rejectWithValue(err.response?.data || { message: 'Đăng nhập thất bại' })
@@ -106,7 +106,7 @@ export const forgotPassword = createAsyncThunk(
   'auth/forgotPassword',
   async (email, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${API_URL}/api/users/forgotPassword`, { email })
+      const response = await axios.post(`${API_URL}/api/users/forgot-password`, { email })
       // Lưu ý: Backend đã trả về status 200 ngay cả khi email không tồn tại.
       return response.data
     } catch (err) {
@@ -121,11 +121,10 @@ export const resetPassword = createAsyncThunk(
   async ({ token, password }, { rejectWithValue }) => {
     try {
       // Gửi mật khẩu mới trong body, token trong URL
-      const response = await axios.patch(`${API_URL}/api/users/resetPassword/${token}`, { password })
+      const response = await axios.post(`${API_URL}/api/users/reset-password/${token}`, { password })
 
       // Sau khi reset thành công, cập nhật state login
       localStorage.setItem('userInfo', JSON.stringify(response.data.user))
-      localStorage.setItem('userToken', response.data.token)
 
       return {
         message: response.data.message,
@@ -144,7 +143,7 @@ export const addFavorite = createAsyncThunk(
   async (productId, { rejectWithValue }) => {
     try {
       const config = {
-        headers: { Authorization: `Bearer ${localStorage.getItem('userToken')}` }
+        withCredentials: true
       }
       const response = await axios.post(`${API_URL}/api/users/favorites/${productId}`, {}, config)
       return response.data // Là mảng favorites mới
@@ -160,8 +159,9 @@ export const removeFavorite = createAsyncThunk(
   async (productId, { rejectWithValue }) => {
     try {
       const config = {
-        headers: { Authorization: `Bearer ${localStorage.getItem('userToken')}` }
+        withCredentials: true
       }
+
       const response = await axios.delete(`${API_URL}/api/users/favorites/${productId}`, config)
       return response.data // Là mảng favorites mới
     } catch (err) {
@@ -178,20 +178,14 @@ const authSlice = createSlice({
   reducers: {
     logout: (state) => {
       state.user = null
-      state.token = null
-
       state.guestId = `guest_${Date.now()}`
       localStorage.setItem('guestId', state.guestId)
-
       localStorage.removeItem('userInfo')
-      localStorage.removeItem('userToken')
     },
 
     setUser: (state, action) => {
       state.user = action.payload.user
-      state.token = action.payload.token
       localStorage.setItem('userInfo', JSON.stringify(action.payload.user))
-      localStorage.setItem('userToken', action.payload.token)
     },
     clearRegisterStatus: (state) => {
       state.loading = false
@@ -214,7 +208,7 @@ const authSlice = createSlice({
     toggleFavoriteLocal: (state, action) => {
       if (state.user) {
         const productId = action.payload
-        const index = state.user.favorites.indexOf(productId)
+        const index = state.user.favorites.findIndex(id => id === productId)
 
         if (index > -1) {
           // Bỏ yêu thích
@@ -255,11 +249,11 @@ const authSlice = createSlice({
       .addCase(loginUser.pending, (state) => {
         state.loading = true
         state.error = null
+        state.isVerifiedError = false
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false
         state.user = action.payload.user
-        state.token = action.payload.token
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false

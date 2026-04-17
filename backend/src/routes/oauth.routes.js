@@ -1,7 +1,7 @@
 // src/routes/oauth.routes.js
 import express from 'express'
 import passport from 'passport'
-import { socialLogin } from '~/controllers/user.controller.js'
+import { userController } from '~/controllers/user.controller'
 import { logSecurity } from '~/middlewares/logger.middleware'
 
 const router = express.Router()
@@ -19,7 +19,7 @@ router.get(
     'google',
     { failureRedirect: '/login', session: false }
   ),
-  socialLogin
+  userController.socialLogin
 )
 
 // ================= FACEBOOK LOGIN ==================
@@ -35,7 +35,7 @@ router.get(
     'facebook',
     { failureRedirect: '/login', session: false }
   ),
-  socialLogin
+  userController.socialLogin
 )
 
 export default router
