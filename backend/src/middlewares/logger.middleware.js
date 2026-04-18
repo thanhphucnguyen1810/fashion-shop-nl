@@ -1,5 +1,4 @@
 import SecurityLog from '~/models/securitylog.model'
-import { checkBruteForce } from '~/services/security.service'
 
 export const logSecurity = (action) => (req, res, next) => {
   res.on('finish', async () => {

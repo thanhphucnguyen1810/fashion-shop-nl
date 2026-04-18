@@ -23,7 +23,6 @@ import couponRoutes from './routes/coupon.routes'
 import checkoutRoutes from './routes/checkout.routes'
 import orderRoutes from './routes/order.routes'
 import uploadRoutes from './routes/upload.routes'
-import subscribeRoutes from './routes/subscribe.routes'
 import categoryRoutes from './routes/category.routes'
 
 import adminUserRoutes from './routes/admin/admin.user.routes'
@@ -92,7 +91,6 @@ app.use('/api/coupons', couponRoutes)
 app.use('/api/checkout', checkoutRoutes)
 app.use('/api/orders', orderRoutes)
 app.use('/api/upload', uploadRoutes)
-app.use('/api/subscribe', subscribeRoutes)
 app.use('/api/categories', categoryRoutes)
 app.use('/api/address', addressRoutes)
 

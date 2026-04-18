@@ -1,5 +1,5 @@
 import express from 'express'
-import { generateInvoice, getInvoiceByOrder } from '~/controllers/invoice.controller.js'
+import { invoiceController } from '~/controllers/invoice.controller.js'
 import { logSecurity } from '~/middlewares/logger.middleware'
 
 const router = express.Router()
@@ -8,14 +8,13 @@ const router = express.Router()
 router.post(
   '/:orderId',
   logSecurity('CREATE_INVOICE'),
-  generateInvoice
+  invoiceController.generateInvoice
 )
 
 router.get(
   '/:orderId',
   logSecurity('VIEW_INVOICE'),
-  getInvoiceByOrder
+  invoiceController.getInvoiceByOrder
 )
-
 
 export default router

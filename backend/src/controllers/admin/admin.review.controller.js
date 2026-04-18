@@ -1,12 +1,12 @@
-import Review from '~/models/review.model.js'
+import {
+  getAllReviewsAdmin as getAllReviewsService,
+  updateReviewStatus as updateReviewStatusService
+} from '~/services/review.service.js'
 
+// ================= GET ALL =================
 export const getAllReviewsAdmin = async (req, res) => {
   try {
-    const reviews = await Review.find()
-      .populate('user', 'name email')
-      .populate('productId', 'name thumbnail images')
-      .sort({ createdAt: -1 })
-
+    const reviews = await getAllReviewsService()
     res.json(reviews)
   } catch (error) {
     console.error('Error getAllReviewsAdmin:', error)
@@ -14,19 +14,21 @@ export const getAllReviewsAdmin = async (req, res) => {
   }
 }
 
+// ================= UPDATE STATUS =================
 export const updateReviewStatus = async (req, res) => {
   try {
     const { status } = req.body
 
-    const review = await Review.findById(req.params.id)
+    const review = await updateReviewStatusService(req.params.id, status)
 
-    if (!review)
+    if (!review) {
       return res.status(404).json({ message: 'Review không tồn tại' })
+    }
 
-    review.status = status
-    await review.save()
-
-    res.json({ message: 'Cập nhật trạng thái thành công', review })
+    res.json({
+      message: 'Cập nhật trạng thái thành công',
+      review
+    })
   } catch (error) {
     console.error('Error updateReviewStatus:', error)
     res.status(500).json({ message: 'Server error' })

@@ -42,13 +42,9 @@ const orderSchema = new mongoose.Schema({
   },
   orderItems: [orderItemSchema],
   shippingAddress: {
-    firstName: { type: String, required: false },
-    lastName: { type: String, required: false },
-    phone: { type: String, required: false },
-    address: { type: String, required: false },
-    city: { type: String, required: false },
-    postalCode: { type: String, required: false },
-    country: { type: String, required: false }
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Address',
+    required: false
   },
   coupon: {
     code: { type: String, default: null },
