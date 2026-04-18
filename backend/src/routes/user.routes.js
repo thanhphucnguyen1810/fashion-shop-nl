@@ -48,6 +48,11 @@ Router.route('/auth/social/callback')
     userController.socialLogin
   )
 
+Router.route('/refresh-token')
+  .get(
+    userController.refreshToken
+  )
+
 // ================= PASSWORD =================
 Router.route('/forgot-password')
   .post(

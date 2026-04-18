@@ -17,7 +17,6 @@ try {
   userFromStorage = null
 }
 
-
 // Check for an existing guest ID or generate a new one
 const initialGuestId = localStorage.getItem('guestId') || `guest_${Date.now()}`
 localStorage.setItem('guestId', initialGuestId)
@@ -85,7 +84,7 @@ export const loginUser = createAsyncThunk(
       await dispatch(fetchCart({ userId }))
 
       return {
-        user: response.data.user,
+        user: response.data.user
       }
     } catch (err) {
       return rejectWithValue(err.response?.data || { message: 'Đăng nhập thất bại' })
@@ -146,7 +145,7 @@ export const addFavorite = createAsyncThunk(
         withCredentials: true
       }
       const response = await axios.post(`${API_URL}/api/users/favorites/${productId}`, {}, config)
-      return response.data // Là mảng favorites mới
+      return response.data
     } catch (err) {
       return rejectWithValue(err.response?.data || { message: 'Lỗi thêm yêu thích' })
     }
@@ -163,7 +162,7 @@ export const removeFavorite = createAsyncThunk(
       }
 
       const response = await axios.delete(`${API_URL}/api/users/favorites/${productId}`, config)
-      return response.data // Là mảng favorites mới
+      return response.data
     } catch (err) {
       return rejectWithValue(err.response?.data || { message: 'Lỗi xóa yêu thích' })
     }
@@ -208,17 +207,16 @@ const authSlice = createSlice({
     toggleFavoriteLocal: (state, action) => {
       if (state.user) {
         const productId = action.payload
-        const index = state.user.favorites.findIndex(id => id === productId)
+        const index = state.user.favorites.findIndex(item => {
+          const favId = item._id ? item._id.toString() : item.toString()
+          return favId === productId.toString()
+        })
 
         if (index > -1) {
-          // Bỏ yêu thích
           state.user.favorites.splice(index, 1)
         } else {
-          // Thêm yêu thích
           state.user.favorites.push(productId)
         }
-
-        // Cập nhật LocalStorage ngay lập tức
         localStorage.setItem('userInfo', JSON.stringify(state.user))
       }
     }
@@ -294,15 +292,13 @@ const authSlice = createSlice({
 
       // ===== ADD FAVORITE =====
       .addCase(addFavorite.pending, (state) => {
-        // Bật cờ loading khi bắt đầu gọi API
         state.favoriteLoading = true
         state.favoriteError = null
       })
       .addCase(addFavorite.fulfilled, (state, action) => {
         state.favoriteLoading = false
         if (state.user) {
-          // Đồng bộ state Redux với dữ liệu favorites mới nhất từ Backend
-          state.user = { ...state.user, favorites: action.payload }
+          state.user.favorites = action.payload
         }
         // Lưu vào LocalStorage
         localStorage.setItem('userInfo', JSON.stringify(state.user))

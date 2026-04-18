@@ -34,10 +34,9 @@ const formatCurrency = (price) => {
 }
 
 
-const ProductGrid = ({ products, loading, error, columnCount, isFetching }) => {
+const ProductGrid = ({ products, error, columnCount, isFetching }) => {
   const theme = useTheme()
   const dispatch = useDispatch()
-  const user = useSelector((state) => state.auth.user)
   const favoriteProductIds = useSelector((state) => state.auth.user?.favorites ?? [])
 
   let columnClass = 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
@@ -63,7 +62,9 @@ const ProductGrid = ({ products, loading, error, columnCount, isFetching }) => {
   const handleToggleFavorite = (e, productId) => {
     e.preventDefault()
     e.stopPropagation()
-    const isCurrentlyFavorite = favoriteProductIds.includes(productId)
+    const isCurrentlyFavorite = favoriteProductIds.some(fav =>
+      (fav._id ? fav._id.toString() : fav.toString()) === productId.toString()
+    )
 
     dispatch(toggleFavoriteLocal(productId))
 
@@ -80,7 +81,11 @@ const ProductGrid = ({ products, loading, error, columnCount, isFetching }) => {
       style={{ opacity: isFetching ? 0.6 : 1 }}
     >
       {products.map((product) => {
-        const isFavorite = favoriteProductIds.includes(product._id)
+        const isFavorite = favoriteProductIds.some(fav => {
+          // Nếu fav là object thì lấy _id, nếu là string thì dùng chính nó
+          const favId = fav._id ? fav._id.toString() : fav.toString()
+          return favId === product._id.toString()
+        })
         return (
           <div
             key={product._id}

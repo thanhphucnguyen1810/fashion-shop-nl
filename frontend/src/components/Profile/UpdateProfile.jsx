@@ -10,20 +10,19 @@ import { setUser } from '~/redux/slices/authSlice'
 
 const UpdateProfile = ({ theme }) => {
 
-  const { user, token } = useSelector((state) => state.auth)
+  const { user } = useSelector((state) => state.auth)
   const navigate = useNavigate()
   const dispatch = useDispatch()
 
   const [avatarFile, setAvatarFile] = useState(null)
   const [name, setName] = useState(user?.name || '')
   const [gender, setGender] = useState(user?.gender || 'other')
+  const [isUpdating, setIsUpdating] = useState(false)
 
   const [showPasswordForm, setShowPasswordForm] = useState(false)
   const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-
-  const userToken = token
 
   useEffect(() => {
     if (!user) {
@@ -34,39 +33,28 @@ const UpdateProfile = ({ theme }) => {
   }, [user, navigate])
 
   const handleUpdateProfile = async () => {
-    if (!user || !userToken) return
+    if (!user) return
+    setIsUpdating(true)
 
     const formData = new FormData()
-
     formData.append('name', name)
     formData.append('gender', gender)
-
-    if (avatarFile) {
-      formData.append('avatar', avatarFile)
-    }
+    if (avatarFile) formData.append('avatar', avatarFile)
 
     try {
       const res = await axios.put(
         `${import.meta.env.VITE_API_URL}/api/users/profile`,
         formData,
-        {
-          headers: {
-            Authorization: `Bearer ${userToken}`,
-            'Content-Type': 'multipart/form-data'
-          }
-        }
+        { withCredentials: true, headers: { 'Content-Type': 'multipart/form-data' } }
       )
-
-      const updatedUser = res.data
-
-      dispatch(setUser({ user: updatedUser, token: userToken }))
-
+      dispatch(setUser({ user: res.data }))
       setAvatarFile(null)
-
       toast.success('Cập nhật profile thành công!', { duration: 1000 })
     } catch (err) {
       console.error(err)
       toast.error('Cập nhật thất bại. Vui lòng kiểm tra console.', { duration: 1000 })
+    } finally {
+      setIsUpdating(false)
     }
   }
 
@@ -82,7 +70,7 @@ const UpdateProfile = ({ theme }) => {
       await axios.put(
         `${import.meta.env.VITE_API_URL}/api/users/change-password`,
         { oldPassword, newPassword },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { withCredentials: true }
       )
 
       toast.success('Đổi mật khẩu thành công!')
@@ -243,19 +231,17 @@ const UpdateProfile = ({ theme }) => {
     Ảnh đại diện
           </label>
 
-          <div className='relative group'>
+          <label htmlFor="avatar-upload" className='relative group cursor-pointer'>
             <img
-              src={avatarFile ? URL.createObjectURL(avatarFile) : (user?.avatar?.url || 'https://via.placeholder.com/150')}
+              src={avatarFile ? URL.createObjectURL(avatarFile) : (user?.avatar?.url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=random`)}
               alt="Avatar Preview"
-              className='w-24 h-24 rounded-full object-cover border-4'
+              className='w-24 h-24 rounded-full object-cover border-4 group-hover:opacity-70 transition-opacity'
               style={{ borderColor: theme.palette.divider }}
             />
-            <label
-              htmlFor="avatar-upload"
-              className='absolute bottom-0 right-0 bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition'
-            >
-              <i className="fa-solid fa-camera text-white text-xs"></i>
-            </label>
+            {/* Overlay khi hover */}
+            <div className='absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity'>
+              <i className="fa-solid fa-camera text-white text-lg"></i>
+            </div>
             <input
               id="avatar-upload"
               type='file'
@@ -263,20 +249,34 @@ const UpdateProfile = ({ theme }) => {
               onChange={(e) => setAvatarFile(e.target.files[0])}
               className='hidden'
             />
-          </div>
-          <p className='text-[10px] mt-2 text-gray-400'>Nhấn vào icon để đổi ảnh</p>
+          </label>
+
+          <p className='text-[10px] mt-2 text-gray-400'>Nhấn vào ảnh để đổi</p>
         </div>
 
         <button
           onClick={handleUpdateProfile}
-          className='w-full py-3 px-4 rounded-lg font-bold transition duration-300 flex items-center justify-center space-x-2'
+          disabled={isUpdating}
+          className='w-full py-3 px-4 rounded-lg font-bold transition duration-300 flex items-center justify-center space-x-2 disabled:opacity-60 disabled:cursor-not-allowed'
           style={{
             backgroundColor: theme.palette.primary.main,
             color: theme.palette.primary.contrastText
           }}
         >
-          <SaveIcon />
-          <span>Cập nhật Profile</span>
+          {isUpdating ? (
+            <>
+              <svg className='animate-spin h-5 w-5' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
+                <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4'/>
+                <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8v8z'/>
+              </svg>
+              <span>Đang cập nhật...</span>
+            </>
+          ) : (
+            <>
+              <SaveIcon />
+              <span>Cập nhật Profile</span>
+            </>
+          )}
         </button>
       </div>
     </>

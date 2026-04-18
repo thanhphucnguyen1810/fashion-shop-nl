@@ -73,7 +73,7 @@ const verifyEmail = async (token) => {
 }
 
 // ======================= REFRESH TOKEN =======================
-const refreshTokenService = async (clientToken, res) => {
+const refreshTokenService = async (clientToken) => {
   if (!clientToken) throw new Error('No refresh token')
 
   const decoded = JwtProvider.verifyToken(
@@ -97,18 +97,11 @@ const refreshTokenService = async (clientToken, res) => {
     env.ACCESS_TOKEN_LIFE
   )
 
-  res.cookie('accessToken', newAccessToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'none',
-    maxAge: 15 * 60 * 1000
-  })
-
-  return { user }
+  return { accessToken: newAccessToken, user }
 }
 
 // ======================= LOGIN =======================
-const loginUser = async (reqBody, res) => {
+const loginUser = async (reqBody) => {
   const { email, password } = reqBody
 
   const user = await userModel.findOne({ email }).populate({
@@ -127,49 +120,30 @@ const loginUser = async (reqBody, res) => {
     }
   }
 
-  // ===== payload token =====
   const userInfo = {
     _id: user._id,
     email: user.email,
     role: user.role
   }
 
-  console.log('ACCESS TOKEN SECRET:', env.ACCESS_TOKEN_SECRET_SIGNATURE)
-console.log('REFRESH TOKEN SECRET:', env.REFRESH_TOKEN_SECRET_SIGNATURE)
-
-  // ===== ACCESS TOKEN =====
   const accessToken = JwtProvider.generateToken(
     userInfo,
     env.ACCESS_TOKEN_SECRET_SIGNATURE,
     env.ACCESS_TOKEN_LIFE
   )
 
-  // ===== REFRESH TOKEN =====
   const refreshToken = JwtProvider.generateToken(
     userInfo,
     env.REFRESH_TOKEN_SECRET_SIGNATURE,
     env.REFRESH_TOKEN_LIFE
   )
 
-  // ===== LƯU refreshToken vào DB =====
   user.refreshToken = refreshToken
   await user.save()
 
-  res.cookie('accessToken', accessToken, {
-    httpOnly: true,
-    secure: false,
-    sameSite: 'none',
-    maxAge: 15 * 60 * 1000
-  })
-
-  res.cookie('refreshToken', refreshToken, {
-    httpOnly: true,
-    secure: false,
-    sameSite: 'none',
-    maxAge: 7 * 24 * 60 * 60 * 1000
-  })
-
   return {
+    accessToken,
+    refreshToken,
     user: {
       _id: user._id,
       name: user.name,
@@ -281,11 +255,11 @@ const resetPassword = async (token, newPassword) => {
 // ======================= CHANGE PASSWORD =======================
 const changePassword = async (user, reqBody) => {
   try {
-    const { currentPassword, newPassword } = reqBody
+    const { oldPassword, newPassword } = reqBody
 
     const currentUser = await userModel.findById(user._id).select('+password')
 
-    const isMatch = await currentUser.matchPassword(currentPassword)
+    const isMatch = await currentUser.matchPassword(oldPassword)
     if (!isMatch) throw new Error('Mật khẩu hiện tại không chính xác.')
 
     currentUser.password = newPassword
@@ -304,15 +278,16 @@ const getUserProfile = async (user) => {
     })
 
     if (!populatedUser) throw new Error('User not found')
-
     return populatedUser
   } catch (error) { throw error }
 }
 
 // ======================= UPDATE PROFILE =======================
 const updateUserProfile = async (user, reqBody, file) => {
-  if (reqBody.name) user.name = reqBody.name
-  if (reqBody.gender) user.gender = reqBody.gender
+  const updateData = {}
+
+  if (reqBody.name) updateData.name = reqBody.name
+  if (reqBody.gender) updateData.gender = reqBody.gender
 
   if (file) {
     const uploadStream = () =>
@@ -326,42 +301,64 @@ const updateUserProfile = async (user, reqBody, file) => {
 
     const uploadResult = await uploadStream()
 
-    if (user.avatar?.public_id) {
-      await cloudinary.uploader.destroy(user.avatar.public_id)
+    // Lấy avatar cũ để xóa trên Cloudinary
+    const oldUser = await userModel.findById(user._id).select('avatar')
+    if (oldUser?.avatar?.public_id) {
+      await cloudinary.uploader.destroy(oldUser.avatar.public_id)
     }
 
-    user.avatar = {
+    updateData.avatar = {
       url: uploadResult.secure_url,
       public_id: uploadResult.public_id
     }
-
-    user.avatarCloudId = uploadResult.public_id
   }
 
-  await user.save()
-  return user
+  // Dùng findByIdAndUpdate thay vì save()
+  const updatedUser = await userModel.findByIdAndUpdate(
+    user._id,
+    { $set: updateData },
+    { new: true }
+  )
+
+  return updatedUser
 }
 
 // ======================= FAVORITES =======================
-const addFavorite = async (user, productId) => {
+const addFavorite = async (userId, productId) => {
   try {
-    if (!user.favorites.includes(productId)) {
+    const user = await userModel.findById(userId)
+    if (!user) throw new Error('User not found')
+
+    const isExist = user.favorites.some(id => id.toString() === productId)
+
+    if (!isExist) {
       user.favorites.push(productId)
       await user.save()
     }
 
-    const populated = await userModel.findById(user._id).populate('favorites')
-    return populated.favorites
+    const result = await userModel.findById(userId).populate({
+      path: 'favorites',
+      select: 'name price images slug'
+    })
+
+    return result.favorites
   } catch (error) { throw error }
 }
 
-const removeFavorite = async (user, productId) => {
+const removeFavorite = async (userId, productId) => {
   try {
-    user.favorites = user.favorites.filter(id => id.toString() !== productId)
-    await user.save()
+    const user = await userModel.findById(userId)
+    if (!user) throw new Error('User not found')
 
-    const populated = await userModel.findById(user._id).populate('favorites')
-    return populated.favorites
+    user.favorites = user.favorites.filter(id => id.toString() !== productId)
+
+    await user.save()
+    const result = await userModel.findById(userId).populate({
+      path: 'favorites',
+      select: 'name price images slug'
+    })
+
+    return result.favorites
   } catch (error) { throw error }
 }
 

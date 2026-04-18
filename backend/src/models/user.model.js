@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema({
   avatar: {
     type: Object,
     default: {
-      url: 'https://res.cloudinary.com/dgec7q298/image/upload/v1763440910/products/p_img2.png',
+      url: 'https://ui-avatars.com/api/?name=User&background=random',
       public_id: 'products/p_img2'
     }
   },

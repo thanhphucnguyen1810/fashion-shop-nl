@@ -9,7 +9,7 @@ const validate = async (schema, data, next, options = { abortEarly: false }) => 
     Object.assign(data, value)
     next()
   } catch (error) {
-    next(ApiError(StatusCodes.UNPROCESSABLE_ENTITY, new Error(error).message))
+    next( new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, new Error(error).message))
   }
 }
 
@@ -46,7 +46,7 @@ export const resetPasswordSchema = async (req, res, next) => {
 
 export const changePasswordSchema = async (req, res, next) => {
   const schema = Joi.object({
-    currentPassword: Joi.string().required(),
+    oldPassword: Joi.string().required(),
     newPassword: Joi.string().min(6).required()
   })
   await validate(schema, req.body, next)

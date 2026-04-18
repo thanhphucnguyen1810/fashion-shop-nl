@@ -2,7 +2,7 @@ import userModel from '~/models/user.model'
 import jwt from 'jsonwebtoken'
 import { env } from '~/config/environment'
 
-const protect = (req, res, next) => {
+const protect = async (req, res, next) => {
   try {
     let token = null
 
@@ -21,6 +21,9 @@ const protect = (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, env.ACCESS_TOKEN_SECRET_SIGNATURE)
+
+    const user = await userModel.findById(decoded._id)
+    if (!user) return res.status(401).json({ message: 'User not found' })
 
     req.user = decoded
     next()

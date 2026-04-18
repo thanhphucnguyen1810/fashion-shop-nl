@@ -1,5 +1,6 @@
 import { StatusCodes } from 'http-status-codes'
 import { userService } from '~/services/user.service'
+import { env } from '~/config/environment'
 
 const registerUser = async (req, res, next) => {
   try {
@@ -20,13 +21,43 @@ const verifyEmail = async (req, res, next) => {
 
 const loginUser = async (req, res, next) => {
   try {
-    const result = await userService.loginUser(req.body, res)
+    const result = await userService.loginUser(req.body)
 
     if (result.userId) {
       res.locals.userId = result.userId
     }
 
-    res.status(StatusCodes.OK).json(result)
+    res.cookie('accessToken', result.accessToken, {
+      httpOnly: true,
+      secure: env.BUILD_MODE === 'production',
+      sameSite: env.BUILD_MODE === 'production' ? 'none' : 'lax',
+      maxAge: 15 * 60 * 1000
+    })
+
+    res.cookie('refreshToken', result.refreshToken, {
+      httpOnly: true,
+      secure: env.BUILD_MODE === 'production',
+      sameSite: env.BUILD_MODE === 'production' ? 'none' : 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    })
+
+    const { accessToken, refreshToken, ...safeResult } = result
+    res.status(StatusCodes.OK).json(safeResult)
+  } catch (error) { next(error) }
+}
+
+const refreshToken = async (req, res, next) => {
+  try {
+    const result = await userService.refreshTokenService(req.cookies?.refreshToken)
+
+    res.cookie('accessToken', result.accessToken, {
+      httpOnly: true,
+      secure: env.BUILD_MODE === 'production',
+      sameSite: env.BUILD_MODE === 'production' ? 'none' : 'lax',
+      maxAge: 15 * 60 * 1000
+    })
+
+    res.status(StatusCodes.OK).json({ user: result.user })
   } catch (error) { next(error) }
 }
 
@@ -82,14 +113,14 @@ const updateUserProfile = async (req, res, next) => {
 
 const addFavorite = async (req, res, next) => {
   try {
-    const result = await userService.addFavorite(req.user, req.params.productId)
+    const result = await userService.addFavorite(req.user._id, req.params.productId)
     res.status(StatusCodes.OK).json(result)
   } catch (error) { next(error) }
 }
 
 const removeFavorite = async (req, res, next) => {
   try {
-    const result = await userService.removeFavorite(req.user, req.params.productId)
+    const result = await userService.removeFavorite(req.user._id, req.params.productId)
     res.status(StatusCodes.OK).json(result)
   } catch (error) { next(error) }
 }
@@ -98,6 +129,7 @@ export const userController = {
   registerUser,
   verifyEmail,
   loginUser,
+  refreshToken,
   socialLogin,
   forgotPassword,
   resetPassword,
