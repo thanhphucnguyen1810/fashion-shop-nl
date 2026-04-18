@@ -1,84 +1,65 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import axios from 'axios'
+import {
+  getAddressesAPI,
+  addAddressAPI,
+  updateAddressAPI,
+  deleteAddressAPI,
+  setDefaultAddressAPI
+} from '~/apis/addressAPI'
 
-const API_URL = import.meta.env.VITE_API_URL
-
-// ================================= LOCAL STORAGE ===============================
-
-// Guest ID phòng trường hợp user chưa đăng nhập
-const initialGuestId = localStorage.getItem('guestId') || `guest_${Date.now()}`
-localStorage.setItem('guestId', initialGuestId)
-
-// ================================= INITIAL STATE ===============================
+// ================= STATE =================
 
 const initialState = {
   list: [],
   loading: false,
   error: null,
-  success: false,
-  guestId: initialGuestId
+  success: false
 }
 
-// ================================ API CALLS ===================================
+// ================= THUNK =================
 
-
-// Get all user addresses
+// GET
 export const fetchAddresses = createAsyncThunk(
   'address/fetchAll',
   async (_, { rejectWithValue }) => {
     try {
-      const config = {
-        headers: { Authorization: `Bearer ${localStorage.getItem('userToken')}` }
-      }
-      const res = await axios.get(`${API_URL}/api/address`, config)
-      return res.data
+      return await getAddressesAPI()
     } catch (err) {
       return rejectWithValue(err.response?.data || { message: 'Lỗi tải địa chỉ' })
     }
   }
 )
 
-// Add new address
+// ADD
 export const addAddress = createAsyncThunk(
   'address/add',
-  async (addressData, { rejectWithValue }) => {
+  async (data, { rejectWithValue }) => {
     try {
-      const config = {
-        headers: { Authorization: `Bearer ${localStorage.getItem('userToken')}` }
-      }
-      const res = await axios.post(`${API_URL}/api/address`, addressData, config)
-      return res.data
+      return await addAddressAPI(data)
     } catch (err) {
       return rejectWithValue(err.response?.data || { message: 'Lỗi thêm địa chỉ' })
     }
   }
 )
 
-// Update address
+// UPDATE
 export const updateAddress = createAsyncThunk(
   'address/update',
   async ({ id, updatedData }, { rejectWithValue }) => {
     try {
-      const config = {
-        headers: { Authorization: `Bearer ${localStorage.getItem('userToken')}` }
-      }
-      const res = await axios.put(`${API_URL}/api/address/${id}`, updatedData, config)
-      return res.data
+      return await updateAddressAPI(id, updatedData)
     } catch (err) {
       return rejectWithValue(err.response?.data || { message: 'Lỗi cập nhật địa chỉ' })
     }
   }
 )
 
-// Delete address
+// DELETE
 export const deleteAddress = createAsyncThunk(
   'address/delete',
   async (id, { rejectWithValue }) => {
     try {
-      const config = {
-        headers: { Authorization: `Bearer ${localStorage.getItem('userToken')}` }
-      }
-      await axios.delete(`${API_URL}/api/address/${id}`, config)
+      await deleteAddressAPI(id)
       return id
     } catch (err) {
       return rejectWithValue(err.response?.data || { message: 'Lỗi xóa địa chỉ' })
@@ -86,23 +67,19 @@ export const deleteAddress = createAsyncThunk(
   }
 )
 
-// Set default address
+// SET DEFAULT
 export const setDefaultAddress = createAsyncThunk(
   'address/default',
   async (id, { rejectWithValue }) => {
     try {
-      const config = {
-        headers: { Authorization: `Bearer ${localStorage.getItem('userToken')}` }
-      }
-      const res = await axios.put(`${API_URL}/api/address/default/${id}`, {}, config)
-      return res.data
+      return await setDefaultAddressAPI(id)
     } catch (err) {
       return rejectWithValue(err.response?.data || { message: 'Không đặt được mặc định' })
     }
   }
 )
 
-// ================================ SLICE =======================================
+// ================= SLICE =================
 
 const addressSlice = createSlice({
   name: 'address',
@@ -114,10 +91,9 @@ const addressSlice = createSlice({
       state.error = null
     }
   },
-
   extraReducers: (builder) => {
     builder
-      // ================================= FETCH =================================
+      // FETCH
       .addCase(fetchAddresses.pending, (state) => {
         state.loading = true
         state.error = null
@@ -128,10 +104,10 @@ const addressSlice = createSlice({
       })
       .addCase(fetchAddresses.rejected, (state, action) => {
         state.loading = false
-        state.error = action.payload.message
+        state.error = action.payload?.message
       })
 
-      // ================================= ADD ===================================
+      // ADD
       .addCase(addAddress.pending, (state) => {
         state.success = false
         state.error = null
@@ -141,21 +117,21 @@ const addressSlice = createSlice({
         state.list.push(action.payload)
       })
       .addCase(addAddress.rejected, (state, action) => {
-        state.error = action.payload.message
+        state.error = action.payload?.message
       })
 
-      // ================================ UPDATE =================================
+      // UPDATE
       .addCase(updateAddress.fulfilled, (state, action) => {
         const idx = state.list.findIndex(a => a._id === action.payload._id)
         if (idx !== -1) state.list[idx] = action.payload
       })
 
-      // ================================ DELETE =================================
+      // DELETE
       .addCase(deleteAddress.fulfilled, (state, action) => {
         state.list = state.list.filter(a => a._id !== action.payload)
       })
 
-      // =============================== SET DEFAULT =============================
+      // SET DEFAULT
       .addCase(setDefaultAddress.fulfilled, (state, action) => {
         state.list = state.list.map(a => ({ ...a, isDefault: false }))
         const idx = state.list.findIndex(a => a._id === action.payload._id)

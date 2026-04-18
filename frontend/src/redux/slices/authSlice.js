@@ -1,8 +1,16 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { mergeCart, fetchCart } from '~/redux/slices/cartSlices'
-import axios from 'axios'
+import {
+  registerUserAPI,
+  loginUserAPI,
+  logoutUserAPI,
+  forgotPasswordAPI,
+  resetPasswordAPI,
+  addFavoriteAPI,
+  removeFavoriteAPI
+} from '~/apis/authAPI'
 
-const API_URL = import.meta.env.VITE_API_URL
+import { toast } from 'react-toastify'
 
 // ============================= LOCAL STORAGE ==================================
 
@@ -39,18 +47,18 @@ const initialState = {
   favoriteError: null
 }
 
-// ================================ API CALLS ===================================
+// ================================ THUNK =======================================
 
-// Đăng ký
+// register
 export const registerUser = createAsyncThunk(
   'auth/registerUser',
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${API_URL}/api/users/register`, userData)
+      const data = await registerUserAPI(userData)
 
       return {
-        message: response.data.message,
-        redirectEmail: response.data.redirectEmail
+        message: data.message,
+        redirectEmail: data.redirectEmail
       }
     } catch (err) {
       return rejectWithValue(err.response?.data || { message: 'Lỗi server' })
@@ -58,25 +66,25 @@ export const registerUser = createAsyncThunk(
   }
 )
 
-// Đăng nhập email/password
+// login
 export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async (userData, { rejectWithValue, dispatch }) => {
     try {
-      const response = await axios.post(`${API_URL}/api/users/login`, userData, { withCredentials: true })
+      const data = await loginUserAPI(userData)
 
-      localStorage.setItem('userInfo', JSON.stringify(response.data.user))
+      localStorage.setItem('userInfo', JSON.stringify(data.user))
 
       const guestId = localStorage.getItem('guestId')
-      const userId = response.data.user._id
+      const userId = data.user._id
 
       if (guestId) {
         await dispatch(
           mergeCart({
             guestId: guestId,
-            user: response.data.user
+            user: data.user
           })
-        ).unwrap()
+        )
 
         localStorage.removeItem('guestId')
       }
@@ -84,7 +92,7 @@ export const loginUser = createAsyncThunk(
       await dispatch(fetchCart({ userId }))
 
       return {
-        user: response.data.user
+        user: data.user
       }
     } catch (err) {
       return rejectWithValue(err.response?.data || { message: 'Đăng nhập thất bại' })
@@ -96,39 +104,52 @@ export const loginUser = createAsyncThunk(
 export const socialLogin = createAsyncThunk(
   'auth/social',
   async (provider) => {
-    window.location.href = `${API_URL}/api/oauth/${provider}`
+    window.location.href = `${import.meta.env.VITE_API_URL}/api/oauth/${provider}`
   }
 )
 
-// Quên mật khẩu
+// forgot password
 export const forgotPassword = createAsyncThunk(
   'auth/forgotPassword',
   async (email, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${API_URL}/api/users/forgot-password`, { email })
-      // Lưu ý: Backend đã trả về status 200 ngay cả khi email không tồn tại.
-      return response.data
+      return await forgotPasswordAPI(email)
+      // return response.data
     } catch (err) {
       return rejectWithValue(err.response?.data || { message: 'Lỗi server khi yêu cầu đặt lại' })
     }
   }
 )
 
-// Đặt lại mật khẩu
+export const logoutUser = createAsyncThunk(
+  'auth/logoutUser',
+  async (showSuccessMessage = true, { rejectWithValue }) => {
+    try {
+      await logoutUserAPI()
+      if (showSuccessMessage) toast.success('Logged out successfully!')
+      return true
+    } catch (err) {
+      return rejectWithValue(err.response?.data || { message: 'Logout failed' })
+    }
+  }
+)
+
+
+// reset password
 export const resetPassword = createAsyncThunk(
   'auth/resetPassword',
   async ({ token, password }, { rejectWithValue }) => {
     try {
       // Gửi mật khẩu mới trong body, token trong URL
-      const response = await axios.post(`${API_URL}/api/users/reset-password/${token}`, { password })
+      const data = await resetPasswordAPI({ token, password })
 
       // Sau khi reset thành công, cập nhật state login
-      localStorage.setItem('userInfo', JSON.stringify(response.data.user))
+      localStorage.setItem('userInfo', JSON.stringify(data.user))
 
       return {
-        message: response.data.message,
-        user: response.data.user,
-        token: response.data.token
+        message: data.message,
+        user: data.user,
+        token: data.token
       }
     } catch (err) {
       return rejectWithValue(err.response?.data || { message: 'Đặt lại mật khẩu thất bại' })
@@ -136,33 +157,26 @@ export const resetPassword = createAsyncThunk(
   }
 )
 
-// Thêm Sản phẩm yêu thích (Giữ nguyên)
+// add favorite
 export const addFavorite = createAsyncThunk(
   'auth/addFavorite',
   async (productId, { rejectWithValue }) => {
     try {
-      const config = {
-        withCredentials: true
-      }
-      const response = await axios.post(`${API_URL}/api/users/favorites/${productId}`, {}, config)
-      return response.data
+      const data = await addFavoriteAPI(productId)
+      return data
     } catch (err) {
       return rejectWithValue(err.response?.data || { message: 'Lỗi thêm yêu thích' })
     }
   }
 )
 
-// Xóa Sản phẩm yêu thích (Giữ nguyên)
+// remove favorite
 export const removeFavorite = createAsyncThunk(
   'auth/removeFavorite',
   async (productId, { rejectWithValue }) => {
     try {
-      const config = {
-        withCredentials: true
-      }
-
-      const response = await axios.delete(`${API_URL}/api/users/favorites/${productId}`, config)
-      return response.data
+      const data = await removeFavoriteAPI(productId)
+      return data
     } catch (err) {
       return rejectWithValue(err.response?.data || { message: 'Lỗi xóa yêu thích' })
     }
@@ -186,6 +200,7 @@ const authSlice = createSlice({
       state.user = action.payload.user
       localStorage.setItem('userInfo', JSON.stringify(action.payload.user))
     },
+
     clearRegisterStatus: (state) => {
       state.loading = false
       state.success = false
@@ -204,6 +219,7 @@ const authSlice = createSlice({
       state.resetSuccess = false
       state.error = null
     },
+
     toggleFavoriteLocal: (state, action) => {
       if (state.user) {
         const productId = action.payload
@@ -252,11 +268,19 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false
         state.user = action.payload.user
+        state.error = null 
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload.message
         state.isVerifiedError = action.payload.isVerified === false
+      })
+
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.user = null
+        state.guestId = `guest_${Date.now()}`
+        localStorage.setItem('guestId', state.guestId)
+        localStorage.removeItem('userInfo')
       })
 
       // ===== FORGOT PASSWORD =====
@@ -328,5 +352,13 @@ const authSlice = createSlice({
   }
 })
 
-export const { logout, setUser, clearForgotStatus, clearResetStatus, clearRegisterStatus, toggleFavoriteLocal } = authSlice.actions
+export const {
+  logout,
+  setUser,
+  clearForgotStatus,
+  clearResetStatus,
+  clearRegisterStatus,
+  toggleFavoriteLocal
+} = authSlice.actions
+
 export default authSlice.reducer

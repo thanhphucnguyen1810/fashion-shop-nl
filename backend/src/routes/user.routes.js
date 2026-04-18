@@ -36,6 +36,9 @@ Router.route('/login')
     userController.loginUser
   )
 
+Router.route('/logout')
+  .delete(userController.logout)
+
 Router.route('/verify-email/:token')
   .get(
     logSecurity('VERIFY_EMAIL'),

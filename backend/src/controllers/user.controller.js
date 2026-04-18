@@ -46,6 +46,14 @@ const loginUser = async (req, res, next) => {
   } catch (error) { next(error) }
 }
 
+const logout = async (req, res, next) => {
+  try {
+    res.clearCookie('accessToken')
+    res.clearCookie('refreshToken')
+    res.status(StatusCodes.OK).json({ loggedOut: true })
+  } catch (error) { next(error)}
+}
+
 const refreshToken = async (req, res, next) => {
   try {
     const result = await userService.refreshTokenService(req.cookies?.refreshToken)
@@ -129,6 +137,7 @@ export const userController = {
   registerUser,
   verifyEmail,
   loginUser,
+  logout,
   refreshToken,
   socialLogin,
   forgotPassword,
