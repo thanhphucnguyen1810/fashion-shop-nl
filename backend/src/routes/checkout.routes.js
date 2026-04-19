@@ -7,6 +7,7 @@ import { logSecurity } from '~/middlewares/logger.middleware'
 const router = express.Router()
 
 router.post('/create', protect, logSecurity('CHECKOUT_CREATE'), checkoutController.createCheckout)
+router.post('/buy-now', protect, logSecurity('CHECKOUT_CREATE'), checkoutController.createCheckout)
 router.get('/:id', protect, checkoutController.getCheckoutDetail)
 router.post('/finalize/:checkoutId', protect, logSecurity('CHECKOUT_FINALIZE'), checkoutController.finalizeOrder)
 

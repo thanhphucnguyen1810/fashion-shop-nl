@@ -1,15 +1,14 @@
-
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import ProductGrid from './ProductGrid'
 import { useTheme } from '@mui/material/styles'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchProductDetails, fetchSimilarProducts, createTemporaryOrder } from '~/redux/slices/productSlice'
+import { FaStar } from 'react-icons/fa'
+import ProductGrid from './ProductGrid'
+import { fetchProductDetails, fetchSimilarProducts } from '~/redux/slices/productSlice'
 import { addToCart } from '~/redux/slices/cartSlices'
 import { fetchProductReviews } from '~/redux/slices/reviewSlice'
 import Loading from '../Common/Loading'
-import { FaStar } from 'react-icons/fa'
 import ProductReviews from '../ProductReviews'
 
 const formatCurrency = (amount) => {
@@ -112,42 +111,22 @@ const ProductDetails = ({ productId }) => {
       return
     }
 
-    setIsButtonDisabled(true)
-
     const orderItems = [{
       productId: productFetchId,
+      name: selectedProduct.name,
+      image: selectedProduct.images[0]?.url,
+      price: selectedProduct.disCountPrice || selectedProduct.price,
       quantity,
       size: selectedSize,
       color: selectedColor
     }]
 
-    dispatch(
-      createTemporaryOrder({
-        orderItems: orderItems,
-        userId: user?._id,
-        guestId: guestId
-      })
-    )
-      .unwrap()
-      .then((response) => {
-        const tempOrderId = response.orderId
-
-        toast.success('Đang chuyển đến trang thanh toán...', { duration: 500 })
-
-        navigate('/checkout', {
-          state: {
-            orderId: tempOrderId,
-            isBuyNow: true
-          }
-        })
-      })
-      .catch((error) => {
-        console.error('Lỗi khi tạo đơn hàng tạm thời:', error)
-        toast.error(`Lỗi: ${error}`, { duration: 2000 })
-      })
-      .finally(() => {
-        setIsButtonDisabled(false)
-      })
+    navigate('/checkout', {
+      state: {
+        orderItems,
+        isBuyNow: true
+      }
+    })
   }
 
   if (loading) {
@@ -169,7 +148,7 @@ const ProductDetails = ({ productId }) => {
           >
 
             {/* --- CỘT TRÁI: HÌNH ẢNH  --- */}
-            <div className='w-full md:w-1/2 flex h-[450px] md:h-[500px] gap-4'>
+            <div className='w-full md:w-1/2 flex h-112.5 md:h-125 gap-4'>
 
               {/* List hình nhỏ */}
               <div className='hidden md:flex flex-col space-y-4 w-24 overflow-y-auto pr-1 custom-scrollbar'>
@@ -270,7 +249,7 @@ const ProductDetails = ({ productId }) => {
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
-                      className={`min-w-[3rem] h-10 flex items-center justify-center rounded border text-sm font-medium transition-all ${selectedSize === size ? 'shadow-sm' : 'hover:border-gray-400'}`}
+                      className={`min-w-12 h-10 flex items-center justify-center rounded border text-sm font-medium transition-all ${selectedSize === size ? 'shadow-sm' : 'hover:border-gray-400'}`}
                       style={{
                         backgroundColor: selectedSize === size ? theme.palette.primary.main : theme.palette.background.paper,
                         color: selectedSize === size ? theme.palette.primary.contrastText : theme.palette.text.primary,
@@ -297,7 +276,7 @@ const ProductDetails = ({ productId }) => {
                         disabled={quantity <= 1}
                         style={{ color: theme.palette.text.primary }}
                       >-</button>
-                      <span className='px-4 font-medium border-x h-full flex items-center justify-center min-w-[3rem]' style={{ color: theme.palette.text.primary, borderColor: theme.palette.divider }}>
+                      <span className='px-4 font-medium border-x h-full flex items-center justify-center min-w-12' style={{ color: theme.palette.text.primary, borderColor: theme.palette.divider }}>
                         {quantity}
                       </span>
                       <button

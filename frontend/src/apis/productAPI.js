@@ -38,15 +38,6 @@ export const fetchSimilarProductsAPI = async (id) => {
   return res.data
 }
 
-// BUY NOW
-export const createTemporaryOrderAPI = async (data) => {
-  const res = await authorizedAxiosInstance.post(
-    `${API_ROOT}/api/orders/buy-now`,
-    data
-  )
-  return res.data
-}
-
 // REVIEWS
 export const fetchProductReviewsAPI = async (productId) => {
   const res = await authorizedAxiosInstance.get(

@@ -19,15 +19,3 @@ export const getOrderById = async (req, res, next) => {
   }
 }
 
-export const createCheckoutOrder = async (req, res, next) => {
-  try {
-    const result = await orderService.createCheckoutOrder(req.body)
-
-    res.status(StatusCodes.CREATED).json({
-      message: 'Đơn hàng được tạo thành công.',
-      checkout: result
-    })
-  } catch (error) {
-    next(error)
-  }
-}

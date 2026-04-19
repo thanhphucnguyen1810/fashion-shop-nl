@@ -4,7 +4,6 @@ import {
   fetchProductDetailsAPI,
   updateProductAPI,
   fetchSimilarProductsAPI,
-  createTemporaryOrderAPI,
   fetchProductReviewsAPI
 } from '~/apis/productAPI'
 
@@ -54,17 +53,6 @@ export const fetchSimilarProducts = createAsyncThunk(
   }
 )
 
-export const createTemporaryOrder = createAsyncThunk(
-  'products/createTemporaryOrder',
-  async (data, { rejectWithValue }) => {
-    try {
-      return await createTemporaryOrderAPI(data)
-    } catch (err) {
-      return rejectWithValue(err.response?.data || { message: 'Lỗi order' })
-    }
-  }
-)
-
 export const fetchProductReviews = createAsyncThunk(
   'products/fetchProductReviews',
   async (productId, { rejectWithValue }) => {
@@ -81,6 +69,9 @@ export const fetchProductReviews = createAsyncThunk(
 
 const initialState = {
   products: [],
+  page: 1,
+  pages: 1,
+  totalProducts: 0,
   selectedProduct: null,
   reviews: [],
   similarProducts: [],
@@ -90,9 +81,6 @@ const initialState = {
   isFetching: false,
   error: null,
 
-  page: 1,
-  pages: 1,
-  totalProducts: 0,
 
   filters: {
     category: '',
@@ -163,11 +151,6 @@ const productSlice = createSlice({
       // SIMILAR
       .addCase(fetchSimilarProducts.fulfilled, (state, action) => {
         state.similarProducts = Array.isArray(action.payload) ? action.payload : []
-      })
-
-      // BUY NOW
-      .addCase(createTemporaryOrder.fulfilled, (state, action) => {
-        state.temporaryOrder = action.payload
       })
 
       // REVIEWS

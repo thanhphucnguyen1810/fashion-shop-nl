@@ -3,6 +3,7 @@ import orderModel from '~/models/order.model.js'
 import cartModel from '~/models/cart.model.js'
 import productModel from '~/models/product.model.js'
 import { env } from '~/config/environment'
+import addressModel from '~/models/address.model'
 
 // ================= CREATE CHECKOUT =================
 const createCheckout = async (userId, body) => {
@@ -76,11 +77,28 @@ const sepayIpn = async (body) => {
   checkout.paymentMethod = 'SEPAY'
   await checkout.save()
 
+  let addressId = null
+
+  if (checkout.shippingAddress) {
+    const newAddress = await addressModel.create({
+      user: checkout.user,
+      name: checkout.shippingAddress.name,
+      phone: checkout.shippingAddress.phone,
+      street: checkout.shippingAddress.street,
+      province: checkout.shippingAddress.province,
+      district: checkout.shippingAddress.district,
+      ward: checkout.shippingAddress.ward
+    })
+
+    addressId = newAddress._id
+  }
+
+
   const newOrder = await orderModel.create({
     user: checkout.user,
     checkoutId: checkout._id,
     orderItems: checkout.checkoutItems,
-    shippingAddress: checkout.shippingAddress,
+    shippingAddress: addressId,
     coupon: checkout.coupon,
     paymentMethod: 'SEPAY',
     totalPrice: checkout.totalPrice,
@@ -162,11 +180,26 @@ const finalizeOrder = async (checkoutId, body) => {
 
   const paymentStatus = isPaid ? 'completed' : 'pending'
 
+  let addressId = null
+
+  if (checkout.shippingAddress) {
+    const newAddress = await addressModel.create({
+      user: checkout.user,
+      name: checkout.shippingAddress.name,
+      phone: checkout.shippingAddress.phone,
+      street: checkout.shippingAddress.street,
+      province: checkout.shippingAddress.province,
+      district: checkout.shippingAddress.district,
+      ward: checkout.shippingAddress.ward
+    })
+
+    addressId = newAddress._id
+  }
   const newOrder = await orderModel.create({
     user: checkout.user,
     checkoutId: checkout._id,
     orderItems: checkout.checkoutItems,
-    shippingAddress: checkout.shippingAddress,
+    shippingAddress: addressId,
     coupon: checkout.coupon,
     paymentMethod: checkout.paymentMethod,
     totalPrice: checkout.totalPrice,

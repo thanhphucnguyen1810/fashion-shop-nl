@@ -18,21 +18,21 @@ const getOrderStatusText = (status) => {
     return 'Chờ thanh toán Online'
 
   case 'AwaitingConfirmation':
-    return 'Chờ xác nhận' // Tương đương "Chờ xác nhận" của Shopee
+    return 'Chờ xác nhận'
 
   case 'AwaitingShipment':
-  case 'Processing': // (Nếu bạn vẫn dùng Processing ở đâu đó)
-    return 'Chờ lấy hàng' // Tương đương "Chờ lấy hàng" của Shopee
+  case 'Processing':
+    return 'Chờ lấy hàng'
 
   case 'InTransit':
-  case 'Shipped': // (Nếu bạn vẫn dùng Shipped ở đâu đó)
-    return 'Đang giao' // Tương đương "Đang giao" của Shopee
+  case 'Shipped':
+    return 'Đang giao'
 
   case 'Delivered':
-    return 'Đã giao' // Tương đương "Đã giao" của Shopee
+    return 'Đã giao'
 
   case 'Cancelled':
-    return 'Đã hủy' // Tương đương "Đã hủy" của Shopee
+    return 'Đã hủy'
 
   default:
     return status || 'Không rõ'
@@ -96,22 +96,15 @@ const OrderDetailsPage = () => {
   const user = orderDetails.user || {}
   const coupon = orderDetails.coupon || {}
 
-  // FIX: Hợp nhất firstName và lastName từ shippingAddress
-  const recipientName =
-    (shippingAddress.firstName || user.fullName)
-      ? `${shippingAddress.firstName || user.fullName || ''} ${shippingAddress.lastName || ''}`.trim()
-      : 'Khách hàng (Chưa cung cấp)'
+  const recipientName = shippingAddress.name || user.fullName || 'Khách hàng (Chưa cung cấp)'
 
-  // FIX: Lấy số điện thoại từ trường 'phone'
-  const recipientPhone = shippingAddress.phone || user.phoneNumber || '---'
+  const recipientPhone = shippingAddress.phone || '---'
 
-  // FIX: Hợp nhất địa chỉ từ trường 'address', 'city', 'country'
   const fullAddress =
-    `${shippingAddress.address || ''}, ${shippingAddress.city || ''}, ${shippingAddress.country || ''}`
-      .replace(/,\s*,\s*/g, ', ') // Xử lý các dấu phẩy bị lặp lại
-      .trim()
-      .replace(/^,|,$/g, '') // Loại bỏ dấu phẩy ở đầu hoặc cuối
-    || 'Địa chỉ chưa xác định'
+  `${shippingAddress.street || ''}, ${shippingAddress.ward || ''}, ${shippingAddress.district || ''}, ${shippingAddress.province || ''}`
+    .replace(/,\s*,/g, ',')
+    .replace(/^,|,$/g, '')
+    .trim() || 'Địa chỉ chưa xác định'
 
   const shippingFee = orderDetails.shippingFee || 0
   const discountAmount = coupon.discountAmount || 0

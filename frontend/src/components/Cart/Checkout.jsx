@@ -8,13 +8,17 @@ import InputField from '../InputFieldCheckout'
 import { createCheckout } from '~/redux/slices/checkoutSlice'
 import { fetchAddresses } from '~/redux/slices/addressSlice'
 import { CircularProgress } from '@mui/material'
+import { useLocation } from 'react-router-dom'
 
 const Checkout = () => {
   const theme = useTheme()
   const navigate = useNavigate()
   const dispatch = useDispatch()
-
+  const location = useLocation()
+  const isBuyNow = location.state?.isBuyNow || false
+  const buyNowItems = location.state?.orderItems || []
   const { cart } = useSelector((state) => state.cart)
+  const checkoutItems = isBuyNow ? buyNowItems : cart.products
   const { user } = useSelector((state) => state.auth)
   const { loading } = useSelector((state) => state.checkout)
   const { list: addresses } = useSelector((state) => state.address)
@@ -29,27 +33,22 @@ const Checkout = () => {
     country: 'Vietnam',
     phone: ''
   })
+  const [isInitialized, setIsInitialized] = useState(false)
 
   useEffect(() => {
-    if (!cart?.products?.length) {
+    if (!checkoutItems?.length) {
       navigate('/')
-      toast.error('Giỏ hàng đang trống.')
+      toast.error('Không có sản phẩm để thanh toán.')
       return
     }
 
-    if (user) {
-      if (!addresses.length) {
-        dispatch(fetchAddresses())
-      }
-
-      const defaultAddress = addresses?.find(addr => addr.isDefault)
-
-      let initialData = { ...shippingAddress }
+    if (user && addresses.length) {
+      const defaultAddress = addresses.find(addr => addr.isDefault)
 
       if (defaultAddress) {
         const fullNameParts = defaultAddress.name?.split(' ')
 
-        initialData = {
+        setShippingAddress({
           firstName: fullNameParts?.[0] || '',
           lastName: fullNameParts?.slice(1).join(' ') || '',
           address: `${defaultAddress.street}, ${defaultAddress.ward}, ${defaultAddress.district}`,
@@ -57,38 +56,30 @@ const Checkout = () => {
           phone: defaultAddress.phone || '',
           country: 'Vietnam',
           postalCode: defaultAddress.postalCode || ''
-        }
-
-      } else {
-        // Ưu tiên 2: Thông tin User cơ bản (chỉ áp dụng nếu chưa có địa chỉ mặc định)
-        initialData = {
-          ...initialData,
-          firstName: user.firstName || user.name?.split(' ')[0] || '',
-          lastName: user.lastName || user.name?.split(' ').slice(1).join(' ') || '',
-          address: user.address || initialData.address,
-          city: user.city || initialData.city,
-          postalCode: user.postalCode || initialData.postalCode,
-          phone: user.phone || initialData.phone
-        }
+        })
+        setIsInitialized(true)
       }
-
-      // CẬP NHẬT STATE
-      setShippingAddress(initialData)
     }
-  }, [cart, user, navigate, addresses, dispatch])
+  }, [user, addresses, isInitialized])
+
+  useEffect(() => {
+    if (user && !addresses.length) {
+      dispatch(fetchAddresses())
+    }
+  }, [addresses.length, dispatch, user])
 
   const { subTotal, discountAmount, finalTotal } = useMemo(() => {
-    if (!cart?.products) return { subTotal: 0, discountAmount: 0, finalTotal: 0 }
+    if (!checkoutItems?.length) return { subTotal: 0, discountAmount: 0, finalTotal: 0 }
 
-    const sub = cart.products.reduce((acc, item) => acc + item.quantity * item.price, 0)
-    const discount = cart.coupon?.discountAmount || 0
+    const sub = checkoutItems.reduce((acc, item) => acc + item.quantity * item.price, 0)
+    const discount = isBuyNow ? 0 : (cart.coupon?.discountAmount || 0)
 
     return {
       subTotal: sub,
       discountAmount: discount,
       finalTotal: Math.max(0, sub - discount)
     }
-  }, [cart])
+  }, [checkoutItems, cart, isBuyNow])
 
   const handlePlaceOrder = async (event) => {
     event.preventDefault()
@@ -110,7 +101,7 @@ const Checkout = () => {
     try {
       const res = await dispatch(
         createCheckout({
-          checkoutItems: cart.products,
+          checkoutItems: checkoutItems,
           shippingAddress: shippingAddressForApi,
           paymentMethod,
           totalPrice: finalTotal,
@@ -266,8 +257,8 @@ const Checkout = () => {
           </h3>
 
           {/* List sản phẩm */}
-          <div className='space-y-4 mb-6 max-h-[400px] overflow-y-auto custom-scrollbar pr-2'>
-            {cart.products.map((product, index) => (
+          <div className='space-y-4 mb-6 max-h-100 overflow-y-auto custom-scrollbar pr-2'>
+            {checkoutItems.map((product, index) => (
               <div key={index} className='flex gap-4'>
                 <img
                   src={product.image} alt={product.name}
