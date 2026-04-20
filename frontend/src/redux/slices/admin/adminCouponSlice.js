@@ -1,72 +1,44 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import axios from 'axios'
+import {
+  fetchCouponsAPI,
+  createCouponAPI,
+  updateCouponAPI,
+  deleteCouponAPI
+} from '~/apis/couponAPI'
 
-const API_URL = import.meta.env.VITE_API_URL
-
-// ================================ THUNKS ================================
-
-// Fetch all coupons
 export const fetchCoupons = createAsyncThunk(
   'coupon/fetchCoupons',
   async (_, { rejectWithValue }) => {
-    try {
-      const res = await axios.get(`${API_URL}/api/admin/coupons`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('userToken')}` }
-      })
-      return res.data.data
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message)
-    }
+    try { return await fetchCouponsAPI() }
+    catch (err) { return rejectWithValue(err.response?.data?.message || err.message) }
   }
 )
 
-// Create a new coupon
 export const createCouponThunk = createAsyncThunk(
   'coupon/createCoupon',
   async (couponData, { rejectWithValue }) => {
-    try {
-      const res = await axios.post(`${API_URL}/api/admin/coupons`, couponData, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('userToken')}` }
-      })
-      return res.data.data
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message)
-    }
+    try { return await createCouponAPI(couponData) }
+    catch (err) { return rejectWithValue(err.response?.data?.message || err.message) }
   }
 )
 
-// Update a coupon
 export const updateCouponThunk = createAsyncThunk(
   'coupon/updateCoupon',
   async (couponData, { rejectWithValue }) => {
-    try {
-      const { _id, ...data } = couponData
-      const res = await axios.put(`${API_URL}/api/admin/coupons/${_id}`, data, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('userToken')}` }
-      })
-      return res.data.data
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message)
-    }
+    try { return await updateCouponAPI(couponData) }
+    catch (err) { return rejectWithValue(err.response?.data?.message || err.message) }
   }
 )
 
-// Delete a coupon
 export const deleteCouponThunk = createAsyncThunk(
   'coupon/deleteCoupon',
   async (couponId, { rejectWithValue }) => {
-    try {
-      await axios.delete(`${API_URL}/api/admin/coupons/${couponId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('userToken')}` }
-      })
-      return couponId
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message)
-    }
+    try { return await deleteCouponAPI(couponId) }
+    catch (err) { return rejectWithValue(err.response?.data?.message || err.message) }
   }
 )
 
-// ================================ SLICE ================================
+// ================= SLICE =================
 
 const couponSlice = createSlice({
   name: 'coupon',
@@ -136,4 +108,3 @@ const couponSlice = createSlice({
 
 export const { clearAdminError } = couponSlice.actions
 export default couponSlice.reducer
-

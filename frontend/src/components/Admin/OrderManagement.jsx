@@ -100,7 +100,7 @@ const OrderManagement = () => {
   }
 
   if (loading) return <LoadingPlaceholder />
-  if (error) return <p className="text-red-500 p-4 text-center">Lỗi: {error}</p>
+  if (error) return <p className="text-red-500 p-4 text-center">Lỗi: {error?.message || error}</p>
 
 
   return (

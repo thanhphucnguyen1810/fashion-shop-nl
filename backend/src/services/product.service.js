@@ -125,10 +125,18 @@ const getSimilarProducts = async (id) => {
   }).limit(4)
 }
 
+// ================= VARIANTS =================
+const getVariants = async (productId) => {
+  const product = await Product.findById(productId).select('variants price')
+  if (!product) return null
+  return product.variants
+}
+
 export const productService = {
   getProducts,
   getBestSeller,
   getNewArrivals,
   getProductById,
-  getSimilarProducts
+  getSimilarProducts,
+  getVariants
 }

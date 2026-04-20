@@ -59,3 +59,49 @@ export const getSimilarProducts = async (req, res, next) => {
     next(error)
   }
 }
+
+export const getVariants = async (req, res, next) => {
+  try {
+    const data = await productService.getVariants(req.params.id)
+    if (!data) return res.status(404).json({ message: 'Product not found' })
+    res.json(data)
+  } catch (err) { next(err) }
+}
+
+export const upsertVariant = async (req, res, next) => {
+  try {
+    // body: { color: 'Đỏ', sizes: [{ size: 'M', price: 250000, stock: 10, sku: 'ABC-RED-M' }] }
+    const data = await productService.upsertVariant(req.params.id, req.body)
+    if (!data) return res.status(404).json({ message: 'Product not found' })
+    res.json(data)
+  } catch (err) { next(err) }
+}
+
+export const deleteVariant = async (req, res, next) => {
+  try {
+    const data = await productService.deleteVariant(req.params.id, req.params.variantId)
+    if (!data) return res.status(404).json({ message: 'Product not found' })
+    res.json(data)
+  } catch (err) { next(err) }
+}
+
+export const deleteSize = async (req, res, next) => {
+  try {
+    const data = await productService.deleteSize(
+      req.params.id, req.params.variantId, req.params.sizeId
+    )
+    if (!data) return res.status(404).json({ message: 'Not found' })
+    res.json(data)
+  } catch (err) { next(err) }
+}
+
+export const updateStock = async (req, res, next) => {
+  try {
+    // body: { delta: -1 }
+    const data = await productService.updateStock(
+      req.params.id, req.params.variantId, req.params.sizeId, req.body.delta
+    )
+    if (!data) return res.status(404).json({ message: 'Not found' })
+    res.json(data)
+  } catch (err) { next(err) }
+}

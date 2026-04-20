@@ -4,7 +4,13 @@ import {
   fetchProductDetailsAPI,
   updateProductAPI,
   fetchSimilarProductsAPI,
-  fetchProductReviewsAPI
+  fetchProductReviewsAPI,
+  fetchVariantsAPI,
+  upsertVariantAPI,
+  deleteVariantAPI,
+  deleteSizeAPI,
+  updateStockAPI
+
 } from '~/apis/productAPI'
 
 // ================= THUNK =================
@@ -65,6 +71,47 @@ export const fetchProductReviews = createAsyncThunk(
   }
 )
 
+export const fetchVariants = createAsyncThunk(
+  'products/fetchVariants',
+  async (productId, { rejectWithValue }) => {
+    try { return await fetchVariantsAPI(productId) }
+    catch (err) { return rejectWithValue(err.response?.data) }
+  }
+)
+
+export const upsertVariant = createAsyncThunk(
+  'products/upsertVariant',
+  async ({ productId, variantData }, { rejectWithValue }) => {
+    try { return await upsertVariantAPI(productId, variantData) }
+    catch (err) { return rejectWithValue(err.response?.data) }
+  }
+)
+
+export const deleteVariant = createAsyncThunk(
+  'products/deleteVariant',
+  async ({ productId, variantId }, { rejectWithValue }) => {
+    try { return await deleteVariantAPI(productId, variantId) }
+    catch (err) { return rejectWithValue(err.response?.data) }
+  }
+)
+
+export const deleteSize = createAsyncThunk(
+  'products/deleteSize',
+  async ({ productId, variantId, sizeId }, { rejectWithValue }) => {
+    try { return await deleteSizeAPI(productId, variantId, sizeId) }
+    catch (err) { return rejectWithValue(err.response?.data) }
+  }
+)
+
+export const updateStock = createAsyncThunk(
+  'products/updateStock',
+  async ({ productId, variantId, sizeId, delta }, { rejectWithValue }) => {
+    try { return await updateStockAPI(productId, variantId, sizeId, delta) }
+    catch (err) { return rejectWithValue(err.response?.data) }
+  }
+)
+
+
 // ================= STATE =================
 
 const initialState = {
@@ -75,12 +122,12 @@ const initialState = {
   selectedProduct: null,
   reviews: [],
   similarProducts: [],
+  variants: [],
   temporaryOrder: null,
 
   loading: false,
   isFetching: false,
   error: null,
-
 
   filters: {
     category: '',
@@ -157,6 +204,31 @@ const productSlice = createSlice({
       .addCase(fetchProductReviews.fulfilled, (state, action) => {
         state.reviews = action.payload.reviews || []
       })
+
+      .addCase(fetchVariants.fulfilled, (state, action) => {
+        state.variants = action.payload || []
+      })
+      .addCase(upsertVariant.fulfilled, (state, action) => {
+        state.variants = action.payload || []
+        if (state.selectedProduct) state.selectedProduct.variants = action.payload
+      })
+      .addCase(deleteVariant.fulfilled, (state, action) => {
+        state.variants = action.payload || []
+        if (state.selectedProduct) state.selectedProduct.variants = action.payload
+      })
+      .addCase(deleteSize.fulfilled, (state, action) => {
+        state.variants = action.payload || []
+        if (state.selectedProduct) state.selectedProduct.variants = action.payload
+      })
+      .addCase(updateStock.fulfilled, (state, action) => {
+        // action.payload là size object đã update
+        const updatedSize = action.payload
+        state.variants = state.variants.map(v => ({
+          ...v,
+          sizes: v.sizes.map(s => s._id === updatedSize._id ? updatedSize : s)
+        }))
+      })
+
   }
 })
 

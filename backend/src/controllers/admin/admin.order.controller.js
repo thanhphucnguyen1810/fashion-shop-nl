@@ -1,4 +1,4 @@
-import { orderService } from '~/services/order.service.js'
+import { orderService } from '~/services/admin/admin.order.service'
 
 // @desc Get all orders
 export const getAllOrders = async (req, res) => {

@@ -1,7 +1,7 @@
 import {
   getAllReviewsAdmin as getAllReviewsService,
   updateReviewStatus as updateReviewStatusService
-} from '~/services/review.service.js'
+} from '~/services/admin/admin.review.service'
 
 // ================= GET ALL =================
 export const getAllReviewsAdmin = async (req, res) => {

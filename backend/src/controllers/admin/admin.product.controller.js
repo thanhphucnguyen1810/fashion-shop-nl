@@ -1,10 +1,11 @@
-import { productService } from '~/services/product.service.js'
+import { productService } from '~/services/admin/admin.product.service'
 
 // ================= GET =================
 export const getAllProducts = async (req, res) => {
   try {
-    const products = await productService.getAllProducts(req.query.search)
-    res.json({ products })
+    const { search = '', page = 1 } = req.query
+    const result = await productService.getAllProducts(search, Number(page))
+    res.json(result)
   } catch (error) {
     res.status(500).json({ message: 'Server Error' })
   }
@@ -61,6 +62,39 @@ export const deleteProduct = async (req, res) => {
 
     res.json({ message: 'Đã xóa sản phẩm thành công' })
   } catch (error) {
+    res.status(500).json({ message: 'Server Error' })
+  }
+}
+
+export const upsertVariant = async (req, res) => {
+  try {
+    // body: { color: 'Đỏ', sizes: [{ size: 'M', price: 250000, stock: 10, sku: 'ABC-RED-M' }] }
+    const variants = await productService.upsertVariant(req.params.id, req.body)
+    if (!variants) return res.status(404).json({ message: 'Sản phẩm không tồn tại' })
+    res.json({ message: 'Cập nhật variant thành công', variants })
+  } catch (err) {
+    res.status(400).json({ message: err.message || 'Server Error' })
+  }
+}
+
+export const deleteVariant = async (req, res) => {
+  try {
+    const variants = await productService.deleteVariant(req.params.id, req.params.variantId)
+    if (!variants) return res.status(404).json({ message: 'Sản phẩm không tồn tại' })
+    res.json({ message: 'Đã xóa màu thành công', variants })
+  } catch (err) {
+    res.status(500).json({ message: 'Server Error' })
+  }
+}
+
+export const deleteSize = async (req, res) => {
+  try {
+    const variants = await productService.deleteSize(
+      req.params.id, req.params.variantId, req.params.sizeId
+    )
+    if (!variants) return res.status(404).json({ message: 'Không tìm thấy' })
+    res.json({ message: 'Đã xóa size thành công', variants })
+  } catch (err) {
     res.status(500).json({ message: 'Server Error' })
   }
 }

@@ -4,7 +4,7 @@ import { API_ROOT } from '~/utils/constants'
 // PRODUCT REVIEWS
 export const fetchProductReviewsAPI = async (productId) => {
   const res = await authorizedAxiosInstance.get(
-    `${API_ROOT}/reviews/product/${productId}`
+    `${API_ROOT}/api/reviews/product/${productId}`
   )
   return res.data
 }
@@ -12,7 +12,7 @@ export const fetchProductReviewsAPI = async (productId) => {
 // ADMIN: ALL REVIEWS
 export const fetchAllReviewsAdminAPI = async () => {
   const res = await authorizedAxiosInstance.get(
-    `${API_ROOT}/admin/reviews`
+    `${API_ROOT}/api/admin/reviews`
   )
   return res.data
 }
@@ -20,7 +20,7 @@ export const fetchAllReviewsAdminAPI = async () => {
 // SUBMIT REVIEW
 export const submitReviewAPI = async (formData) => {
   const res = await authorizedAxiosInstance.post(
-    `${API_ROOT}/reviews`,
+    `${API_ROOT}/api/reviews`,
     formData,
     {
       headers: {
@@ -34,7 +34,7 @@ export const submitReviewAPI = async (formData) => {
 // UPDATE STATUS
 export const updateReviewStatusAPI = async ({ id, status }) => {
   await authorizedAxiosInstance.patch(
-    `${API_ROOT}/admin/reviews/${id}/status`,
+    `${API_ROOT}/api/admin/reviews/${id}/status`,
     { status }
   )
   return { id, status }
@@ -43,7 +43,7 @@ export const updateReviewStatusAPI = async ({ id, status }) => {
 // DELETE REVIEW
 export const deleteReviewAPI = async (reviewId) => {
   await authorizedAxiosInstance.delete(
-    `${API_ROOT}/reviews/${reviewId}`
+    `${API_ROOT}/api/admin/reviews/${reviewId}`
   )
   return reviewId
 }

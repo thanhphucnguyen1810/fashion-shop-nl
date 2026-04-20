@@ -5,7 +5,10 @@ import {
   getAllProducts,
   createProduct,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  upsertVariant,
+  deleteVariant,
+  deleteSize
 } from '~/controllers/admin/admin.product.controller'
 import { logSecurity } from '~/middlewares/logger.middleware'
 import { validateRequest } from '~/middlewares/validation.middleware'
@@ -43,6 +46,28 @@ router.delete(
   validateRequest(adminProductValidation.paramsId, 'params'),
   logSecurity('DELETE_PRODUCT'),
   deleteProduct
+)
+
+// Variant routes
+router.put(
+  '/:id/variants',
+  protect, admin,
+  logSecurity('UPSERT_VARIANT'),
+  upsertVariant
+)
+
+router.delete(
+  '/:id/variants/:variantId',
+  protect, admin,
+  logSecurity('DELETE_VARIANT'),
+  deleteVariant
+)
+
+router.delete(
+  '/:id/variants/:variantId/sizes/:sizeId',
+  protect, admin,
+  logSecurity('DELETE_SIZE'),
+  deleteSize
 )
 
 export default router

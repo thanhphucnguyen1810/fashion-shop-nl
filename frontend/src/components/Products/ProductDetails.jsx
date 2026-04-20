@@ -38,7 +38,7 @@ const ProductDetails = ({ productId }) => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const { selectedProduct, loading, error, similarProducts } = useSelector((state) => state.products)
-  const { reviews, loading: reviewsLoading } = useSelector((state) => state.reviews)
+  const { reviews } = useSelector((state) => state.reviews)
   const { user, guestId } = useSelector((state) => state.auth)
 
   const [mainImage, setMainImage] = useState('')

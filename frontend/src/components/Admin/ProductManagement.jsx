@@ -10,12 +10,14 @@ import Loading from '../Common/Loading'
 const ProductManagement = () => {
   const theme = useTheme()
   const dispatch = useDispatch()
-  const { products, loading, error } = useSelector((state) => state.adminProducts)
+  const { products, loading, error, page, pages, totalProducts } = useSelector(state => state.adminProducts)
   const [showForm, setShowForm] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm)
 
   // Lọc danh sách sản phẩm theo searchTerm
-  const filteredProducts = products.filter(product =>
+  const filteredProducts = (Array.isArray(products) ? products : []).filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
@@ -23,19 +25,23 @@ const ProductManagement = () => {
     name: '',
     description: '',
     price: '',
-    countInStock: '',
     sku: '',
     category: '',
-    sizes: '',
-    colors: '',
     collections: '',
-    images: [],
-    user: ''
+    images: []
   })
 
   useEffect(() => {
-    dispatch(fetchAdminProducts())
-  }, [dispatch])
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm)
+    }, 500) // 500ms delay
+
+    return () => clearTimeout(handler)
+  }, [searchTerm])
+
+  useEffect(() => {
+    dispatch(fetchAdminProducts({ search: debouncedSearch, page: currentPage }))
+  }, [currentPage, dispatch, debouncedSearch])
 
   // ===== HANDLE FORM =====
   const handleChange = (e) => {
@@ -51,13 +57,9 @@ const ProductManagement = () => {
     formPayload.append('name', formData.name)
     formPayload.append('description', formData.description)
     formPayload.append('price', formData.price)
-    formPayload.append('countInStock', formData.countInStock)
     formPayload.append('sku', formData.sku)
     formPayload.append('category', formData.category)
     formPayload.append('collections', formData.collections)
-
-    formPayload.append('sizes', JSON.stringify(formData.sizes))
-    formPayload.append('colors', JSON.stringify(formData.colors))
 
     formData.images.forEach(file => {
       formPayload.append('images', file)
@@ -68,7 +70,14 @@ const ProductManagement = () => {
       setShowForm(false)
       setShowForm(false)
       setFormData({
-        name:'', description:'', price:'', countInStock:'', sku:'', category:'', sizes: [], colors: [], collections:'', images:[]
+        name: '',
+        description: '',
+        price: '',
+        sku: '',
+        category: '',
+        collections: '',
+        variants: [],
+        images: []
       })
     } catch (error) {
       console.error(error)
@@ -80,6 +89,12 @@ const ProductManagement = () => {
     if (window.confirm('Bạn có chắc muốn xóa sản phẩm này không?'))
       dispatch(deleteProduct(id))
   }
+
+  const handleSearch = () => {
+    setCurrentPage(1)
+    dispatch(fetchAdminProducts({ search: searchTerm, page: 1 }))
+  }
+
   if (loading) return <Loading />
   if (error) return <p>Error: {error}</p>
 
@@ -99,7 +114,7 @@ const ProductManagement = () => {
           />
           <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none" />
           <button
-            onClick={() => console.log('Tìm sản phẩm:', searchTerm)}
+            onClick={handleSearch}
             className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-blue-600 text-white text-sm font-semibold px-4 py-1.5 rounded-full hover:bg-blue-700 active:scale-95 transition-all duration-200"
           >
              Tìm
@@ -187,17 +202,6 @@ const ProductManagement = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">Số lượng trong kho</label>
-                <input
-                  type="number"
-                  name="countInStock"
-                  value={formData.countInStock}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
-              <div>
                 <label className="block mb-1 font-medium">Danh mục</label>
                 <input
                   type="text"
@@ -214,26 +218,6 @@ const ProductManagement = () => {
                   type="text"
                   name="collections"
                   value={formData.collections}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-              <div>
-                <label className="block mb-1 font-medium">Kích cỡ</label>
-                <input
-                  type="text"
-                  name="sizes"
-                  value={formData.sizes}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-              <div>
-                <label className="block mb-1 font-medium">Màu sắc</label>
-                <input
-                  type="text"
-                  name="colors"
-                  value={formData.colors}
                   onChange={handleChange}
                   className="w-full p-2 border rounded"
                 />
@@ -315,7 +299,11 @@ const ProductManagement = () => {
                     </td>
                     <td className="p-4 font-medium">{product.name}</td>
                     <td className="p-4">{product.price}đ</td>
-                    <td className="p-4">{product.countInStock}</td>
+                    <td className="p-4">
+                      {product.variants?.reduce((sum, v) =>
+                        sum + (v.sizes?.reduce((s, sz) => s + (sz.stock || 0), 0) || 0),
+                      0) || 0}
+                    </td>
                     <td className="p-4">{product.sku}</td>
                     <td className="p-4">{product.category}</td>
                     <td className="p-4 flex gap-2">
@@ -357,6 +345,46 @@ const ProductManagement = () => {
           </table>
         )}
       </div>
+
+      {/* Phân trang */}
+      {pages > 1 && (
+        <div className="flex items-center justify-between px-4 py-3 border-t">
+          <p className="text-sm text-gray-500">
+      Hiển thị {products.length} / {totalProducts} sản phẩm
+          </p>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+              disabled={page <= 1}
+              className="px-3 py-1 rounded border text-sm disabled:opacity-40 hover:bg-gray-50"
+            >
+        ‹ Trước
+            </button>
+
+            {Array.from({ length: pages }, (_, i) => i + 1).map(p => (
+              <button
+                key={p}
+                onClick={() => setCurrentPage(p)}
+                className={`px-3 py-1 rounded border text-sm ${
+                  p === page
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'hover:bg-gray-50'
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+
+            <button
+              onClick={() => setCurrentPage(p => Math.min(p + 1, pages))}
+              disabled={page >= pages}
+              className="px-3 py-1 rounded border text-sm disabled:opacity-40 hover:bg-gray-50"
+            >
+        Sau ›
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -28,12 +28,12 @@ import EditProductPage from './components/Admin/EditProductPage'
 import OrderManagement from './components/Admin/OrderManagement'
 import AdminDiscountCodes from './components/Admin/AdminDiscountCodes'
 import AdminReviews from './components/Admin/AdminReviews'
-import StockInList from './components/Admin/StockInList'
 import ProtectedRoute from './components/Common/ProtectedRoute'
 import UserOrderHistory from './components/Admin/UserOrderHistory'
 import CategoryManagement from './components/Admin/CategoryManagement'
 import OrdersStatusTabs from './components/OrdersStatusTabs'
 import AdminLogPage from './components/Admin/AdminLogPage'
+import AdminStockImportPage from './pages/AdminStockImportPage'
 
 
 function App() {
@@ -86,8 +86,8 @@ function App() {
             <Route path='orders' element={<OrderManagement />} />
             <Route path='coupons' element={<AdminDiscountCodes />} />
             <Route path="reviews" element={<AdminReviews />} />
-            <Route path='stock-in' element={<StockInList />} />
             <Route path='categories' element={<CategoryManagement />} />
+            <Route path="stock-imports" element={<AdminStockImportPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

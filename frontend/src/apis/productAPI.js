@@ -45,3 +45,41 @@ export const fetchProductReviewsAPI = async (productId) => {
   )
   return res.data
 }
+
+// VARIANTS
+export const fetchVariantsAPI = async (productId) => {
+  const res = await authorizedAxiosInstance.get(`${API_ROOT}/api/products/${productId}/variants`)
+  return res.data
+}
+
+export const upsertVariantAPI = async (productId, variantData) => {
+  // variantData: { color, sizes: [{ size, price, stock, sku }] }
+  const res = await authorizedAxiosInstance.put(
+    `${API_ROOT}/api/products/${productId}/variants`, variantData
+  )
+  return res.data
+}
+
+export const deleteVariantAPI = async (productId, variantId) => {
+  const res = await authorizedAxiosInstance.delete(
+    `${API_ROOT}/api/products/${productId}/variants/${variantId}`
+  )
+  return res.data
+}
+
+export const deleteSizeAPI = async (productId, variantId, sizeId) => {
+  const res = await authorizedAxiosInstance.delete(
+    `${API_ROOT}/api/products/${productId}/variants/${variantId}/sizes/${sizeId}`
+  )
+  return res.data
+}
+
+export const updateStockAPI = async (productId, variantId, sizeId, delta) => {
+  const res = await authorizedAxiosInstance.patch(
+    `${API_ROOT}/api/products/${productId}/variants/${variantId}/sizes/${sizeId}/stock`,
+    { delta }
+  )
+  return res.data
+}
+
+

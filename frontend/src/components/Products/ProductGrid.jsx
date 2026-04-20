@@ -7,23 +7,16 @@ import { addFavorite, removeFavorite, toggleFavoriteLocal } from '~/redux/slices
 import { FaShoppingCart } from 'react-icons/fa'
 import { addToCart } from '~/redux/slices/cartSlices'
 
-const ACCENT_YELLOW = '#F59E0B'
-const PRIMARY_COLOR = '#007bff'
-const ERROR_COLOR = '#e53e3e'
-const FAVORITE_COLOR = '#ff4d4f'
-
-const colors = { text: '#333', mutedText: '#6B7280' }
-
 const renderRatingStars = (rating) => {
   const fullStars = Math.floor(rating || 0)
   const emptyStars = 5 - fullStars
   const stars = []
 
   for (let i = 0; i < fullStars; i++) {
-    stars.push(<FaStar key={`full-${i}`} className='mr-0.5 w-3 h-3' style={{ color: ACCENT_YELLOW }} />)
+    stars.push(<FaStar key={`full-${i}`} className='mr-0.5 w-3 h-3' style={{ color: '#F59E0B' }} />)
   }
   for (let i = 0; i < emptyStars; i++) {
-    stars.push(<FaStar key={`empty-${i}`} className='mr-0.5 w-3 h-3' style={{ color: colors.mutedText, opacity: 0.3 }} />)
+    stars.push(<FaStar key={`empty-${i}`} className='mr-0.5 w-3 h-3' style={{ color: '#6B7280', opacity: 0.3 }} />)
   }
   return <div className='flex items-center'>{stars}</div>
 }
@@ -106,7 +99,7 @@ const ProductGrid = ({ products, error, columnCount, isFetching }) => {
             <Link to={`/products/${product._id}`} className='block'>
 
               {/* IMAGE */}
-              <div className='relative w-full aspect-[3/4] bg-gray-50 overflow-hidden'>
+              <div className='relative w-full aspect-3/4 bg-gray-50 overflow-hidden'>
                 <img
                   src={product.images?.[0]?.url}
                   alt={product.name}
@@ -128,7 +121,7 @@ const ProductGrid = ({ products, error, columnCount, isFetching }) => {
                 >
                   <FaHeart
                     className='w-4 h-4'
-                    style={{ color: isFavorite ? FAVORITE_COLOR : '#999' }}
+                    style={{ color: isFavorite ? '#ff4d4f' : '#999' }}
                   />
                 </button>
 
@@ -153,7 +146,7 @@ const ProductGrid = ({ products, error, columnCount, isFetching }) => {
                   </span>
                 </div>
 
-                <h4 className='text-sm font-medium line-clamp-2 min-h-[40px]'>
+                <h4 className='text-sm font-medium line-clamp-2 min-h-10'>
                   {product.name}
                 </h4>
 
