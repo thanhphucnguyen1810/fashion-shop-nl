@@ -1,15 +1,14 @@
-
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import ProductGrid from './ProductGrid'
 import { useTheme } from '@mui/material/styles'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchProductDetails, fetchSimilarProducts, createTemporaryOrder } from '~/redux/slices/productSlice'
-import { addToCart } from '~/redux/slices/cartSlices'
-import { fetchProductReviews, submitReview } from '~/redux/slices/reviewSlice'
-import Loading from '../Common/Loading'
 import { FaStar } from 'react-icons/fa'
+import ProductGrid from './ProductGrid'
+import { fetchProductDetails, fetchSimilarProducts } from '~/redux/slices/productSlice'
+import { addToCart } from '~/redux/slices/cartSlices'
+import { fetchProductReviews } from '~/redux/slices/reviewSlice'
+import Loading from '../Common/Loading'
 import ProductReviews from '../ProductReviews'
 
 const formatCurrency = (amount) => {
@@ -39,7 +38,7 @@ const ProductDetails = ({ productId }) => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const { selectedProduct, loading, error, similarProducts } = useSelector((state) => state.products)
-  const { reviews, loading: reviewsLoading } = useSelector((state) => state.reviews)
+  const { reviews } = useSelector((state) => state.reviews)
   const { user, guestId } = useSelector((state) => state.auth)
 
   const [mainImage, setMainImage] = useState('')
@@ -49,6 +48,18 @@ const ProductDetails = ({ productId }) => {
   const [isButtonDisabled, setIsButtonDisabled] = useState(false)
   const [activeTab, setActiveTab] = useState('description')
   const productFetchId = productId || id
+  const selectedVariant = selectedProduct?.variants?.find(
+    v => v.color === selectedColor
+  )
+
+  const selectedSizeData = selectedVariant?.sizes?.find(
+    s => s.size === selectedSize
+  )
+
+  const displayPrice =
+  selectedSizeData?.price ||
+  selectedProduct?.disCountPrice ||
+  selectedProduct?.price
 
   const totalReviews = reviews.length
 
@@ -68,14 +79,19 @@ const ProductDetails = ({ productId }) => {
   useEffect(() => {
     if (selectedProduct?.images?.length > 0) {
       setMainImage(selectedProduct.images[0].url)
-      if (selectedProduct.colors.length > 0 && !selectedColor) {
-        setSelectedColor(selectedProduct.colors[0])
+    }
+
+    if (selectedProduct?.variants?.length > 0) {
+      if (!selectedColor) {
+        setSelectedColor(selectedProduct.variants[0].color)
       }
-      if (selectedProduct.sizes.length > 0 && !selectedSize) {
-        setSelectedSize(selectedProduct.sizes[0])
+
+      if (!selectedSize) {
+        const firstSize = selectedProduct.variants[0]?.sizes?.[0]?.size
+        if (firstSize) setSelectedSize(firstSize)
       }
     }
-  }, [selectedProduct, selectedColor, selectedSize])
+  }, [selectedColor, selectedProduct, selectedSize])
 
   const handleQuantityChange = (action) => {
     if (action === 'plus') setQuantity((prev) => prev + 1)
@@ -84,18 +100,32 @@ const ProductDetails = ({ productId }) => {
 
   const handleAddToCart = () => {
     if (!selectedColor || !selectedSize) {
-      toast.error('Vui lòng chọn màu sắc và kích cỡ trước khi thêm vào giỏ hàng.', {
-        duration: 1000
-      })
+      toast.error('Vui lòng chọn màu sắc và kích cỡ trước khi thêm vào giỏ hàng.')
       return
     }
+
+    const selectedVariant = selectedProduct?.variants?.find(
+      v => v.color === selectedColor
+    )
+
+    const selectedSizeData = selectedVariant?.sizes?.find(
+      s => s.size === selectedSize
+    )
+
+    if (!selectedSizeData?.sku) {
+      toast.error('Không tìm thấy SKU của sản phẩm!')
+      return
+    }
+
     setIsButtonDisabled(true)
+
     dispatch(
       addToCart({
         productId: productFetchId,
         quantity,
         size: selectedSize,
         color: selectedColor,
+        sku: selectedSizeData.sku,
         guestId,
         userId: user?._id
       })
@@ -112,42 +142,22 @@ const ProductDetails = ({ productId }) => {
       return
     }
 
-    setIsButtonDisabled(true)
-
     const orderItems = [{
       productId: productFetchId,
+      name: selectedProduct.name,
+      image: selectedProduct.images[0]?.url,
+      price: displayPrice,
       quantity,
       size: selectedSize,
       color: selectedColor
     }]
 
-    dispatch(
-      createTemporaryOrder({
-        orderItems: orderItems,
-        userId: user?._id,
-        guestId: guestId
-      })
-    )
-      .unwrap()
-      .then((response) => {
-        const tempOrderId = response.orderId
-
-        toast.success('Đang chuyển đến trang thanh toán...', { duration: 500 })
-
-        navigate('/checkout', {
-          state: {
-            orderId: tempOrderId,
-            isBuyNow: true
-          }
-        })
-      })
-      .catch((error) => {
-        console.error('Lỗi khi tạo đơn hàng tạm thời:', error)
-        toast.error(`Lỗi: ${error}`, { duration: 2000 })
-      })
-      .finally(() => {
-        setIsButtonDisabled(false)
-      })
+    navigate('/checkout', {
+      state: {
+        orderItems,
+        isBuyNow: true
+      }
+    })
   }
 
   if (loading) {
@@ -157,6 +167,13 @@ const ProductDetails = ({ productId }) => {
   if (error) {
     return <p>Error: {error}</p>
   }
+
+  const colors = selectedProduct?.variants?.map(v => v.color) || []
+
+  const sizes =
+  selectedProduct?.variants
+    ?.find(v => v.color === selectedColor)
+    ?.sizes || []
 
   return (
     <div className='p-6'>
@@ -169,11 +186,11 @@ const ProductDetails = ({ productId }) => {
           >
 
             {/* --- CỘT TRÁI: HÌNH ẢNH  --- */}
-            <div className='w-full md:w-1/2 flex h-[450px] md:h-[500px] gap-4'>
+            <div className='w-full md:w-1/2 flex h-112.5 md:h-125 gap-4'>
 
               {/* List hình nhỏ */}
               <div className='hidden md:flex flex-col space-y-4 w-24 overflow-y-auto pr-1 custom-scrollbar'>
-                {selectedProduct.images.map((image, index) => (
+                {selectedProduct?.images?.map((image, index) => (
                   <img
                     key={index}
                     src={image.url}
@@ -227,7 +244,7 @@ const ProductDetails = ({ productId }) => {
               <div className='p-4 mb-6 rounded-lg' style={{ backgroundColor: theme.palette.grey[50] }}>
                 <div className='flex items-baseline gap-3'>
                   <p className='text-3xl md:text-4xl font-bold' style={{ color: theme.palette.error.main }}>
-                    {selectedProduct.disCountPrice ? formatCurrency(selectedProduct.disCountPrice) : formatCurrency(selectedProduct.price)}
+                    {formatCurrency(displayPrice)}
                   </p>
                   {selectedProduct.disCountPrice && selectedProduct.disCountPrice < selectedProduct.price && (
                     <p className='text-lg line-through' style={{ color: theme.palette.text.secondary }}>
@@ -243,10 +260,13 @@ const ProductDetails = ({ productId }) => {
         Màu sắc
                 </p>
                 <div className='flex gap-3 flex-wrap'>
-                  {selectedProduct.colors.map((color) => (
+                  {colors.map((color) => (
                     <button
                       key={color}
-                      onClick={() => setSelectedColor(color)}
+                      onClick={() => {
+                        setSelectedColor(color)
+                        setSelectedSize('')
+                      }}
                       className={`px-6 py-2 rounded border text-sm font-medium transition-all ${selectedColor === color ? 'shadow-sm ring-1 ring-offset-1' : 'hover:border-gray-400'}`}
                       style={{
                         backgroundColor: selectedColor === color ? theme.palette.background.paper : 'transparent',
@@ -266,18 +286,18 @@ const ProductDetails = ({ productId }) => {
         Kích cỡ
                 </p>
                 <div className='flex gap-3 flex-wrap'>
-                  {selectedProduct.sizes.map((size) => (
+                  {sizes?.map((s) => (
                     <button
-                      key={size}
-                      onClick={() => setSelectedSize(size)}
-                      className={`min-w-[3rem] h-10 flex items-center justify-center rounded border text-sm font-medium transition-all ${selectedSize === size ? 'shadow-sm' : 'hover:border-gray-400'}`}
+                      key={s.size}
+                      onClick={() => setSelectedSize(s.size)}
+                      className={`min-w-12 h-10 flex items-center justify-center rounded border text-sm font-medium transition-all ${selectedSize === s.size ? 'shadow-sm' : 'hover:border-gray-400'}`}
                       style={{
-                        backgroundColor: selectedSize === size ? theme.palette.primary.main : theme.palette.background.paper,
-                        color: selectedSize === size ? theme.palette.primary.contrastText : theme.palette.text.primary,
-                        borderColor: selectedSize === size ? theme.palette.primary.main : theme.palette.divider
+                        backgroundColor: selectedSize === s.size ? theme.palette.primary.main : theme.palette.background.paper,
+                        color: selectedSize === s.size ? theme.palette.primary.contrastText : theme.palette.text.primary,
+                        borderColor: selectedSize === s.size ? theme.palette.primary.main : theme.palette.divider
                       }}
                     >
-                      {size}
+                      {s.size}
                     </button>
                   ))}
                 </div>
@@ -297,7 +317,7 @@ const ProductDetails = ({ productId }) => {
                         disabled={quantity <= 1}
                         style={{ color: theme.palette.text.primary }}
                       >-</button>
-                      <span className='px-4 font-medium border-x h-full flex items-center justify-center min-w-[3rem]' style={{ color: theme.palette.text.primary, borderColor: theme.palette.divider }}>
+                      <span className='px-4 font-medium border-x h-full flex items-center justify-center min-w-12' style={{ color: theme.palette.text.primary, borderColor: theme.palette.divider }}>
                         {quantity}
                       </span>
                       <button
@@ -389,7 +409,11 @@ const ProductDetails = ({ productId }) => {
                       </tr>
                       <tr className='border-b' style={{ borderColor: theme.palette.divider }}>
                         <td className='py-2'>Kích cỡ</td>
-                        <td className='py-2'>{selectedProduct.sizes.join(', ')}</td>
+                        <td className='py-2'>
+                          {selectedProduct?.variants
+                            ?.flatMap(v => v.sizes.map(s => s.size))
+                            .join(', ')}
+                        </td>
                       </tr>
                     </tbody>
                   </table>

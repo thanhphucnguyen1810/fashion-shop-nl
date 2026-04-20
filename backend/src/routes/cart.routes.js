@@ -1,31 +1,26 @@
 import express from 'express'
 import { protect } from '~/middlewares/auth.middleware'
-import {
-  addToCart,
-  updateCart,
-  removeFromCart,
-  getCartDetails,
-  mergeGuestCart
-} from '~/controllers/cart.controller'
-import { validateRequest } from '~/middlewares/validation.middleware'
+import { cartController } from '~/controllers/cart.controller'
 import { cartValidation } from '~/validations/cart.validation'
 
 const router = express.Router()
 
-router.post('/', validateRequest(cartValidation.cartAction), addToCart)
-router.put('/', validateRequest(cartValidation.cartAction), updateCart)
-router.delete('/', validateRequest(cartValidation.removeFromCart), removeFromCart)
+// ADD / UPDATE / DELETE
+router.post('/', cartValidation.addToCart, cartController.addToCart)
 
-router.get('/', (req, res, next) => {
-  const { error } = Joi.object({
-    userId: Joi.string().allow(''),
-    guestId: Joi.string().allow('')
-  }).or('userId', 'guestId').validate(req.query)
+router.put('/', cartValidation.updateCart, cartController.updateCart)
 
-  if (error) return res.status(400).json({ message: 'Thiếu định danh giỏ hàng' })
-  next()
-}, getCartDetails)
+router.delete('/', cartValidation.removeFromCart, cartController.removeFromCart)
 
-router.post('/merge', protect, validateRequest(cartValidation.mergeCart), mergeGuestCart)
+// GET CART
+router.get('/', cartValidation.getCart, cartController.getCartDetails)
+
+// MERGE CART
+router.post(
+  '/merge',
+  protect,
+  cartValidation.mergeCart,
+  cartController.mergeGuestCart
+)
 
 export default router

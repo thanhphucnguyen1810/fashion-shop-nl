@@ -7,18 +7,9 @@ const addressSchema = new mongoose.Schema(
       ref: 'User',
       required: true
     },
-    name: {
-      type: String,
-      required: true
-    },
-    phone: {
-      type: String,
-      required: true
-    },
-    street: {
-      type: String,
-      required: true
-    },
+    name: { type: String, required: true },
+    phone: { type: String, required: true, match: /^[0-9]{9,11}$/ },
+    street: { type: String, required: true },
     province: {
       type: String,
       required: true

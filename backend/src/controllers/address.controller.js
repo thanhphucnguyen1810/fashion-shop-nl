@@ -1,101 +1,60 @@
-import Address from '~/models/address.model'
+import { StatusCodes } from 'http-status-codes'
+import { addressService } from '~/services/address.service'
 
-// Lấy danh sách địa chỉ của user
-export const getAddresses = async (req, res) => {
+// GET
+const getAddresses = async (req, res, next) => {
   try {
-    const addresses = await Address.find({ user: req.user._id })
-    res.json(addresses)
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' })
-  }
+    const result = await addressService.getAddresses(req.user._id)
+    res.status(StatusCodes.OK).json(result)
+  } catch (error) { next(error) }
 }
 
-// Tạo địa chỉ mới
-export const addAddress = async (req, res) => {
+// CREATE
+const addAddress = async (req, res, next) => {
   try {
-    const { name, phone, street, province, district, ward } = req.body
-
-    if (!req.user || !req.user._id) {
-      return res.status(401).json({ message: 'Lỗi xác thực. Vui lòng đăng nhập lại.' })
-    }
-
-    const newAddress = await Address.create({
-      user: req.user._id,
-      name,
-      phone,
-      street,
-      province,
-      district,
-      ward
-    })
-
-    res.status(201).json(newAddress)
-  } catch (error) {
-    console.error('Lỗi khi thêm địa chỉ:', error)
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({ message: error.message || 'Dữ liệu địa chỉ không hợp lệ' })
-    }
-
-    res.status(500).json({ message: 'Lỗi server: Không thể tạo địa chỉ' })
-  }
+    const result = await addressService.addAddress(req.user._id, req.body)
+    res.status(StatusCodes.CREATED).json(result)
+  } catch (error) { next(error) }
 }
 
-// Cập nhật địa chỉ
-export const updateAddress = async (req, res) => {
+// UPDATE
+const updateAddress = async (req, res, next) => {
   try {
-    const address = await Address.findOne({
-      _id: req.params.id,
-      user: req.user._id
-    })
-
-    if (!address) return res.status(404).json({ message: 'Address not found' })
-
-    Object.assign(address, req.body)
-    await address.save()
-
-    res.json(address)
-  } catch (error) {
-    res.status(500).json({ message: 'Cannot update address' })
-  }
-}
-
-// Xóa địa chỉ
-export const deleteAddress = async (req, res) => {
-  try {
-    const address = await Address.findOne({
-      _id: req.params.id,
-      user: req.user._id
-    })
-
-    if (!address) return res.status(404).json({ message: 'Address not found' })
-
-    await address.deleteOne()
-    res.json({ message: 'Deleted successfully' })
-  } catch (error) {
-    res.status(500).json({ message: 'Cannot delete address' })
-  }
-}
-
-// Đặt mặc định
-export const setDefaultAddress = async (req, res) => {
-  try {
-    await Address.updateMany(
-      { user: req.user._id },
-      { $set: { isDefault: false } }
+    const result = await addressService.updateAddress(
+      req.user._id,
+      req.params.id,
+      req.body
     )
+    res.status(StatusCodes.OK).json(result)
+  } catch (error) { next(error) }
+}
 
-    const address = await Address.findOne({
-      _id: req.params.id,
-      user: req.user._id
-    })
+// DELETE
+const deleteAddress = async (req, res, next) => {
+  try {
+    const result = await addressService.deleteAddress(
+      req.user._id,
+      req.params.id
+    )
+    res.status(StatusCodes.OK).json(result)
+  } catch (error) { next(error) }
+}
 
-    if (!address) return res.status(404).json({ message: 'Address not found' })
+// SET DEFAULT
+const setDefaultAddress = async (req, res, next) => {
+  try {
+    const result = await addressService.setDefaultAddress(
+      req.user._id,
+      req.params.id
+    )
+    res.status(StatusCodes.OK).json(result)
+  } catch (error) { next(error) }
+}
 
-    address.isDefault = true
-    await address.save()
-
-    res.json(address)
-  } catch (error) {
-    res.status(500).json({ message: 'Cannot set default address' })
-  }
+export const addressController = {
+  getAddresses,
+  addAddress,
+  updateAddress,
+  deleteAddress,
+  setDefaultAddress
 }

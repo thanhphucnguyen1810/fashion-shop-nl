@@ -11,6 +11,8 @@ import adminOrderReducer from '~/redux/slices/admin/adminOrderSlice'
 import categoryReducer from '~/redux/slices/categorySlice'
 import reviewReducer from '~/redux/slices/reviewSlice'
 import addressReducer from '~/redux/slices/addressSlice'
+import stockImportReducer from '~/redux/slices/admin/stockImportSlice'
+import adminReviewReducer from '~/redux/slices/admin/adminReviewSlice'
 
 const store = configureStore({
   reducer: {
@@ -25,7 +27,9 @@ const store = configureStore({
     orders: orderReducer,
     admin: adminReducer,
     adminProducts: adminProductReducer,
-    adminOrders: adminOrderReducer
+    adminOrders: adminOrderReducer,
+    stockImport: stockImportReducer,
+    adminReview: adminReviewReducer
   }
 })
 

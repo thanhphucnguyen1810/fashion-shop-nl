@@ -1,29 +1,27 @@
 import express from 'express'
-import {
-  getCategories,
-  createCategory,
-  updateCategory,
-  deleteCategory
-} from '~/controllers/category.controller.js'
+import { categoryController } from '~/controllers/category.controller.js'
 
 import { protect, admin } from '~/middlewares/auth.middleware.js'
 import { upload } from '~/middlewares/upload.middleware'
 import { logSecurity } from '~/middlewares/logger.middleware'
-import { validateRequest } from '~/middlewares/validation.middleware'
-import { categoryValidation } from '~/validations/category.validation'
+import {
+  createCategorySchema,
+  updateCategorySchema,
+  deleteCategorySchema
+} from '~/validations/category.validation'
 
 const router = express.Router()
 
-router.get('/', getCategories)
+router.get('/', categoryController.getCategories)
 
 router.post(
   '/',
   protect,
   admin,
   upload.single('image'),
-  validateRequest(categoryValidation.createCategory),
+  createCategorySchema,
   logSecurity('ADMIN_CREATE_CATEGORY'),
-  createCategory
+  categoryController.createCategory
 )
 
 router.patch(
@@ -31,18 +29,18 @@ router.patch(
   protect,
   admin,
   upload.single('image'),
-  validateRequest(categoryValidation.updateCategory),
+  updateCategorySchema,
   logSecurity('ADMIN_UPDATE_CATEGORY'),
-  updateCategory
+  categoryController.updateCategory
 )
 
 router.delete(
   '/:id',
   protect,
   admin,
-  validateRequest(categoryValidation.deleteCategory),
+  deleteCategorySchema,
   logSecurity('ADMIN_DELETE_CATEGORY'),
-  deleteCategory
+  categoryController.deleteCategory
 )
 
 export default router

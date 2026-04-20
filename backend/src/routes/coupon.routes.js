@@ -1,20 +1,22 @@
 import express from 'express'
-import {
-  applyCoupon,
-  removeCoupon,
-  getAllActiveCoupons
-} from '~/controllers/coupon.controller'
+import { couponController } from '~/controllers/coupon.controller'
 import { validateRequest } from '~/middlewares/validation.middleware'
 import { couponValidation } from '~/validations/coupon.validation'
 
 const router = express.Router()
 
-// --- Customer apply coupon ---
-router.post('/apply', validateRequest(couponValidation.applyCoupon), applyCoupon)
+router.post(
+  '/apply',
+  validateRequest(couponValidation.applyCoupon),
+  couponController.applyCoupon
+)
 
-// --- Customer remove coupon ---
-router.post('/remove', validateRequest(couponValidation.removeCoupon), removeCoupon)
+router.post(
+  '/remove',
+  validateRequest(couponValidation.removeCoupon),
+  couponController.removeCoupon
+)
 
-router.get('/active', getAllActiveCoupons)
+router.get('/active', couponController.getAllActiveCoupons)
 
 export default router

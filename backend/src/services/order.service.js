@@ -1,0 +1,29 @@
+import orderModel from '~/models/order.model'
+
+// ================= GET MY ORDERS =================
+const getMyOrders = async (userId) => {
+  const orders = await orderModel
+    .find({ user: userId })
+    .sort({ createdAt: -1 })
+
+  return orders
+}
+
+// ================= GET ORDER BY ID =================
+const getOrderById = async (orderId) => {
+  const order = await orderModel.findById(orderId)
+    .populate('user', 'fullName email phoneNumber')
+    .populate('shippingAddress')
+    .populate('coupon.couponId', 'code name discountType')
+
+  if (!order) {
+    throw new Error('Order not found')
+  }
+
+  return order
+}
+
+export const orderService = {
+  getMyOrders,
+  getOrderById
+}

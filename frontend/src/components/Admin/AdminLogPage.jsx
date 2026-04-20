@@ -1,16 +1,14 @@
-import axios from 'axios'
 import { useEffect, useState } from 'react'
 import { Refresh, Download } from '@mui/icons-material'
+import authorizedAxiosInstance from '~/utils/authorizeAxios'
+import { API_ROOT } from '~/utils/constants'
 
 const AdminLogPage = () => {
   const [logs, setLogs] = useState([])
 
   const fetchLogs = async () => {
     try {
-      const token = localStorage.getItem('userToken')
-      const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/system/security-logs`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const { data } = await authorizedAxiosInstance.get(`${API_ROOT}/api/admin/system/security-logs`)
       setLogs(Array.isArray(data) ? data : data.logs || [])
     } catch (err) { console.error(err) }
   }
@@ -56,8 +54,8 @@ const AdminLogPage = () => {
         <table className="w-full text-left border-collapse text-sm">
           <thead>
             <tr className="bg-[#f8f9fa] border-b border-gray-200 text-gray-700">
-              <th className="p-4 font-bold w-[180px]">THỜI GIAN</th>
-              <th className="p-4 font-bold w-[200px]">NGƯỜI THỰC HIỆN</th>
+              <th className="p-4 font-bold w-45">THỜI GIAN</th>
+              <th className="p-4 font-bold w-50">NGƯỜI THỰC HIỆN</th>
               <th className="p-4 font-bold text-center">HÀNH ĐỘNG</th>
               <th className="p-4 font-bold">IP</th>
               <th className="p-4 font-bold">THIẾT BỊ TRUY CẬP</th>
@@ -82,7 +80,7 @@ const AdminLogPage = () => {
                     {log.ip}
                   </span>
                 </td>
-                <td className="p-4 text-xs text-gray-600 leading-relaxed max-w-[400px]">
+                <td className="p-4 text-xs text-gray-600 leading-relaxed max-w-100">
                   <div className="line-clamp-2 hover:line-clamp-none cursor-help" title={log.userAgent}>
                     {log.userAgent || 'Không có dữ liệu thiết bị'}
                   </div>

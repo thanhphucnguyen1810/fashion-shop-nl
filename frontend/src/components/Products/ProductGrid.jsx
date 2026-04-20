@@ -2,18 +2,10 @@ import { Link } from 'react-router-dom'
 import { useTheme } from '@mui/material/styles'
 import { FaStar, FaHeart } from 'react-icons/fa'
 import Loading from '../Common/Loading'
-import { useSelector, useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { addFavorite, removeFavorite, toggleFavoriteLocal } from '~/redux/slices/authSlice'
-
-const ACCENT_YELLOW = '#F59E0B'
-const PRIMARY_COLOR = '#007bff'
-const ERROR_COLOR = '#e53e3e'
-const FAVORITE_COLOR = '#ff4d4f'
-
-const colors = {
-  text: '#333',
-  mutedText: '#6B7280'
-}
+import { FaShoppingCart } from 'react-icons/fa'
+import { addToCart } from '~/redux/slices/cartSlices'
 
 const renderRatingStars = (rating) => {
   const fullStars = Math.floor(rating || 0)
@@ -21,10 +13,10 @@ const renderRatingStars = (rating) => {
   const stars = []
 
   for (let i = 0; i < fullStars; i++) {
-    stars.push(<FaStar key={`full-${i}`} className='mr-0.5 w-3 h-3' style={{ color: ACCENT_YELLOW }} />)
+    stars.push(<FaStar key={`full-${i}`} className='mr-0.5 w-3 h-3' style={{ color: '#F59E0B' }} />)
   }
   for (let i = 0; i < emptyStars; i++) {
-    stars.push(<FaStar key={`empty-${i}`} className='mr-0.5 w-3 h-3' style={{ color: colors.mutedText, opacity: 0.3 }} />)
+    stars.push(<FaStar key={`empty-${i}`} className='mr-0.5 w-3 h-3' style={{ color: '#6B7280', opacity: 0.3 }} />)
   }
   return <div className='flex items-center'>{stars}</div>
 }
@@ -33,11 +25,9 @@ const formatCurrency = (price) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price)
 }
 
-
-const ProductGrid = ({ products, loading, error, columnCount, isFetching }) => {
+const ProductGrid = ({ products, error, columnCount, isFetching }) => {
   const theme = useTheme()
   const dispatch = useDispatch()
-  const user = useSelector((state) => state.auth.user)
   const favoriteProductIds = useSelector((state) => state.auth.user?.favorites ?? [])
 
   let columnClass = 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
@@ -63,7 +53,9 @@ const ProductGrid = ({ products, loading, error, columnCount, isFetching }) => {
   const handleToggleFavorite = (e, productId) => {
     e.preventDefault()
     e.stopPropagation()
-    const isCurrentlyFavorite = favoriteProductIds.includes(productId)
+    const isCurrentlyFavorite = favoriteProductIds.some(fav =>
+      (fav._id ? fav._id.toString() : fav.toString()) === productId.toString()
+    )
 
     dispatch(toggleFavoriteLocal(productId))
 
@@ -74,112 +66,101 @@ const ProductGrid = ({ products, loading, error, columnCount, isFetching }) => {
     }
   }
 
+  const handleAddToCart = (e, product) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    dispatch(
+      addToCart({
+        productId: product._id,
+        quantity: 1,
+        size: product.sizes?.[0] || null,
+        color: product.colors?.[0] || null
+      })
+    )
+  }
+
   return (
     <div
       className={`grid ${columnClass} gap-4 sm:gap-6 transition-opacity duration-300`}
       style={{ opacity: isFetching ? 0.6 : 1 }}
     >
       {products.map((product) => {
-        const isFavorite = favoriteProductIds.includes(product._id)
+        const isFavorite = favoriteProductIds.some(fav => {
+          const favId = fav._id ? fav._id.toString() : fav.toString()
+          return favId === product._id.toString()
+        })
         return (
           <div
             key={product._id}
-            className='relative group overflow-hidden transition-all duration-300'
-            style={{
-              backgroundColor: theme.palette.background.paper,
-              border: `1px solid ${theme.palette.divider}`,
-              borderRadius: '4px',
-              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)'
-            }}
+            className='relative group overflow-hidden bg-white rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-1'
+            style={{ border: `1px solid ${theme.palette.divider}` }}
           >
-            <Link to={`/products/${product._id}`} className='block' style={{ textDecoration: 'none' }}>
-              <div className='flex flex-col h-full'>
-                {/* Khu vực Hình ảnh & Sale Tag */}
-                <div className='w-full h-96 relative overflow-hidden'>
-                  <img
-                    src={product.images && product.images.length > 0 ? product.images[0].url : 'placeholder_image_url'}
-                    alt={product.name}
-                    className='w-full h-full object-contain transition-transform duration-500 group-hover:scale-105'
-                    draggable='false'
-                  />
+            <Link to={`/products/${product._id}`} className='block'>
 
-                  {/* TAGS (NEW & SALE) */}
-                  <div className='absolute top-3 left-3 flex space-x-2'>
-                    <span
-                      className='px-3 py-1 text-xs font-bold tracking-widest text-white shadow-md'
-                      style={{ backgroundColor: PRIMARY_COLOR }}
-                    >
-                       NEW
-                    </span>
+              {/* IMAGE */}
+              <div className='relative w-full aspect-3/4 bg-gray-50 overflow-hidden'>
+                <img
+                  src={product.images?.[0]?.url}
+                  alt={product.name}
+                  className='w-full h-full object-cover transition duration-500 group-hover:scale-105'
+                />
 
-                    {/* Sale Tag */}
-                    {product.disCountPrice && product.disCountPrice < product.price && (
-                      <span
-                        className='px-3 py-1 text-xs font-bold tracking-widest text-white shadow-md'
-                        style={{ backgroundColor: ERROR_COLOR }}
-                      >
-                       SALE
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Thêm sp yêu thích */}
-                  <button
-                    className='absolute top-3 right-3 p-2 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110'
-                    style={{
-                      backgroundColor: theme.palette.background.paper,
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                      opacity: isFavorite ? 1 : 0.6
-                    }}
-                    onClick={(e) => handleToggleFavorite(e, product._id)}
-                    aria-label={isFavorite ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}
-                  >
-                    <FaHeart
-                      className='w-5 h-5 transition-all'
-                      style={{
-                        color: isFavorite ? FAVORITE_COLOR : colors.mutedText
-                      }}
-                    />
-                  </button>
+                {/* TAG */}
+                <div className='absolute top-2 left-2 flex gap-1'>
+                  <span className='px-2 py-0.5 text-[10px] bg-blue-500 text-white rounded'>NEW</span>
+                  {product.disCountPrice < product.price && (
+                    <span className='px-2 py-0.5 text-[10px] bg-red-500 text-white rounded'>SALE</span>
+                  )}
                 </div>
 
+                {/* FAVORITE */}
+                <button
+                  onClick={(e) => handleToggleFavorite(e, product._id)}
+                  className='absolute top-2 right-2 p-2 rounded-full bg-white/80 backdrop-blur shadow'
+                >
+                  <FaHeart
+                    className='w-4 h-4'
+                    style={{ color: isFavorite ? '#ff4d4f' : '#999' }}
+                  />
+                </button>
+
+                {/* ADD TO CART (HOVER) */}
+                <div className='absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-all duration-300'>
+                  <button
+                    onClick={(e) => handleAddToCart(e, product)}
+                    className='w-full py-2 flex items-center justify-center gap-2 text-sm font-semibold bg-orange-500 text-white hover:bg-orange-600'
+                  >
+                    <FaShoppingCart />
+          Thêm vào giỏ
+                  </button>
+                </div>
               </div>
 
-              {/* 2. Khu vực Thông tin*/}
-              <div
-                className='p-4 text-left transition-all duration-300'
-                style={{
-                  backgroundColor: 'transparent',
-                  color: theme.palette.text.primary
-                }}
-              >
-                {/* Đánh giá & Số lượng đánh giá */}
-                <div className='flex items-center mb-1'>
+              {/* INFO */}
+              <div className='p-3 space-y-1'>
+                <div className='flex items-center text-xs'>
                   {renderRatingStars(product.rating)}
-                  <span className='ml-2 text-xs' style={{ color: colors.mutedText }}>
-                  ({product.numReviews || 0} Đánh giá)
+                  <span className='ml-1 text-gray-400'>
+          ({product.numReviews || 0})
                   </span>
                 </div>
 
-                {/* Tên Sản Phẩm */}
-                <h4 className='font-normal text-lg mb-1 line-clamp-1 tracking-wide'>
+                <h4 className='text-sm font-medium line-clamp-2 min-h-10'>
                   {product.name}
                 </h4>
 
-                {/* Giá Khuyến Mãi & Giá Gốc */}
-                {product.disCountPrice && product.disCountPrice < product.price ? (
-                  <div className='flex items-end space-x-2'>
-                    {/* Giá Khuyến Mãi */}
-                    <p className='text-lg font-bold' style={{ color: ERROR_COLOR }}>
+                {product.disCountPrice < product.price ? (
+                  <div className='flex gap-2 items-end'>
+                    <p className='text-red-500 font-semibold'>
                       {formatCurrency(product.disCountPrice)}
                     </p>
-                    {/* Giá Gốc */}
-                    <p className='text-sm line-through' style={{ color: colors.mutedText }}>
+                    <p className='text-xs line-through text-gray-400'>
                       {formatCurrency(product.price)}
                     </p>
                   </div>
                 ) : (
-                  <p className='text-lg font-bold' style={{ color: theme.palette.text.primary }}>
+                  <p className='font-semibold text-gray-800'>
                     {formatCurrency(product.price)}
                   </p>
                 )}

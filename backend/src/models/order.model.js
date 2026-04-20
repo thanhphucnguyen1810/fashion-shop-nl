@@ -42,13 +42,12 @@ const orderSchema = new mongoose.Schema({
   },
   orderItems: [orderItemSchema],
   shippingAddress: {
-    firstName: { type: String, required: false },
-    lastName: { type: String, required: false },
-    phone: { type: String, required: false },
-    address: { type: String, required: false },
-    city: { type: String, required: false },
-    postalCode: { type: String, required: false },
-    country: { type: String, required: false }
+    name:     { type: String },
+    phone:    { type: String },
+    street:   { type: String },
+    province: { type: String },
+    district: { type: String },
+    ward:     { type: String }
   },
   coupon: {
     code: { type: String, default: null },

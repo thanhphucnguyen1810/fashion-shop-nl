@@ -1,25 +1,34 @@
+import userModel from '~/models/user.model'
 import jwt from 'jsonwebtoken'
-import User from '~/models/user.model'
 import { env } from '~/config/environment'
 
-// Middleware to protect routes
 const protect = async (req, res, next) => {
-  let token
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
-  ) {
-    try {
-      token = req.headers.authorization.split(' ')[1]
-      const decoded = jwt.verify(token, env.JWT_SECRET)
-      req.user = await User.findById(decoded.user.id).select('-password')
-      next()
-    } catch (error) {
-      console.error('Token verification failed: ', error)
-      res.status(401).json({ message: 'Not authorized, token failed.' })
+  try {
+    let token = null
+
+    // 1. lấy từ cookie
+    if (req.cookies?.accessToken) {
+      token = req.cookies.accessToken
     }
-  } else {
-    res.status(401).json({ message: 'Not authorized, no token provided.' })
+
+    // 2. fallback header
+    if (!token && req.headers.authorization?.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1]
+    }
+
+    if (!token) {
+      return res.status(401).json({ message: 'No token' })
+    }
+
+    const decoded = jwt.verify(token, env.ACCESS_TOKEN_SECRET_SIGNATURE)
+
+    const user = await userModel.findById(decoded._id)
+    if (!user) return res.status(401).json({ message: 'User not found' })
+
+    req.user = decoded
+    next()
+  } catch (err) {
+    return res.status(401).json({ message: 'Unauthorized' })
   }
 }
 

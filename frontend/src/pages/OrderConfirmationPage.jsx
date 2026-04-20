@@ -167,13 +167,13 @@ const OrderConfirm = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
               <div>
                 <p className="text-gray-500">Người nhận:</p>
-                <p className="font-semibold text-base">{checkout.shippingAddress?.firstName} {checkout.shippingAddress?.lastName}</p>
+                <p className="font-semibold text-base">{checkout.shippingAddress?.name}</p>
                 <p>{checkout.shippingAddress?.phone}</p>
               </div>
               <div>
                 <p className="text-gray-500">Địa chỉ giao hàng:</p>
-                <p className="font-medium">{checkout.shippingAddress?.address}</p>
-                <p>{checkout.shippingAddress?.city}, {checkout.shippingAddress?.country}</p>
+                <p className="font-medium">{checkout.shippingAddress?.street}</p>
+                <p>{checkout.shippingAddress?.ward}, {checkout.shippingAddress?.district}, {checkout.shippingAddress?.province}</p>
               </div>
             </div>
             <div className="mt-4 pt-4 border-t flex justify-end">

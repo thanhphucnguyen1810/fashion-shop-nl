@@ -8,28 +8,19 @@ import {
   getOrderStats,
   getOrdersByUser
 } from '~/controllers/admin/admin.order.controller'
-
 import { logSecurity } from '~/middlewares/logger.middleware'
 
 const router = express.Router()
 
-// Lấy đơn hàng theo user
-router.get('/user/:userId', protect, admin, getOrdersByUser)
+router.use(protect, admin)
 
-// Lấy danh sách đơn hàng
-router.get('/', protect, admin, getAllOrders)
+router.get('/user/:userId', getOrdersByUser)
+router.get('/stats', getOrderStats)
 
-// Lấy thống kê đơn hàng (Dashboard)
-router.get('/stats', protect, admin, getOrderStats)
+router.get('/', getAllOrders)
+router.get('/:id', getOrderById)
 
-// Xem chi tiết 1 đơn hàng: /api/admin/users
-router.get('/:id', protect, admin, getOrderById)
-
-// Cập nhật trạng thái đơn hàng
-router.put('/:id', protect, admin, logSecurity('UPDATE_ORDER_STATUS'), updateOrderStatus)
-
-// Xóa đơn hàng
-router.delete('/:id', protect, admin, logSecurity('DELETE_ORDER'), deleteOrder)
+router.put('/:id', logSecurity('UPDATE_ORDER_STATUS'), updateOrderStatus)
+router.delete('/:id', logSecurity('DELETE_ORDER'), deleteOrder)
 
 export default router
-

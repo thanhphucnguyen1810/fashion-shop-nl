@@ -1,136 +1,171 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import axios from 'axios'
+import {
+  fetchAdminProductsAPI,
+  createProductAPI,
+  updateProductAPI,
+  deleteProductAPI,
+  upsertVariantAPI,
+  deleteVariantAPI,
+  deleteSizeAPI
+} from '~/apis/adminProductAPI'
 
-const API_URL = import.meta.env.VITE_API_URL
+// ================= PRODUCT THUNKS =================
 
-// async thunk to fetch admin products
 export const fetchAdminProducts = createAsyncThunk(
   'adminProducts/fetchAdminProducts',
-  async () => {
-    const response = await axios.get(
-      `${API_URL}/api/admin/products`,
-      { headers: { Authorization: `Bearer ${localStorage.getItem('userToken')}` } }
-    )
-    return response.data
+  async ({ search = '', page = 1 } = {}, { rejectWithValue }) => {
+    try { return await fetchAdminProductsAPI({ search, page }) }
+    catch (err) { return rejectWithValue(err.response?.data) }
   }
 )
 
-// Async function to create a new product
 export const createProduct = createAsyncThunk(
   'adminProducts/createProduct',
-  async (formData) => {
-    const response = await axios.post(
-      `${API_URL}/api/admin/products`,
-      formData,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('userToken')}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      }
-    )
-    return response.data
+  async (formData, { rejectWithValue }) => {
+    try { return await createProductAPI(formData) }
+    catch (err) { return rejectWithValue(err.response?.data) }
   }
 )
 
-
-// Async function to update an existing product
 export const updateProduct = createAsyncThunk(
   'adminProducts/updateProduct',
-  async ({ id, productData }) => {
-    const response = await axios.put(
-      `${API_URL}/api/admin/products/${id}`,
-      productData,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('userToken')}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      }
-    )
-    return response.data
+  async ({ id, productData }, { rejectWithValue }) => {
+    try { return await updateProductAPI({ id, productData }) }
+    catch (err) { return rejectWithValue(err.response?.data) }
   }
 )
 
-// Async function to delete a product
 export const deleteProduct = createAsyncThunk(
   'adminProducts/deleteProduct',
-  async (id) => {
-    await axios.delete(
-      `${API_URL}/api/admin/products/${id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('userToken')}`
-        }
-      }
-    )
-    return id
+  async (id, { rejectWithValue }) => {
+    try { return await deleteProductAPI(id) }
+    catch (err) { return rejectWithValue(err.response?.data) }
   }
 )
 
+// ================= VARIANT THUNKS =================
+
+export const upsertVariant = createAsyncThunk(
+  'adminProducts/upsertVariant',
+  async ({ productId, variantData }, { rejectWithValue }) => {
+    try {
+      const res = await upsertVariantAPI(productId, variantData)
+      return { productId, variants: res.variants }
+    } catch (err) { return rejectWithValue(err.response?.data) }
+  }
+)
+
+export const deleteVariant = createAsyncThunk(
+  'adminProducts/deleteVariant',
+  async ({ productId, variantId }, { rejectWithValue }) => {
+    try {
+      const res = await deleteVariantAPI(productId, variantId)
+      return { productId, variants: res.variants }
+    } catch (err) { return rejectWithValue(err.response?.data) }
+  }
+)
+
+export const deleteSize = createAsyncThunk(
+  'adminProducts/deleteSize',
+  async ({ productId, variantId, sizeId }, { rejectWithValue }) => {
+    try {
+      const res = await deleteSizeAPI(productId, variantId, sizeId)
+      return { productId, variants: res.variants }
+    } catch (err) { return rejectWithValue(err.response?.data) }
+  }
+)
+
+// ================= SLICE =================
+
+const syncVariants = (state, action) => {
+  state.loading = false
+  const { productId, variants } = action.payload
+  const idx = state.products.findIndex(p => p._id === productId)
+  if (idx !== -1) state.products[idx].variants = variants
+}
 
 const adminProductSlice = createSlice({
   name: 'adminProducts',
   initialState: {
     products: [],
+    page: 1,
+    pages: 1,
+    totalProducts: 0,
     loading: false,
     error: null
   },
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(fetchAdminProducts.pending, (state) => {
-        state.loading = true
-      })
+      // FETCH
+      .addCase(fetchAdminProducts.pending, (state) => { state.loading = true })
       .addCase(fetchAdminProducts.fulfilled, (state, action) => {
         state.loading = false
         state.products = action.payload.products
+        state.page = action.payload.page
+        state.pages = action.payload.pages
+        state.totalProducts = action.payload.totalProducts
       })
       .addCase(fetchAdminProducts.rejected, (state, action) => {
         state.loading = false
-        state.error = action.error.message
+        state.error = action.payload?.message || action.error.message
       })
 
-      // Create a product
-      .addCase(createProduct.pending, (state) => {
-        state.loading = true
-        state.error = null
-      })
+      // CREATE
+      .addCase(createProduct.pending, (state) => { state.loading = true; state.error = null })
       .addCase(createProduct.fulfilled, (state, action) => {
         state.loading = false
         state.products.push(action.payload.newProduct)
       })
       .addCase(createProduct.rejected, (state, action) => {
         state.loading = false
-        state.error = action.error.message
+        state.error = action.payload?.message || action.error.message
       })
 
-      // Update Product
-      .addCase(updateProduct.pending, (state) => {
-        state.loading = true
-        state.error = null
-      })
+      // UPDATE
+      .addCase(updateProduct.pending, (state) => { state.loading = true; state.error = null })
       .addCase(updateProduct.fulfilled, (state, action) => {
         state.loading = false
         const updated = action.payload.product
-        const index = state.products.findIndex(p => p._id === updated._id)
-        if (index !== -1) state.products[index] = updated
+        const idx = state.products.findIndex(p => p._id === updated._id)
+        if (idx !== -1) state.products[idx] = updated
       })
       .addCase(updateProduct.rejected, (state, action) => {
-        state.loading = false; state.error = action.error.message
+        state.loading = false
+        state.error = action.payload?.message || action.error.message
       })
 
-      // Delete Product
-      .addCase(deleteProduct.pending, (state) => {
-        state.loading = true
-        state.error = null
-      })
+      // DELETE
+      .addCase(deleteProduct.pending, (state) => { state.loading = true; state.error = null })
       .addCase(deleteProduct.fulfilled, (state, action) => {
         state.loading = false
-        state.products = state.products.filter((product) => product._id !== action.payload)
+        state.products = state.products.filter(p => p._id !== action.payload)
       })
       .addCase(deleteProduct.rejected, (state, action) => {
-        state.loading = false; state.error = action.error.message
+        state.loading = false
+        state.error = action.payload?.message || action.error.message
+      })
+
+      // VARIANTS
+      .addCase(upsertVariant.pending, (state) => { state.loading = true })
+      .addCase(upsertVariant.fulfilled, syncVariants)
+      .addCase(upsertVariant.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload?.message
+      })
+
+      .addCase(deleteVariant.pending, (state) => { state.loading = true })
+      .addCase(deleteVariant.fulfilled, syncVariants)
+      .addCase(deleteVariant.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload?.message
+      })
+
+      .addCase(deleteSize.pending, (state) => { state.loading = true })
+      .addCase(deleteSize.fulfilled, syncVariants)
+      .addCase(deleteSize.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload?.message
       })
   }
 })

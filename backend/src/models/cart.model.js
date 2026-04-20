@@ -6,6 +6,7 @@ const cartItemSchema = new mongoose.Schema({
     ref: 'Product',
     required: true
   },
+  sku: { type: String, required: true },
   name: String,
   image: String,
   price: Number,

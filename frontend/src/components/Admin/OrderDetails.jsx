@@ -72,9 +72,11 @@ export default function OrderDetailModal({ selectedOrder, showDetailModal, close
           <div className="grid grid-cols-2 gap-8 mb-8 text-xs border p-4 rounded-lg bg-gray-50">
             <div>
               <h3 className="font-bold border-b mb-2 pb-1 text-gray-600">THÔNG TIN KHÁCH HÀNG</h3>
-              <p className="text-sm font-bold">{selectedOrder.shippingAddress?.lastName} {selectedOrder.shippingAddress?.firstName}</p>
+              <p className="text-sm font-bold">{selectedOrder.shippingAddress?.name}</p>
               <p>SĐT: {selectedOrder.shippingAddress?.phone}</p>
-              <p>Địa chỉ: {selectedOrder.shippingAddress?.address}, {selectedOrder.shippingAddress?.city}</p>
+              <p>
+                Địa chỉ: {selectedOrder.shippingAddress?.street}, {selectedOrder.shippingAddress?.ward}, {selectedOrder.shippingAddress?.district}, {selectedOrder.shippingAddress?.province}
+              </p>
             </div>
             <div className="text-right">
               <h3 className="font-bold border-b mb-2 pb-1 text-gray-600">VẬN CHUYỂN & THANH TOÁN</h3>

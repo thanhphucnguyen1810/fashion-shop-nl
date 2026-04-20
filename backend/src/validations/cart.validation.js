@@ -1,36 +1,96 @@
 import Joi from 'joi'
+import ApiError from '~/utils/ApiError'
+import { StatusCodes } from 'http-status-codes'
 
-const objectIdRule = Joi.string().regex(/^[0-9a-fA-F]{24}$/).messages({
-  'string.pattern.base': 'ID sản phẩm không hợp lệ'
-})
-
-export const cartValidation = {
-  // Dùng chung cho cả Add và Update
-  cartAction: Joi.object({
-    productId: objectIdRule.required(),
-    quantity: Joi.number().integer().min(1).required().messages({
-      'number.min': 'Số lượng phải ít nhất là 1',
-      'number.base': 'Số lượng phải là một con số'
-    }),
-    size: Joi.string().required().messages({ 'string.empty': 'Vui lòng chọn size' }),
-    color: Joi.string().required().messages({ 'string.empty': 'Vui lòng chọn màu' }),
-    userId: Joi.string().allow(null, ''),
-    guestId: Joi.string().allow(null, '')
-  }).or('userId', 'guestId').messages({
-    'object.missing': 'Phải có userId hoặc guestId để xác định giỏ hàng'
-  }),
-
-  removeFromCart: Joi.object({
-    productId: objectIdRule.required(),
+// ADD TO CART
+const addToCart = async (req, res, next) => {
+  const correctCondition = Joi.object({
+    productId: Joi.string().required(),
+    quantity: Joi.number().min(1).required(),
     size: Joi.string().required(),
     color: Joi.string().required(),
-    userId: Joi.string().allow(null, ''),
-    guestId: Joi.string().allow(null, '')
-  }).or('userId', 'guestId'),
-
-  mergeCart: Joi.object({
-    guestId: Joi.string().required().messages({
-      'string.empty': 'Thiếu guestId để thực hiện gộp giỏ hàng'
-    })
+    sku: Joi.string().required(),
+    guestId: Joi.string().allow('', null),
+    userId: Joi.string().allow('', null)
   })
+
+  try {
+    await correctCondition.validateAsync(req.body, { abortEarly: false })
+    next()
+  } catch (error) {
+    next(new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, error.message))
+  }
+}
+
+// UPDATE CART
+const updateCart = async (req, res, next) => {
+  const correctCondition = Joi.object({
+    productId: Joi.string().required(),
+    quantity: Joi.number().min(0).required(),
+    size: Joi.string().required(),
+    color: Joi.string().required(),
+    guestId: Joi.string().allow('', null),
+    userId: Joi.string().allow('', null)
+  })
+
+  try {
+    await correctCondition.validateAsync(req.body, { abortEarly: false })
+    next()
+  } catch (error) {
+    next(new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, error.message))
+  }
+}
+
+// REMOVE
+const removeFromCart = async (req, res, next) => {
+  const correctCondition = Joi.object({
+    productId: Joi.string().required(),
+    size: Joi.string().required(),
+    color: Joi.string().required(),
+    guestId: Joi.string().allow('', null),
+    userId: Joi.string().allow('', null)
+  })
+
+  try {
+    await correctCondition.validateAsync(req.body, { abortEarly: false })
+    next()
+  } catch (error) {
+    next(new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, error.message))
+  }
+}
+
+// GET CART
+const getCart = async (req, res, next) => {
+  const correctCondition = Joi.object({
+    userId: Joi.string().allow('', null),
+    guestId: Joi.string().allow('', null)
+  })
+
+  try {
+    await correctCondition.validateAsync(req.query, { abortEarly: false })
+    next()
+  } catch (error) {
+    next(new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, error.message))
+  }
+}
+
+const mergeCart = async (req, res, next) => {
+  const correctCondition = Joi.object({
+    guestId: Joi.string().required()
+  })
+
+  try {
+    await correctCondition.validateAsync(req.body, { abortEarly: false })
+    next()
+  } catch (error) {
+    next(new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, error.message))
+  }
+}
+
+export const cartValidation = {
+  addToCart,
+  updateCart,
+  removeFromCart,
+  getCart,
+  mergeCart
 }

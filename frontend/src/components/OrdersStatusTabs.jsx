@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Box, Tab, Tabs, Typography } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
 import { Link } from 'react-router-dom'
 import MyOrdersList from '~/pages/MyOrdersPage'
 import { FaWallet, FaBox, FaTruckFast, FaStar, FaLayerGroup, FaBan, FaArrowRotateLeft } from 'react-icons/fa6'
@@ -33,9 +34,9 @@ const ORDERS_STATUS_TABS = [
   { label: 'Trả hàng/Hoàn tiền', icon: <FaArrowRotateLeft />, status: 'returned' }
 ]
 
-const OrdersStatusTabs = ({ theme }) => {
+const OrdersStatusTabs = () => {
   const [tabValue, setTabValue] = useState(0)
-
+  const theme = useTheme()
   const handleChange = (event, newValue) => {
     setTabValue(newValue)
   }

@@ -54,7 +54,7 @@ const AdminLayout = () => {
 
       {/* Khu vực nội dung chính */}
       <div
-        className="flex-grow p-6 overflow-hidden"
+        className="grow p-6 overflow-hidden"
         style={{ backgroundColor: theme.palette.background.default }}
       >
         <Outlet />

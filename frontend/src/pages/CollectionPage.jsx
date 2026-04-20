@@ -14,16 +14,24 @@ const CollectionPage = () => {
   const { products, loading, error, isFetching } = useSelector((state) => state.products)
   const sidebarRef = useRef(null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-
+  const [page, setPage] = useState(1)
+  const { pages } = useSelector((state) => state.products)
+  const LIMIT = window.innerWidth < 768 ? 8 : 12
   useEffect(() => {
     const queryParams = Object.fromEntries([...searchParams])
     const allFilters = {
-      ...queryParams
+      ...queryParams,
+      page,
+      limit: LIMIT
     }
     dispatch(setFilters(allFilters))
     dispatch(fetchProducts(allFilters))
 
-  }, [dispatch, searchParams])
+  }, [dispatch, searchParams, page, LIMIT])
+
+  useEffect(() => {
+    setPage(1)
+  }, [searchParams])
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen)
 
@@ -70,6 +78,20 @@ const CollectionPage = () => {
         ) : (
           <ProductGrid products={products} error={error} columnCount={4} isFetching={isFetching} />
         )}
+
+        <div className="flex justify-center mt-6 space-x-2">
+          {[...Array(pages).keys()].map((p) => (
+            <button
+              key={p + 1}
+              onClick={() => setPage(p + 1)}
+              className={`px-4 py-2 border rounded ${
+                page === p + 1 ? 'bg-black text-white' : 'bg-white'
+              }`}
+            >
+              {p + 1}
+            </button>
+          ))}
+        </div>
 
       </div>
     </div>

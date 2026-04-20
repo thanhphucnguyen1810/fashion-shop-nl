@@ -20,9 +20,7 @@ router
 
 router
   .route('/:couponId')
-  .get(
-    adminCouponController.getSingleCoupon
-  )
+  .get( adminCouponController.getSingleCoupon )
   .put(
     logSecurity('ADMIN_UPDATE_COUPON'),
     adminCouponController.updateCoupon

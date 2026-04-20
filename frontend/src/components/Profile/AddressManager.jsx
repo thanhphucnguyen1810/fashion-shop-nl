@@ -75,7 +75,6 @@ const AddressManager = () => {
 
       setOpenForm(false)
     } catch (err) {
-      console.error(err)
       toast.error(err.message || 'Lỗi khi lưu địa chỉ!')
     }
   }
@@ -86,7 +85,6 @@ const AddressManager = () => {
       await dispatch(deleteAddress(id)).unwrap()
       toast.success('Đã xóa địa chỉ')
     } catch (err) {
-      console.error(err)
       toast.error(err.message || 'Không thể xóa')
     }
   }
@@ -97,7 +95,6 @@ const AddressManager = () => {
       await dispatch(setDefaultAddress(id)).unwrap()
       toast.success('Đã đặt làm địa chỉ mặc định!')
     } catch (err) {
-      console.error(err)
       toast.error(err.message || 'Không thể đặt mặc định')
     }
   }
@@ -170,10 +167,10 @@ const AddressManager = () => {
       </div>
 
       {openForm && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-white/30 backdrop-blur-md">
+        <div className="fixed inset-0 z-1000 flex items-center justify-center bg-white/30 backdrop-blur-md">
           <form
             onSubmit={handleSubmit}
-            className="bg-white p-8 rounded-2xl w-[450px] space-y-4 shadow-2xl border border-white/50"
+            className="bg-white p-8 rounded-2xl w-112.5 space-y-4 shadow-2xl border border-white/50"
           >
             <div className="border-b pb-3 mb-4">
               <h3 className="text-xl font-bold text-gray-800">
