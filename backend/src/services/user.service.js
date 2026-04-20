@@ -5,6 +5,8 @@ import userModel from '~/models/user.model'
 import { sendPasswordResetEmail, sendVerificationEmail } from '~/utils/sendEmail'
 import cloudinary from '~/config/cloudinary.config'
 import { JwtProvider } from '~/providers/jwt.provider'
+import { StatusCodes } from 'http-status-codes'
+import ApiError from '~/utils/ApiError'
 
 // ======================= REGISTER =======================
 const registerUser = async (reqBody) => {
@@ -57,11 +59,7 @@ const verifyEmail = async (token) => {
     emailVerificationExpires: { $gt: Date.now() }
   })
 
-  if (!user) {
-    const error = new Error('Token không hợp lệ hoặc hết hạn')
-    error.statusCode = 400
-    throw error
-  }
+  if (!user) throw new ApiError(StatusCodes.NOT_FOUND, 'Account not found!')
 
   user.isVerified = true
   user.emailVerificationToken = undefined

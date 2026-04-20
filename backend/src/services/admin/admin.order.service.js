@@ -37,13 +37,15 @@ const getAllOrders = async (query) => {
       queryOrders: [
         { $skip: skip },
         { $limit: limit },
-        { $lookup: { from: 'users', localField: 'user', foreignField: '_id', as: 'user',
-          pipeline: [{ $project: { name: 1, email: 1 } }]
+        // Chỉ lookup user thôi, shippingAddress đã embedded
+        { $lookup: {
+          from: 'users',
+          localField: 'user',
+          foreignField: '_id',
+          as: 'user',
+          pipeline: [{ $project: { name: 1, email: 1, avatar: 1 } }]
         } },
-        { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
-        { $lookup: { from: 'products', localField: 'orderItems.productId', foreignField: '_id', as: 'productDetails',
-          pipeline: [{ $project: { name: 1, price: 1, images: 1 } }]
-        } }
+        { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } }
       ],
       queryTotal: [{ $count: 'total' }]
     } }

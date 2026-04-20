@@ -20,7 +20,7 @@ export const logoutUserAPI = async () => {
 }
 
 export const refreshTokenAPI = async () => {
-  const response = await authorizedAxiosInstance.get(`${API_ROOT}/api/users/refresh_token`)
+  const response = await authorizedAxiosInstance.get(`${API_ROOT}/api/users/refresh-token`)
   return response.data
 }
 

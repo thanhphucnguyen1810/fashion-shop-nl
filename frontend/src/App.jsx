@@ -1,5 +1,4 @@
 import '~/index.css'
-
 import { Toaster } from 'sonner'
 import { BrowserRouter } from 'react-router-dom'
 

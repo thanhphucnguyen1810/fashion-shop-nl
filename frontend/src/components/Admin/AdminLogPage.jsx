@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Refresh, Download } from '@mui/icons-material'
-import axiosInstance from '~/service/axiosConfig'
+import authorizedAxiosInstance from '~/utils/authorizeAxios'
 import { API_ROOT } from '~/utils/constants'
 
 const AdminLogPage = () => {
@@ -8,7 +8,7 @@ const AdminLogPage = () => {
 
   const fetchLogs = async () => {
     try {
-      const { data } = await axiosInstance.get(`${API_ROOT}/api/admin/system/security-logs`)
+      const { data } = await authorizedAxiosInstance.get(`${API_ROOT}/api/admin/system/security-logs`)
       setLogs(Array.isArray(data) ? data : data.logs || [])
     } catch (err) { console.error(err) }
   }

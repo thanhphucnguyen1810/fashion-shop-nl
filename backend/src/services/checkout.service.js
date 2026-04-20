@@ -3,7 +3,7 @@ import orderModel from '~/models/order.model.js'
 import cartModel from '~/models/cart.model.js'
 import productModel from '~/models/product.model.js'
 import { env } from '~/config/environment'
-import addressModel from '~/models/address.model'
+import mongoose from 'mongoose'
 
 // ================= CREATE CHECKOUT =================
 const createCheckout = async (userId, body) => {
@@ -62,64 +62,73 @@ const getSepayQrInfo = async (id) => {
 // ================= IPN =================
 const sepayIpn = async (body) => {
   const { content } = body
-
   const match = content.match(/DH([a-fA-F0-9]{24})/)
   if (!match) return { error: 'Invalid content' }
-
   const checkoutId = match[1]
 
-  const checkout = await checkoutModel.findById(checkoutId)
-  if (!checkout) return { error: 'Order not found' }
-  if (checkout.isPaid) return { message: 'Already paid' }
+  //bắt đầu một session
+  const session = await mongoose.startSession()
+  session.startTransaction()
+  try {
+    const checkout = await checkoutModel.findById(checkoutId).session(session) // truyền session vào
+    if (!checkout) throw new Error('Order not found')
+    if (checkout.isPaid) return { message: 'Already paid' }
 
-  checkout.isPaid = true
-  checkout.paymentStatus = 'completed'
-  checkout.paymentMethod = 'SEPAY'
-  await checkout.save()
+    checkout.isPaid = true
+    checkout.paymentStatus = 'completed'
+    checkout.paymentMethod = 'SEPAY'
+    await checkout.save({ session }) // truyền session vào
 
-  let addressId = null
-
-  if (checkout.shippingAddress) {
-    const newAddress = await addressModel.create({
+    const newOrder = await orderModel.create([{ // create cần đc truyền vào mảng cho session
       user: checkout.user,
-      name: checkout.shippingAddress.name,
-      phone: checkout.shippingAddress.phone,
-      street: checkout.shippingAddress.street,
-      province: checkout.shippingAddress.province,
-      district: checkout.shippingAddress.district,
-      ward: checkout.shippingAddress.ward
-    })
+      checkoutId: checkout._id,
+      orderItems: checkout.checkoutItems,
+      shippingAddress: checkout.shippingAddress,
+      coupon: checkout.coupon,
+      paymentMethod: 'SEPAY',
+      totalPrice: checkout.totalPrice,
+      isPaid: true,
+      paymentStatus: 'completed',
+      status: 'AwaitingConfirmation',
+      orderType: 'Cart'
+    }], { session })
 
-    addressId = newAddress._id
+    checkout.orderId = newOrder[0]._id
+    await checkout.save({ session })
+
+    for (const item of checkout.checkoutItems) {
+      const result = await productModel.updateOne(
+        {
+          _id: item.productId,
+          'variants.color': item.color,
+          'variants.sizes.size': item.size,
+          'variants.sizes.stock': { $gte: item.quantity } // Chỉ trừ nếu đủ hàng
+        },
+        { $inc: { 'variants.$[v].sizes.$[s].stock': -item.quantity } },
+        {
+          arrayFilters: [
+            { 'v.color': item.color },
+            { 's.size': item.size }
+          ],
+          session
+        }
+      )
+
+      if (result.modifiedCount === 0) {
+        throw new Error(`Sản phẩm ${item.name} (${item.color} - ${item.size}) đã hết hàng hoặc không đủ số lượng.`)
+      }
+    }
+
+    await cartModel.findOneAndDelete({ user: checkout.user }, { session })
+    await session.commitTransaction() // lưu tất cả thay đổi
+    return { success: true, newOrderId: newOrder[0]._id }
+
+  } catch (error) {
+    await session.abortTransaction() // hoàn tác tất cả nếu có lỗi
+    throw error
+  } finally {
+    session.endSession()
   }
-
-
-  const newOrder = await orderModel.create({
-    user: checkout.user,
-    checkoutId: checkout._id,
-    orderItems: checkout.checkoutItems,
-    shippingAddress: addressId,
-    coupon: checkout.coupon,
-    paymentMethod: 'SEPAY',
-    totalPrice: checkout.totalPrice,
-    isPaid: true,
-    paymentStatus: 'completed',
-    status: 'AwaitingConfirmation',
-    orderType: 'Cart'
-  })
-
-  checkout.orderId = newOrder._id
-  await checkout.save()
-
-  for (const item of checkout.checkoutItems) {
-    await productModel.findByIdAndUpdate(item.productId, {
-      $inc: { countInStock: -item.quantity, sold: item.quantity }
-    })
-  }
-
-  await cartModel.findOneAndDelete({ user: checkout.user })
-
-  return { success: true, newOrderId: newOrder._id }
 }
 
 // ================= CHECK STATUS =================
@@ -152,74 +161,73 @@ const checkPaymentStatus = async (id) => {
 // ================= FINALIZE =================
 const finalizeOrder = async (checkoutId, body) => {
   const { isOnlinePaymentSuccess = false } = body
+  const session = await mongoose.startSession()
+  session.startTransaction()
 
-  const checkout = await checkoutModel.findById(checkoutId)
-  if (!checkout) {
-    const error = new Error('Không tìm thấy đơn hàng tạm.')
-    error.statusCode = 404
-    throw error
-  }
+  try {
+    const checkout = await checkoutModel.findById(checkoutId).session(session)
+    if (!checkout) throw new Error('Không tìm thấy đơn hàng tạm.')
 
-  for (const item of checkout.checkoutItems) {
-    const product = await productModel.findById(item.productId)
-    if (!product || product.countInStock < item.quantity) {
-      const error = new Error(`Sản phẩm ${product?.name} không đủ số lượng.`)
-      error.statusCode = 400
-      throw error
+    // 1. Kiểm tra tồn kho và trừ kho (Atomic)
+    for (const item of checkout.checkoutItems) {
+      const result = await productModel.updateOne(
+        {
+          _id: item.productId,
+          'variants.color': item.color,
+          'variants.sizes.size': item.size,
+          'variants.sizes.stock': { $gte: item.quantity } // Phải đủ hàng
+        },
+        {
+          $inc: { 'variants.$[v].sizes.$[s].stock': -item.quantity }
+        },
+        {
+          arrayFilters: [
+            { 'v.color': item.color },
+            { 's.size': item.size }
+          ],
+          session // Bắt buộc truyền session
+        }
+      )
+
+      if (result.modifiedCount === 0) throw new Error(`Sản phẩm ${item.name} (${item.color} - ${item.size}) đã hết hàng hoặc không đủ số lượng.`)
     }
-  }
 
-  if (checkout.paymentMethod !== 'COD' && !isOnlinePaymentSuccess) {
-    const error = new Error('Thanh toán online phải finalize qua IPN.')
-    error.statusCode = 400
-    throw error
-  }
+    // 2.Kiểm tra thanh toán
+    if (checkout.paymentMethod !== 'COD' && !isOnlinePaymentSuccess) {
+      throw new Error('Thanh toán online phải finalize qua IPN.')
+    }
 
-  const isPaid =
-    checkout.paymentMethod !== 'COD' && isOnlinePaymentSuccess
+    const isPaid = checkout.paymentMethod !== 'COD' && isOnlinePaymentSuccess
+    const paymentStatus = isPaid ? 'completed' : 'pending'
 
-  const paymentStatus = isPaid ? 'completed' : 'pending'
-
-  let addressId = null
-
-  if (checkout.shippingAddress) {
-    const newAddress = await addressModel.create({
+    // 3. Tạo đơn hàng chính thức
+    const newOrder = await orderModel.create([{
       user: checkout.user,
-      name: checkout.shippingAddress.name,
-      phone: checkout.shippingAddress.phone,
-      street: checkout.shippingAddress.street,
-      province: checkout.shippingAddress.province,
-      district: checkout.shippingAddress.district,
-      ward: checkout.shippingAddress.ward
-    })
+      checkoutId: checkout._id,
+      orderItems: checkout.checkoutItems,
+      shippingAddress: checkout.shippingAddress,
+      coupon: checkout.coupon,
+      paymentMethod: checkout.paymentMethod,
+      totalPrice: checkout.totalPrice,
+      isPaid,
+      paymentStatus,
+      status: 'AwaitingConfirmation',
+      orderType: 'Cart'
+    }], { session }) // bắt buộc truyền session
 
-    addressId = newAddress._id
-  }
-  const newOrder = await orderModel.create({
-    user: checkout.user,
-    checkoutId: checkout._id,
-    orderItems: checkout.checkoutItems,
-    shippingAddress: addressId,
-    coupon: checkout.coupon,
-    paymentMethod: checkout.paymentMethod,
-    totalPrice: checkout.totalPrice,
-    isPaid,
-    paymentStatus,
-    status: 'AwaitingConfirmation',
-    orderType: 'Cart'
-  })
+    // 4. Xóa checkout tạm
+    await checkoutModel.findByIdAndDelete(checkoutId, { session })
+    await session.commitTransaction()
 
-  for (const item of checkout.checkoutItems) {
-    await productModel.findByIdAndUpdate(item.productId, {
-      $inc: { countInStock: -item.quantity, sold: item.quantity }
-    })
-  }
-
-  await checkoutModel.findByIdAndDelete(checkoutId)
-
-  return {
-    message: 'Đơn hàng đã được xác nhận.',
-    orderId: newOrder._id
+    return {
+      message: 'Đơn hàng đã được xác nhận.',
+      orderId: newOrder[0]._id
+    }
+  } catch (error) {
+    await session.abortTransaction()
+    throw error
+  } finally {
+    session.endSession()
   }
 }
 

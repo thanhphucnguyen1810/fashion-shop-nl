@@ -10,7 +10,7 @@ const getCart = async (userId, guestId) => {
 
 // ================= ADD =================
 const addToCart = async (data) => {
-  const { productId, quantity, size, color, guestId, userId } = data
+  const { productId, quantity, size, color, guestId, userId, sku } = data
 
   const product = await Product.findById(productId)
   if (!product) {
@@ -39,7 +39,8 @@ const addToCart = async (data) => {
         price: product.price,
         size,
         color,
-        quantity
+        quantity,
+        sku
       })
     }
 
@@ -63,7 +64,8 @@ const addToCart = async (data) => {
         price: product.price,
         size,
         color,
-        quantity
+        quantity,
+        sku
       }
     ],
     totalPrice: product.price * quantity

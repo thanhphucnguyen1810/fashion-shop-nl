@@ -10,12 +10,13 @@ export const fetchCartAPI = async ({ userId, guestId }) => {
 }
 
 // ADD TO CART
-export const addToCartAPI = async ({ productId, quantity, size, color, guestId, userId }) => {
+export const addToCartAPI = async ({ productId, quantity, size, color, sku, guestId, userId }) => {
   const response = await authorizedAxiosInstance.post(`${API_ROOT}/api/cart`, {
     productId,
     quantity,
     size,
     color,
+    sku,
     guestId,
     userId
   })

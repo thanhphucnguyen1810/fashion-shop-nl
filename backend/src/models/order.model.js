@@ -42,9 +42,12 @@ const orderSchema = new mongoose.Schema({
   },
   orderItems: [orderItemSchema],
   shippingAddress: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Address',
-    required: false
+    name:     { type: String },
+    phone:    { type: String },
+    street:   { type: String },
+    province: { type: String },
+    district: { type: String },
+    ward:     { type: String }
   },
   coupon: {
     code: { type: String, default: null },

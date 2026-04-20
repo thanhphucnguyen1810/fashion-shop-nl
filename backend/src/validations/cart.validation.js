@@ -9,6 +9,7 @@ const addToCart = async (req, res, next) => {
     quantity: Joi.number().min(1).required(),
     size: Joi.string().required(),
     color: Joi.string().required(),
+    sku: Joi.string().required(),
     guestId: Joi.string().allow('', null),
     userId: Joi.string().allow('', null)
   })
