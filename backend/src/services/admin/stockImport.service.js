@@ -7,15 +7,31 @@ const getAll = async ({ page = 1, limit = 20, search = '' }) => {
     { supplier: { $regex: search, $options: 'i' } }
   ] } : {}
 
-  const total = await StockImport.countDocuments(query)
-  const imports = await StockImport.find(query)
-    .populate('createdBy', 'name email')
-    .populate('items.product', 'name sku images')
-    .sort({ createdAt: -1 })
-    .limit(Number(limit))
-    .skip((Number(page) - 1) * Number(limit))
-
-  return { imports, total, page: Number(page), pages: Math.ceil(total / limit) }
+  const result = await StockImport.aggregate([
+    { $match: query },
+    { $sort: { createdAt: -1 } },
+    { $facet: {
+      queryImports: [
+        { $skip: (Number(page) - 1) * Number(limit) },
+        { $limit: Number(limit) },
+        { $lookup: { from: 'users', localField: 'createdBy', foreignField: '_id', as: 'createdBy',
+          pipeline: [{ $project: { name: 1, email: 1 } }]
+        } },
+        { $lookup: { from: 'products', localField: 'items.product', foreignField: '_id', as: 'productDetails',
+          pipeline: [{ $project: { name: 1, sku: 1, images: 1 } }]
+        } },
+        { $unwind: { path: '$createdBy', preserveNullAndEmptyArrays: true } }
+      ],
+      queryTotal: [{ $count: 'total' }]
+    } }
+  ])
+  const data = result[0]
+  return {
+    imports: data.queryImports || [],
+    total: data.queryTotal[0]?.total || 0,
+    page: Number(page),
+    pages: Math.ceil((data.queryTotal[0]?.total || 0) / Number(limit))
+  }
 }
 
 const getById = async (id) => {

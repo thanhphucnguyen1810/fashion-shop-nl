@@ -51,6 +51,7 @@ export const getOrderById = async (req, res) => {
     if (!order) {
       return res.status(404).json({ message: 'Order not found' })
     }
+    console.log(order.shippingAddress)
 
     res.json(order)
   } catch (error) {

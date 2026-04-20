@@ -78,18 +78,24 @@ const getProducts = async (queryParams) => {
     }
   }
 
-  const count = await Product.countDocuments(query)
+  const result = await Product.aggregate([
+    { $match: query },
+    { $sort: sort },
+    { $facet: {
+      queryProducts: [
+        { $skip: skip },
+        { $limit: pageSize }
+      ],
+      queryTotal: [{ $count: 'total' }]
+    } }
+  ])
 
-  const products = await Product.find(query)
-    .sort(sort)
-    .limit(pageSize)
-    .skip(skip)
-
+  const data = result[0]
   return {
-    products,
+    products: data.queryProducts || [],
     page: currentPage,
-    pages: Math.ceil(count / pageSize),
-    totalProducts: count
+    pages: Math.ceil((data.queryTotal[0]?.total || 0) / pageSize),
+    totalProducts: data.queryTotal[0]?.total || 0
   }
 }
 

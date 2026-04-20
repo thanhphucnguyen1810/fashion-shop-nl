@@ -67,7 +67,7 @@ const AdminSidebar = () => {
       }}
     >
       {/* Phần Logo */}
-      <div className="mb-6 flex-shrink-0">
+      <div className="mb-6 shrink-0">
         <Link to="/admin" className="text-2xl font-bold tracking-tighter" style={{ color: theme.palette.primary.main }}>
           TheAurora
         </Link>
@@ -78,7 +78,7 @@ const AdminSidebar = () => {
 
       {/* Phần Navigation */}
       <nav
-        className="flex-grow overflow-y-auto pr-2 custom-scrollbar"
+        className="grow overflow-y-auto pr-2 custom-scrollbar"
         style={{
           scrollbarWidth: 'thin',
           msOverflowStyle: 'none'
@@ -127,7 +127,7 @@ const AdminSidebar = () => {
       </nav>
 
       {/* Phần Logout */}
-      <div className="mt-6 pt-4 flex-shrink-0 border-t border-dashed border-gray-500/20">
+      <div className="mt-6 pt-4 shrink-0 border-t border-dashed border-gray-500/20">
         <button
           onClick={handleLogout}
           className="w-full py-3 px-4 rounded-xl flex items-center justify-center gap-2 font-bold transition-all"

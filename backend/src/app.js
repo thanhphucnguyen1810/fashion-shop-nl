@@ -28,7 +28,6 @@ import categoryRoutes from './routes/category.routes'
 import adminUserRoutes from './routes/admin/admin.user.routes'
 import adminProductRoutes from './routes/admin/admin.product.routes'
 import adminOrderRoutes from './routes/admin/admin.order.routes'
-import adminStockInRoutes from './routes/admin/admin.stock-in.routes'
 import adminReviewRoutes from './routes/admin/admin.review.routes'
 import adminCouponRoutes from './routes/admin/admin.coupon.routes'
 import reviewRoutes from './routes/review.routes'
@@ -100,7 +99,6 @@ app.use('/api/address', addressRoutes)
 app.use('/api/admin/users', adminUserRoutes)
 app.use('/api/admin/products', adminProductRoutes)
 app.use('/api/admin/orders', adminOrderRoutes)
-app.use('/api/admin/stock-in', adminStockInRoutes)
 app.use('/api/admin/reviews', adminReviewRoutes)
 app.use('/api/admin/coupons', adminCouponRoutes)
 app.use('/api/admin/system', adminSystemRoutes)

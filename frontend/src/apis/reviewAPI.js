@@ -10,10 +10,8 @@ export const fetchProductReviewsAPI = async (productId) => {
 }
 
 // ADMIN: ALL REVIEWS
-export const fetchAllReviewsAdminAPI = async () => {
-  const res = await authorizedAxiosInstance.get(
-    `${API_ROOT}/api/admin/reviews`
-  )
+export const fetchAllReviewsAdminAPI = async ({ page = 1, search = '' } = {}) => {
+  const res = await authorizedAxiosInstance.get(`${API_ROOT}/api/admin/reviews?page=${page}&search=${search}`)
   return res.data
 }
 
@@ -33,7 +31,7 @@ export const submitReviewAPI = async (formData) => {
 
 // UPDATE STATUS
 export const updateReviewStatusAPI = async ({ id, status }) => {
-  await authorizedAxiosInstance.patch(
+  await authorizedAxiosInstance.put(
     `${API_ROOT}/api/admin/reviews/${id}/status`,
     { status }
   )
@@ -41,7 +39,7 @@ export const updateReviewStatusAPI = async ({ id, status }) => {
 }
 
 // DELETE REVIEW
-export const deleteReviewAPI = async (reviewId) => {
+export const deleteReviewAdminAPI = async (reviewId) => {
   await authorizedAxiosInstance.delete(
     `${API_ROOT}/api/admin/reviews/${reviewId}`
   )

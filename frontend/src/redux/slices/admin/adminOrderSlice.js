@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import {
   fetchAllOrdersAPI,
+  fetchAllOrdersForDashboardAPI,
   fetchAdminOrderDetailsAPI,
   fetchOrdersByUserAPI,
   updateOrderStatusAPI,
@@ -9,9 +10,17 @@ import {
 
 export const fetchAllOrders = createAsyncThunk(
   'adminOrders/fetchAllOrders',
-  async (_, { rejectWithValue }) => {
-    try { return await fetchAllOrdersAPI() }
+  async ({ page = 1, search = '' } = {}, { rejectWithValue }) => {
+    try { return await fetchAllOrdersAPI({ page, search }) }
     catch (err) { return rejectWithValue(err.response?.data.message || err.message) }
+  }
+)
+
+export const fetchAllOrdersForDashboard = createAsyncThunk(
+  'adminOrders/fetchAllForDashboard',
+  async (_, { rejectWithValue }) => {
+    try { return await fetchAllOrdersForDashboardAPI() }
+    catch (err) { return rejectWithValue(err.response?.data) }
   }
 )
 
@@ -55,6 +64,8 @@ const adminOrderSlice = createSlice({
     orders: [],
     totalOrders: 0,
     totalSales: 0,
+    page: 1,
+    pages: 1,
     loading: false,
     error: null
   },
@@ -65,9 +76,11 @@ const adminOrderSlice = createSlice({
       .addCase(fetchAllOrders.pending, (state) => { state.loading = true; state.error = null })
       .addCase(fetchAllOrders.fulfilled, (state, action) => {
         state.loading = false
-        state.orders = action.payload
-        state.totalOrders = action.payload.length
-        state.totalSales = action.payload.reduce((acc, o) => acc + o.totalPrice, 0)
+        state.orders = action.payload.orders
+        state.totalOrders = action.payload.total
+        state.totalSales = action.payload.orders.reduce((acc, o) => acc + o.totalPrice, 0)
+        state.page = action.payload.page
+        state.pages = action.payload.pages
       })
       .addCase(fetchAllOrders.rejected, (state, action) => {
         state.loading = false
@@ -100,6 +113,14 @@ const adminOrderSlice = createSlice({
       .addCase(fetchOrdersByUser.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload
+      })
+
+      .addCase(fetchAllOrdersForDashboard.fulfilled, (state, action) => {
+        state.orders = action.payload.orders
+        state.totalOrders = action.payload.total
+        state.totalSales = action.payload.orders
+          .filter(o => o.status === 'Delivered')
+          .reduce((acc, o) => acc + o.totalPrice, 0)
       })
   }
 })

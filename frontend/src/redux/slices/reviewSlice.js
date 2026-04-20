@@ -4,7 +4,7 @@ import {
   fetchAllReviewsAdminAPI,
   submitReviewAPI,
   updateReviewStatusAPI,
-  deleteReviewAPI
+  deleteReviewAdminAPI
 } from '~/apis/reviewAPI'
 import { toast } from 'sonner'
 
@@ -76,7 +76,7 @@ export const deleteReview = createAsyncThunk(
   'reviews/deleteReview',
   async (reviewId, { rejectWithValue }) => {
     try {
-      return await deleteReviewAPI(reviewId)
+      return await deleteReviewAdminAPI(reviewId)
     } catch (error) {
       toast.error('Không thể xóa đánh giá')
       return rejectWithValue(error.response?.data?.message || error.message)

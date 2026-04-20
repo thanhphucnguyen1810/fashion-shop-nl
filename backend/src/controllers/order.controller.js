@@ -13,6 +13,7 @@ export const getMyOrders = async (req, res, next) => {
 export const getOrderById = async (req, res, next) => {
   try {
     const result = await orderService.getOrderById(req.params.orderId)
+    console.log(order.shippingAddress)
     res.status(StatusCodes.OK).json(result)
   } catch (error) {
     next(error)

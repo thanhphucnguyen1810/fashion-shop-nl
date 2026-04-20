@@ -8,8 +8,8 @@ import {
 
 export const fetchStockImports = createAsyncThunk(
   'stockImport/fetchAll',
-  async (params, { rejectWithValue }) => {
-    try { return await fetchStockImportsAPI(params) }
+  async ({ page = 1, search = '' } = {}, { rejectWithValue }) => {
+    try { return await fetchStockImportsAPI({ page, search }) }
     catch (err) { return rejectWithValue(err.response?.data) }
   }
 )

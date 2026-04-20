@@ -3,7 +3,7 @@ import { useTheme, MenuItem, Select, FormControl, InputLabel, Button, Stack } fr
 import { useDispatch, useSelector } from 'react-redux'
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { fetchAdminProducts } from '~/redux/slices/admin/adminProductSlice'
-import { fetchAllOrders } from '~/redux/slices/admin/adminOrderSlice'
+import { fetchAllOrdersForDashboard } from '~/redux/slices/admin/adminOrderSlice'
 import {
   XAxis, YAxis, Tooltip,
   ResponsiveContainer, AreaChart, Area,
@@ -29,12 +29,12 @@ const AdminHomePage = () => {
     documentTitle: `Bao-cao-doanh-thu-${timeFrame}`
   })
 
-  const { products } = useSelector((state) => state.adminProducts)
+  const { totalProducts } = useSelector((state) => state.adminProducts)
   const { orders, totalSales, totalOrders, loading } = useSelector((state) => state.adminOrders)
 
   useEffect(() => {
-    dispatch(fetchAdminProducts())
-    dispatch(fetchAllOrders())
+    dispatch(fetchAdminProducts({ page: 1, search: '' }))
+    dispatch(fetchAllOrdersForDashboard())
   }, [dispatch])
 
 
@@ -275,7 +275,7 @@ const AdminHomePage = () => {
         </div>
         <div className={`p-6 rounded-2xl border ${isDark ? 'bg-gray-800' : 'bg-purple-50'}`}>
           <p className="text-xs font-bold opacity-60 uppercase">Sản phẩm</p>
-          <p className="text-2xl font-black">{products.length}</p>
+          <p className="text-2xl font-black">{totalProducts}</p>
         </div>
         <div className={`p-6 rounded-2xl border ${isDark ? 'bg-gray-800' : 'bg-green-50'}`}>
           <p className="text-xs font-bold opacity-60 uppercase">Doanh thu</p>

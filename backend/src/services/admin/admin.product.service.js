@@ -36,16 +36,26 @@ const getAllProducts = async (search, page = 1, limit = 10) => {
     }
     : {}
 
-  const count = await productModel.countDocuments(keyword)
-  const products = await productModel.find(keyword)
-    .limit(limit)
-    .skip(limit * (page - 1))
-    .sort({ createdAt: -1 })
+  const result = await productModel.aggregate([
+    { $match: keyword },
+    { $sort: { createdAt: -1 } },
+    { $facet: {
+      queryProducts: [
+        { $skip: limit * (page - 1) },
+        { $limit: limit }
+      ],
+      queryTotal: [
+        { $count: 'total' }
+      ]
+    } }
+  ])
+
+  const data = result[0]
   return {
-    products,
+    products: data.queryProducts || [],
     page,
-    pages: Math.ceil(count / limit),
-    totalProducts: count
+    pages: Math.ceil((data.queryTotal[0]?.total || 0) / limit),
+    totalProducts: data.queryTotal[0]?.total || 0
   }
 }
 

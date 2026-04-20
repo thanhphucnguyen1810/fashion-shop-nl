@@ -21,7 +21,7 @@ const VerifyEmail = () => {
       }
     }
     verify()
-  }, [token])
+  }, [navigate, token])
 
   return <div>{message}</div>
 }

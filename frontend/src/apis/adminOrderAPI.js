@@ -8,6 +8,11 @@ export const fetchAllOrdersAPI = async () => {
   return res.data
 }
 
+export const fetchAllOrdersForDashboardAPI = async () => {
+  const res = await authorizedAxiosInstance.get(`${BASE}?limit=9999`)
+  return res.data
+}
+
 export const fetchAdminOrderDetailsAPI = async (id) => {
   const res = await authorizedAxiosInstance.get(`${BASE}/${id}`)
   return res.data
