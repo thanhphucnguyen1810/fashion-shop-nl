@@ -8,57 +8,61 @@ import { format } from 'date-fns'
 import { vi } from 'date-fns/locale'
 
 const getOrderStatusDisplay = (order) => {
-  const status = order.status || 'AwaitingConfirmation'
+  const status = (order.status || 'AwaitingConfirmation').toLowerCase()
 
   if (!order.isPaid && order.paymentMethod !== 'COD') {
     return { text: 'Chờ thanh toán', color: 'bg-red-100 text-red-700', icon: 'fa-solid fa-credit-card' }
   }
 
-  switch (status.toLowerCase()) {
+  switch (status) {
   case 'awaitingconfirmation':
     return { text: 'Chờ xác nhận', color: 'bg-yellow-100 text-yellow-700', icon: 'fa-solid fa-box-open' }
-  case 'awaitingshipment':
+
+  case 'awaitingpickup':
     return { text: 'Chờ lấy hàng', color: 'bg-orange-100 text-orange-700', icon: 'fa-solid fa-box' }
+
+  case 'pickedup':
+    return { text: 'Đã lấy hàng', color: 'bg-indigo-100 text-indigo-700', icon: 'fa-solid fa-truck' }
+
   case 'intransit':
-    return { text: 'Đang giao hàng', color: 'bg-blue-100 text-blue-700', icon: 'fa-solid fa-truck-fast' }
+    return { text: 'Đang vận chuyển', color: 'bg-blue-100 text-blue-700', icon: 'fa-solid fa-truck-fast' }
+
+  case 'outfordelivery':
+    return { text: 'Đang giao hàng', color: 'bg-purple-100 text-purple-700', icon: 'fa-solid fa-shipping-fast' }
+
   case 'delivered':
     return { text: 'Đã giao hàng', color: 'bg-green-100 text-green-700', icon: 'fa-solid fa-circle-check' }
+
+  case 'confirmed':
+    return { text: 'Hoàn tất', color: 'bg-teal-100 text-teal-700', icon: 'fa-solid fa-box-open' }
+
   case 'cancelled':
     return { text: 'Đã hủy', color: 'bg-gray-100 text-gray-700', icon: 'fa-solid fa-circle-xmark' }
+
   default:
     return { text: 'Không rõ', color: 'bg-gray-100 text-gray-700', icon: 'fa-solid fa-circle-question' }
   }
 }
+
 const getTabDisplayName = (filterStatus) => {
-  if (!filterStatus) {
-    return 'Tất cả'
-  }
-
-  const status = String(filterStatus).toLowerCase().replace(/[^a-z0-9]/g, '')
-
-  switch (status) {
-  case 'pendingcheckout':
-    return 'Chờ thanh toán'
-
-  case 'awaitingconfirmation':
+  switch (filterStatus) {
+  case 'AwaitingConfirmation':
     return 'Chờ xác nhận'
 
-  case 'awaitingshipment':
-  case 'processing':
+  case 'AwaitingPickup':
     return 'Chờ lấy hàng'
 
-  case 'intransit':
-  case 'shipped':
+  case 'InTransit':
     return 'Đang giao'
 
-  case 'delivered':
+  case 'Delivered':
     return 'Đã giao/Đánh giá'
 
-  case 'cancelled':
+  case 'Cancelled':
     return 'Đã hủy'
 
   default:
-    return 'Không xác định'
+    return 'Tất cả'
   }
 }
 
@@ -83,30 +87,34 @@ const MyOrdersList = ({ currentStatusFilter }) => {
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
       const matchesSearch =
-                order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                order.shippingAddress?.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                order.orderItems.some(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.shippingAddress?.street?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.orderItems.some(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()))
 
-      const dbStatus = (order.status || 'AwaitingConfirmation').toLowerCase()
+      const dbStatus = (order.status || 'AwaitingConfirmation')
 
       const matchesStatus = (() => {
         switch (currentStatusFilter) {
         case 'all':
           return true
-        case 'awaiting_confirmation':
-          return dbStatus === 'awaitingconfirmation'
-        case 'processing':
-          return dbStatus === 'awaitingshipment'
-        case 'shipped':
-          return dbStatus === 'intransit'
-        case 'delivered':
-          return dbStatus === 'delivered'
-        case 'cancelled':
-          return dbStatus === 'cancelled'
-        case 'returned':
-          return false
+
+        case 'AwaitingConfirmation':
+          return dbStatus === 'AwaitingConfirmation'
+
+        case 'AwaitingPickup':
+          return dbStatus === 'AwaitingPickup'
+
+        case 'InTransit':
+          return dbStatus === 'InTransit' || dbStatus === 'OutForDelivery'
+
+        case 'Delivered':
+          return dbStatus === 'Delivered' || dbStatus === 'Confirmed'
+
+        case 'Cancelled':
+          return dbStatus === 'Cancelled'
+
         default:
-          return false
+          return true
         }
       })()
 

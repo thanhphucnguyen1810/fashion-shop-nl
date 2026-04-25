@@ -5,6 +5,7 @@ import UserLayout from '~/components/Layouts/UserLayout'
 import AdminLayout from '~/components/Admin/AdminLayout'
 import ProtectedRoute from '~/components/Common/ProtectedRoute'
 
+
 /** Loading wrapper giống MUI pattern */
 const Loadable = (Component) => (props) => (
   <Suspense fallback={<div>Loading...</div>}>
@@ -29,6 +30,7 @@ const OrderSuccess = Loadable(lazy(() => import('~/pages/OrderSuccess')))
 const OrderDetails = Loadable(lazy(() => import('~/pages/OrderDetailsPage')))
 const MyOrders = Loadable(lazy(() => import('~/components/OrdersStatusTabs')))
 
+
 /** ADMIN */
 const AdminHome = Loadable(lazy(() => import('~/pages/AdminHomePage')))
 const Users = Loadable(lazy(() => import('~/components/Admin/UserManagement')))
@@ -41,6 +43,8 @@ const Reviews = Loadable(lazy(() => import('~/components/Admin/AdminReviews')))
 const Categories = Loadable(lazy(() => import('~/components/Admin/CategoryManagement')))
 const Logs = Loadable(lazy(() => import('~/components/Admin/AdminLogPage')))
 const StockImports = Loadable(lazy(() => import('~/pages/AdminStockImportPage')))
+const ShipperLayout = Loadable(lazy(() => import('~/components/Shipper/ShipperLayout')))
+const ShipperDashboard = Loadable(lazy(() => import('~/pages/ShipperDashboard')))
 
 export default function Router() {
   return useRoutes([
@@ -101,7 +105,20 @@ export default function Router() {
         { path: 'stock-imports', element: <StockImports /> }
       ]
     },
+    {
+      path: '/shipper',
+      element: (
+        <ProtectedRoute role={['shipper', 'admin']}>
+          <ShipperLayout />
+        </ProtectedRoute>
+      ),
+      children: [
+        { index: true, element: <ShipperDashboard /> }
 
+        // sau này thêm:
+        // { path: 'orders', element: <ShipperOrders /> }
+      ]
+    },
     /** fallback */
     { path: '*', element: <Navigate to="/" replace /> }
   ])

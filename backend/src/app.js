@@ -34,7 +34,7 @@ import reviewRoutes from './routes/review.routes'
 import addressRoutes from './routes/address.routes'
 import adminSystemRoutes from './routes/admin/admin.system.routes'
 import stockImportRoutes from '~/routes/admin/stockImport.routes'
-
+import shipperRoutes from '~/routes/shipper/shipper.routes'
 
 // Load environment variables
 dotenv.config()
@@ -94,6 +94,7 @@ app.use('/api/orders', orderRoutes)
 app.use('/api/upload', uploadRoutes)
 app.use('/api/categories', categoryRoutes)
 app.use('/api/address', addressRoutes)
+app.use('/api/shipper', shipperRoutes)
 
 // Admin
 app.use('/api/admin/users', adminUserRoutes)

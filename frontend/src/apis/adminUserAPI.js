@@ -17,9 +17,7 @@ export const addUserAPI = async (userData) => {
   fd.append('gender', userData.gender)
   if (userData.avatarFile) fd.append('avatar', userData.avatarFile)
 
-  const res = await authorizedAxiosInstance.post(BASE, fd, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  })
+  const res = await authorizedAxiosInstance.post(BASE, fd)
   return res.data
 }
 
@@ -31,9 +29,7 @@ export const updateUserAPI = async ({ id, name, email, role, gender, avatarFile 
   fd.append('gender', gender)
   if (avatarFile) fd.append('avatar', avatarFile)
 
-  const res = await authorizedAxiosInstance.put(`${BASE}/${id}`, fd, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  })
+  const res = await authorizedAxiosInstance.put(`${BASE}/${id}`, fd)
   return res.data.user
 }
 

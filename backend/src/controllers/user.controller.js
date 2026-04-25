@@ -133,6 +133,15 @@ const removeFavorite = async (req, res, next) => {
   } catch (error) { next(error) }
 }
 
+// User xác nhận nhận hàng
+const userConfirmReceived = async (req, res, next) => {
+  try {
+    const order = await userService.userConfirmReceived(req.params.orderId, req.user._id)
+    if (!order) return res.status(404).json({ message: 'Không tìm thấy đơn hàng hoặc chưa được giao' })
+    res.json({ message: 'Xác nhận nhận hàng thành công', order })
+  } catch (err) { next(err) }
+}
+
 export const userController = {
   registerUser,
   verifyEmail,
@@ -146,5 +155,6 @@ export const userController = {
   getUserProfile,
   updateUserProfile,
   addFavorite,
-  removeFavorite
+  removeFavorite,
+  userConfirmReceived
 }

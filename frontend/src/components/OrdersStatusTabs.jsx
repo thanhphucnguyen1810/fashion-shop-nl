@@ -26,12 +26,19 @@ function TabPanel(props) {
 
 const ORDERS_STATUS_TABS = [
   { label: 'Tất cả', icon: <FaLayerGroup />, status: 'all' },
-  { label: 'Chờ xác nhận', icon: <FaWallet />, status: 'awaiting_confirmation' },
-  { label: 'Chờ lấy hàng', icon: <FaBox />, status: 'processing' },
-  { label: 'Chờ giao hàng', icon: <FaTruckFast />, status: 'shipped' },
-  { label: 'Đã giao/Đánh giá', icon: <FaStar />, status: 'delivered' },
-  { label: 'Đã hủy', icon: <FaBan />, status: 'cancelled' },
-  { label: 'Trả hàng/Hoàn tiền', icon: <FaArrowRotateLeft />, status: 'returned' }
+  { label: 'Chờ xác nhận', icon: <FaWallet />, status: 'AwaitingConfirmation' },
+  { label: 'Chờ lấy hàng', icon: <FaBox />, status: 'AwaitingPickup' },
+  {
+    label: 'Đang giao',
+    icon: <FaTruckFast />,
+    status: ['InTransit', 'OutForDelivery']
+  },
+  {
+    label: 'Đã giao',
+    icon: <FaStar />,
+    status: ['Delivered', 'Confirmed']
+  },
+  { label: 'Đã hủy', icon: <FaBan />, status: 'Cancelled' }
 ]
 
 const OrdersStatusTabs = () => {

@@ -30,11 +30,12 @@ const menuItems = [
   { to: '/admin/stock-imports', label: 'Nhập hàng', icon: <FaWarehouse /> },
 
   { to: '/admin/orders', label: 'Đơn hàng', icon: <FaClipboardList /> },
+  { to: '/admin/shipper', label: 'Shipper', icon: <FaTruck /> },
   { to: '/admin/reviews', label: 'Đánh giá', icon: <FaStar /> },
   { to: '/admin/users', label: 'Người dùng', icon: <FaUser /> },
 
   { to: '/admin/coupons', label: 'Mã giảm giá', icon: <FaTags /> },
-  { to: '/admin/shipping', label: 'Vận chuyển', icon: <FaTruck /> },
+  // { to: '/admin/shipping', label: 'Vận chuyển', icon: <FaTruck /> },
 
   { to: '/admin/blog', label: 'Blog', icon: <FaPenNib /> },
   { to: '/admin/posts', label: 'Bài viết', icon: <FaEdit /> },

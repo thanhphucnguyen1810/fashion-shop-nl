@@ -1,5 +1,17 @@
 import orderModel from '~/models/order.model.js'
 
+// ===== TIMELINE MESSAGE MAP =====
+const STATUS_MESSAGES = {
+  AwaitingConfirmation: 'Đơn hàng đã được đặt, đang chờ xác nhận từ cửa hàng.',
+  AwaitingPickup:       'Cửa hàng đã xác nhận đơn hàng, đang chờ shipper đến lấy hàng.',
+  PickedUp:             'Shipper đã lấy hàng thành công.',
+  InTransit:            'Đơn hàng đang trên đường vận chuyển.',
+  OutForDelivery:       'Shipper đang trên đường giao hàng đến bạn.',
+  Delivered:            'Shipper đã giao hàng thành công.',
+  Confirmed:            'Bạn đã xác nhận nhận hàng. Cảm ơn bạn đã mua sắm!',
+  Cancelled:            'Đơn hàng đã bị hủy.'
+}
+
 // ===================== POPULATE =====================
 const populateOrder = (query) => {
   return query
@@ -45,7 +57,17 @@ const getAllOrders = async (query) => {
           as: 'user',
           pipeline: [{ $project: { name: 1, email: 1, avatar: 1 } }]
         } },
-        { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } }
+        { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'shipper',
+            foreignField: '_id',
+            as: 'shipper',
+            pipeline: [{ $project: { name: 1, email: 1, avatar: 1 } }]
+          }
+        },
+        { $unwind: { path: '$shipper', preserveNullAndEmptyArrays: true } }
       ],
       queryTotal: [{ $count: 'total' }]
     } }
@@ -60,30 +82,114 @@ const getAllOrders = async (query) => {
   }
 }
 
-const updateOrderStatus = async (orderId, status) => {
+// ===== ADMIN: UPDATE STATUS =====
+const updateOrderStatus = async (orderId, status, userId) => {
   const order = await orderModel.findById(orderId)
   if (!order) return null
 
-  order.status = status || order.status
-
-  if (status === 'Delivered' && !order.deliveredAt) {
-    order.deliveredAt = Date.now()
+  order.status = status
+  // tự động set lại các flag
+  if (status === 'Delivered') {
+    order.isDelivered = true
+    order.deliveredAt = new Date()
+  }
+  if (status === 'Confirmed') {
+    order.isDelivered = true
+    order.deliveredAt = order.deliveredAt || new Date()
   }
 
-  if (status !== 'Delivered' && order.deliveredAt) {
-    order.deliveredAt = undefined
-  }
+  // push vào timeline
+  order.timeline.push({
+    status,
+    message: STATUS_MESSAGES[status] || status,
+    updatedBy: userId,
+    role: 'admin'
+  })
 
-  const updatedOrder = await order.save()
-  await updatedOrder.populate('user', 'name email')
-
-  return updatedOrder
+  await order.save()
+  return order
 }
+
+// ===== ADMIN: ASSIGN SHIPPER =====
+const assignShipper = async (orderId, shipperId, adminId) => {
+  const order = await orderModel.findById(orderId)
+  if (!order) return null
+  if (!shipperId) throw new Error('Thiếu shipperId')
+
+  order.shipper = shipperId
+  order.status = 'AwaitingPickup'
+  order.timeline.push({
+    status: 'AwaitingPickup',
+    message: STATUS_MESSAGES['AwaitingPickup'],
+    updatedBy: adminId,
+    role: 'admin'
+  })
+
+  await order.save()
+  return order.populate('shipper', 'name email avatar')
+}
+
+// ===== SHIPPER: LẤY DANH SÁCH ĐƠN ĐƯỢC PHÂN CÔNG =====
+const getShipperOrders = async (shipperId) => {
+  if (!shipperId) throw new Error('Thiếu shipperId')
+  return await orderModel.find({
+    shipper: shipperId,
+    status: { $in: ['AwaitingPickup', 'PickedUp', 'InTransit', 'OutForDelivery'] }
+  })
+    .populate('user', 'name phone')
+    .populate('shipper', 'name email avatar')
+    .sort({ createdAt: -1 })
+}
+
+// ===== SHIPPER: CẬP NHẬT TRẠNG THÁI =====
+const shipperUpdateStatus = async (orderId, shipperId, status) => {
+  const SHIPPER_ALLOWED = ['PickedUp', 'InTransit', 'OutForDelivery', 'Delivered']
+  if (!SHIPPER_ALLOWED.includes(status)) throw new Error('Trạng thái không hợp lệ')
+
+  const order = await orderModel.findOne({ _id: orderId, shipper: shipperId })
+  if (!order) return null
+
+  order.status = status
+  if (status === 'Delivered') {
+    order.isDelivered = true
+    order.deliveredAt = new Date()
+  }
+
+  order.timeline.push({
+    status,
+    message: STATUS_MESSAGES[status],
+    updatedBy: shipperId,
+    role: 'shipper'
+  })
+
+  await order.save()
+  return order
+}
+
+const userConfirmReceived = async (orderId, userId) => {
+  const order = await orderModel.findOne({
+    _id: orderId,
+    user: userId,
+    status: 'Delivered'
+  })
+  if (!order) return null
+
+  order.status = 'Confirmed'
+  order.timeline.push({
+    status: 'Confirmed',
+    message: STATUS_MESSAGES['Confirmed'],
+    updatedBy: userId,
+    role: 'user'
+  })
+
+  await order.save()
+  return order
+}
+
 
 const deleteOrder = async (orderId) => {
   const order = await orderModel.findById(orderId)
   if (!order) return null
-
   await order.deleteOne()
   return true
 }
@@ -106,16 +212,16 @@ const getOrderStats = async () => {
     { $group: { _id: null, total: { $sum: '$totalPrice' } } }
   ])
 
-  const [pending, processing, delivered] = await Promise.all([
-    orderModel.countDocuments({ status: 'Pending' }),
-    orderModel.countDocuments({ status: 'Processing' }),
+  const [awaiting, shipping, delivered] = await Promise.all([
+    orderModel.countDocuments({ status: 'AwaitingConfirmation' }),
+    orderModel.countDocuments({ status: { $in: ['PickedUp', 'InTransit', 'OutForDelivery'] } }),
     orderModel.countDocuments({ status: 'Delivered' })
   ])
 
   return {
     totalOrders,
     totalRevenue: totalRevenue[0]?.total || 0,
-    statusCount: { pending, processing, delivered }
+    statusCount: { awaiting, shipping, delivered }
   }
 }
 
@@ -123,6 +229,10 @@ const getOrderStats = async () => {
 export const orderService = {
   getAllOrders,
   updateOrderStatus,
+  assignShipper,
+  getShipperOrders,
+  shipperUpdateStatus,
+  userConfirmReceived,
   deleteOrder,
   getOrderById,
   getOrdersByUser,

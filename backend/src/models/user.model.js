@@ -3,11 +3,7 @@ import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 
 const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true
-  },
+  name: { type: String, required: true, trim: true },
   email: {
     type: String,
     required: true,
@@ -15,16 +11,8 @@ const userSchema = new mongoose.Schema({
     trim: true,
     match: [/.+\@.+\..+/, 'Please enter a valid email address']
   },
-  password: {
-    type: String,
-    required: true,
-    minLength: 8
-  },
-  role: {
-    type: String,
-    enum: ['customer', 'staff', 'admin'],
-    default: 'customer'
-  },
+  password: { type: String, required: true, minLength: 8 },
+  role: { type: String, enum: ['customer', 'staff', 'shipper', 'admin'], default: 'customer' },
   avatar: {
     type: Object,
     default: {
@@ -32,28 +20,11 @@ const userSchema = new mongoose.Schema({
       public_id: 'products/p_img2'
     }
   },
-  gender: {
-    type: String,
-    enum: ['male', 'female', 'other'],
-    default: 'other'
-  },
-  favorites: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Product'
-    }
-  ],
-  isVerified: {
-    type: Boolean,
-    default: false
-  },
-  isBlocked: {
-    type: Boolean,
-    default: false
-  },
-  refreshToken: {
-    type: String
-  },
+  gender: { type: String, enum: ['male', 'female', 'other'], default: 'other' },
+  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+  isVerified: { type: Boolean, default: false },
+  isBlocked: { type: Boolean, default: false },
+  refreshToken: { type: String },
   emailVerificationToken: String,
   emailVerificationExpires: Date,
   passwordResetToken: String,

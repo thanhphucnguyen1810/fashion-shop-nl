@@ -102,6 +102,7 @@ const EditUserModal = ({ user, onClose, onUpdate }) => {
             <select name="role" value={formData.role} onChange={handleChange} className={`w-full p-2 border rounded bg-transparent text-[${theme.palette.text.primary}] border-[${alpha(theme.palette.text.primary, 0.3)}]`}>
               <option value="customer">Khách hàng</option>
               <option value="staff">Nhân viên</option>
+              <option value="shipper">Giao hàng</option>
               <option value="admin">Quản trị viên</option>
             </select>
           </div>

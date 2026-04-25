@@ -1,75 +1,60 @@
 import { orderService } from '~/services/admin/admin.order.service'
 
-// @desc Get all orders
-export const getAllOrders = async (req, res) => {
+export const getAllOrders = async (req, res, next) => {
   try {
     const orders = await orderService.getAllOrders(req.query)
     res.json(orders)
-  } catch (error) {
-    res.status(500).json({ message: 'Server Error' })
-  }
+  } catch (error) { next(error) }
 }
 
-// @desc Update order status
-export const updateOrderStatus = async (req, res) => {
+export const updateOrderStatus = async (req, res, next) => {
   try {
-    const updated = await orderService.updateOrderStatus(
-      req.params.id,
-      req.body.status
+    const order = await orderService.updateOrderStatus(
+      req.params.orderId,
+      req.body.status,
+      req.user._id
     )
+    if (!order) return res.status(404).json({ message: 'Không tìm thấy đơn hàng' })
 
-    if (!updated) {
-      return res.status(404).json({ message: 'Order not found' })
-    }
-
-    res.json(updated)
-  } catch (error) {
-    res.status(500).json({ message: 'Server Error' })
-  }
+    res.json({ message: 'Cập nhật trạng thái thành công', order })
+  } catch (err) { next(err) }
 }
 
-// @desc Delete order
-export const deleteOrder = async (req, res) => {
+export const assignShipper = async (req, res, next) => {
   try {
-    const result = await orderService.deleteOrder(req.params.id)
-
-    if (!result) {
-      return res.status(404).json({ message: 'Order not found' })
-    }
-
-    res.json({ message: 'Order deleted successfully' })
-  } catch (error) {
-    res.status(500).json({ message: 'Server Error' })
-  }
+    const order = await orderService.assignShipper(
+      req.params.orderId, req.body.shipperId, req.user._id
+    )
+    if (!order) return res.status(404).json({ message: 'Không tìm thấy đơn hàng' })
+    res.json({ message: 'Phân công shipper thành công', order })
+  } catch (err) { next(err) }
 }
 
-// @desc Get order by ID
-export const getOrderById = async (req, res) => {
+export const deleteOrder = async (req, res, next) => {
   try {
-    const order = await orderService.getOrderById(req.params.id)
+    const result = await orderService.deleteOrder(req.params.orderId)
+    if (!result) return res.status(404).json({ message: 'Không tìm thấy đơn hàng' })
+    res.json({ message: 'Đã xóa đơn hàng' })
+  } catch (err) { next(err) }
+}
 
-    if (!order) {
-      return res.status(404).json({ message: 'Order not found' })
-    }
-    console.log(order.shippingAddress)
-
+export const getOrderById = async (req, res, next) => {
+  try {
+    const order = await orderService.getOrderById(req.params.orderId || req.params.id)
+    if (!order) return res.status(404).json({ message: 'Order not found' })
     res.json(order)
   } catch (error) {
-    res.status(500).json({ message: 'Server Error' })
+    next(error)
   }
 }
 
-// @desc Get orders by user
-export const getOrdersByUser = async (req, res) => {
+export const getOrdersByUser = async (req, res, next) => {
   try {
     const orders = await orderService.getOrdersByUser(req.params.userId)
     res.json(orders)
-  } catch (error) {
-    res.status(500).json({ message: 'Server Error' })
-  }
+  } catch (error) {next(error)}
 }
 
-// @desc Stats
 export const getOrderStats = async (req, res) => {
   try {
     const stats = await orderService.getOrderStats()
