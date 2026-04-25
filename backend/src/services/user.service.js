@@ -7,6 +7,7 @@ import cloudinary from '~/config/cloudinary.config'
 import { JwtProvider } from '~/providers/jwt.provider'
 import { StatusCodes } from 'http-status-codes'
 import ApiError from '~/utils/ApiError'
+import orderModel from '~/models/order.model'
 
 // ======================= REGISTER =======================
 const registerUser = async (reqBody) => {
@@ -360,6 +361,33 @@ const removeFavorite = async (userId, productId) => {
   } catch (error) { throw error }
 }
 
+// ===== USER: XÁC NHẬN ĐÃ NHẬN HÀNG =====
+const STATUS_MESSAGES = {
+  Confirmed: 'Bạn đã xác nhận nhận hàng. Cảm ơn bạn đã mua sắm!'
+}
+
+const userConfirmReceived = async (orderId, userId) => {
+  const order = await orderModel.findOne({
+    _id: orderId,
+    user: userId,
+    status: 'Delivered' // chỉ confirm được khi shipper đã giao
+  })
+
+  if (!order) return null
+
+  order.status = 'Confirmed'
+  order.timeline.push({
+    status: 'Confirmed',
+    message: STATUS_MESSAGES['Confirmed'],
+    updatedBy: userId,
+    role: 'user'
+  })
+
+  await order.save()
+  return order
+}
+
+
 export const userService = {
   registerUser,
   verifyEmail,
@@ -372,5 +400,6 @@ export const userService = {
   getUserProfile,
   updateUserProfile,
   addFavorite,
-  removeFavorite
+  removeFavorite,
+  userConfirmReceived
 }

@@ -5,7 +5,6 @@ import {
   HiOutlineShoppingBag,
   HiBars3BottomRight
 } from 'react-icons/hi2'
-import { FiSun, FiMoon } from 'react-icons/fi'
 import { useTheme } from '@mui/material/styles'
 
 import SearchBar from './SearchBar'
@@ -42,7 +41,7 @@ const Navbar = () => {
           {/* Logo */}
           <Link
             to="/"
-            className="text-xl md:text-2xl font-bold font-Lobster tracking-wide flex-shrink-0"
+            className="text-xl md:text-2xl font-bold font-Lobster tracking-wide shrink-0"
             style={{ color: primaryColor }}
           >
              TheAurora
@@ -55,7 +54,7 @@ const Navbar = () => {
         </div>
 
         {/* Bên phải: Icons */}
-        <div className="flex items-center space-x-2 md:space-x-3 flex-shrink-0">
+        <div className="flex items-center space-x-2 md:space-x-3 shrink-0">
 
 
           <button className="text-xl p-2 rounded-full hover:bg-gray-200 dark:hover:bg-slate-400 transition">
@@ -65,6 +64,17 @@ const Navbar = () => {
                 className='block bg-gray-500 px-2 rounded text-sm text-white'
               >
               Admin
+              </Link>
+            )}
+          </button>
+
+          <button className="text-xl p-2 rounded-full hover:bg-gray-200 dark:hover:bg-slate-400 transition">
+            { user && user.role === 'shipper' && (
+              <Link
+                to='/shipper'
+                className='block bg-gray-500 px-2 rounded text-sm text-white'
+              >
+              Shipper
               </Link>
             )}
           </button>

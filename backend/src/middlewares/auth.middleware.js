@@ -41,7 +41,17 @@ const admin = (req, res, next) => {
   }
 }
 
+const shipper = (req, res, next) => {
+  if (req.user && (req.user.role === 'shipper' || req.user.role === 'admin')) {
+    next()
+  } else {
+    res.status(403).json({ message: 'Không có quyền truy cập' })
+  }
+}
+
 export {
   protect,
-  admin
+  admin,
+  shipper
 }
+

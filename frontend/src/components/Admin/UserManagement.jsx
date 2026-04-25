@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useTheme, alpha } from '@mui/material/styles'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
-import { addUser, deleteUser, fetchUsers, updateUser, toggleUserStatus } from '~/redux/slices/admin/adminUserSlice'
+import { addUser, deleteUser, fetchUsers, updateUser } from '~/redux/slices/admin/adminUserSlice'
 import EditUserModal from './EditUserModal'
 
 
@@ -166,6 +166,7 @@ const UserManagement = () => {
           <option value="">Tất cả vai trò</option>
           <option value="customer">Khách hàng</option>
           <option value="staff">Nhân viên</option>
+          <option value="shipper">Giao hàng</option>
           <option value="admin">Quản trị viên</option>
         </select>
 
@@ -206,6 +207,7 @@ const UserManagement = () => {
                 <select name="role" value={formData.role} onChange={handleChange} className={inputClass}>
                   <option value="customer">Khách hàng</option>
                   <option value="staff">Nhân viên</option>
+                  <option value="shipper">Giao hàng</option>
                   <option value="admin">Quản trị viên</option>
                 </select>
               </div>
@@ -310,6 +312,7 @@ const UserManagement = () => {
                   >
                     <option value="customer">Khách hàng</option>
                     <option value="staff">Nhân viên</option>
+                    <option value="shipper">Giao hàng</option>
                     <option value="admin">Quản trị viên</option>
                   </select>
                 </td>

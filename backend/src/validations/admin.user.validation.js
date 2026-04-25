@@ -9,14 +9,14 @@ export const adminUserValidation = {
     name: Joi.string().min(2).max(50).required().trim(),
     email: Joi.string().email().required().lowercase(),
     password: Joi.string().min(6).required(),
-    role: Joi.string().valid('customer', 'admin').default('customer'),
+    role: Joi.string().valid('customer', 'admin', 'shipper', 'staff').default('customer'),
     gender: Joi.string().valid('male', 'female', 'other').default('other')
   }),
 
   updateUser: Joi.object({
     name: Joi.string().min(2).max(50).trim(),
     email: Joi.string().email().lowercase(),
-    role: Joi.string().valid('customer', 'admin'),
+    role: Joi.string().valid('customer', 'admin', 'shipper', 'staff'),
     gender: Joi.string().valid('male', 'female', 'other')
   }).min(1),
 

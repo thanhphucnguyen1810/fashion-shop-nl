@@ -90,7 +90,12 @@ const sepayIpn = async (body) => {
       isPaid: true,
       paymentStatus: 'completed',
       status: 'AwaitingConfirmation',
-      orderType: 'Cart'
+      orderType: 'Cart',
+      timeline: [{
+        status: 'AwaitingConfirmation',
+        message: 'Đơn hàng đã được đặt, đang chờ xác nhận từ cửa hàng.',
+        role: 'system'
+      }]
     }], { session })
 
     checkout.orderId = newOrder[0]._id
@@ -212,7 +217,12 @@ const finalizeOrder = async (checkoutId, body) => {
       isPaid,
       paymentStatus,
       status: 'AwaitingConfirmation',
-      orderType: 'Cart'
+      orderType: 'Cart',
+      timeline: [{
+        status: 'AwaitingConfirmation',
+        message: 'Đơn hàng đã được đặt, đang chờ xác nhận từ cửa hàng.',
+        role: 'system'
+      }]
     }], { session }) // bắt buộc truyền session
 
     // 4. Xóa checkout tạm

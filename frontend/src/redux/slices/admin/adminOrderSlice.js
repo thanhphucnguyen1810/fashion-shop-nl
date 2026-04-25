@@ -89,8 +89,10 @@ const adminOrderSlice = createSlice({
 
       // UPDATE STATUS
       .addCase(updateOrderStatus.fulfilled, (state, action) => {
-        const idx = state.orders.findIndex(o => o._id === action.payload._id)
-        if (idx !== -1) state.orders[idx] = action.payload
+        const updated = action.payload.order // payload là { message, order }
+        if (!updated) return
+        const idx = state.orders.findIndex(o => o._id === updated._id)
+        if (idx !== -1) state.orders[idx] = { ...state.orders[idx], ...updated }
       })
       .addCase(updateOrderStatus.rejected, (state, action) => {
         state.error = action.payload

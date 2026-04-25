@@ -25,3 +25,8 @@ export const createTemporaryOrderAPI = async (data) => {
   )
   return res.data
 }
+
+export const confirmReceivedAPI = async (orderId) => {
+  const res = await authorizedAxiosInstance.put(`${API_ROOT}/api/orders/${orderId}/confirm-received`)
+  return res.data
+}
