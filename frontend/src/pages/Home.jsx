@@ -14,6 +14,7 @@ import ProductGrid from '~/components/Products/ProductGrid'
 import CategoryMenu from '~/components/CategoryMenu'
 import { fetchProducts } from '~/redux/slices/productSlice'
 import { fetchCart } from '~/redux/slices/cartSlices'
+import { toast } from 'sonner'
 
 const Home = () => {
   const theme = useTheme()
@@ -45,7 +46,7 @@ const Home = () => {
         )
         setBestSellerProduct(response.data)
       } catch (error) {
-        console.error(error)
+        toast.error(error)
       }
     }
 
